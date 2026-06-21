@@ -1,0 +1,1162 @@
+{% extends "base.html" %}
+{% block title %}المحلل الدلالي — Semantic Analyzer{% endblock %}
+
+{% block page_header %}
+<div class="compiler-hero">
+    <div class="ch-bg"></div>
+    <div class="ch-inner">
+        <div class="ch-eyebrow">
+            <span class="ch-dot"></span> Compilers 2025/2026
+        </div>
+        <h1 class="ch-title">Semantic Analyzer</h1>
+        <p class="ch-sub">تحليل دلالي كامل لتطبيق Flask باستخدام Java 17 + ANTLR4 v4.13.2</p>
+        <div class="ch-pills">
+            <span class="ch-pill cp-java">Java 17</span>
+            <span class="ch-pill cp-antlr">ANTLR4</span>
+            <span class="ch-pill cp-python">Python AST</span>
+            <span class="ch-pill cp-jinja">Jinja2 Parse Tree</span>
+            <span class="ch-pill cp-checks">25 Semantic Checks</span>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ═══════════════════════════════════════════════════════════
+   HERO HEADER
+═══════════════════════════════════════════════════════════ */
+.compiler-hero {
+    position: relative;
+    padding: 52px 32px 44px;
+    text-align: center;
+    overflow: hidden;
+    background: #050a18;
+}
+.ch-bg {
+    position: absolute; inset: 0;
+    background:
+        radial-gradient(ellipse 70% 50% at 20% 50%, rgba(37,99,235,.22) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 50% at 80% 50%, rgba(124,58,237,.18) 0%, transparent 70%),
+        radial-gradient(ellipse 80% 40% at 50% 100%, rgba(5,150,105,.12) 0%, transparent 60%);
+    pointer-events: none;
+}
+.ch-bg::after {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+        linear-gradient(rgba(37,99,235,.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(37,99,235,.06) 1px, transparent 1px);
+    background-size: 40px 40px;
+}
+.ch-inner { position: relative; }
+.ch-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 700;
+    color: #60a5fa; letter-spacing: .12em; text-transform: uppercase;
+    margin-bottom: 14px;
+    border: 1px solid rgba(96,165,250,.25);
+    padding: 5px 14px; border-radius: 99px;
+    background: rgba(96,165,250,.08);
+}
+.ch-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 8px #22c55e;
+    animation: blink 1.5s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+.ch-title {
+    font-size: clamp(2rem, 5vw, 3.4rem);
+    font-weight: 900;
+    letter-spacing: -.04em;
+    color: #fff;
+    margin-bottom: 14px;
+    background: linear-gradient(135deg, #fff 30%, #93c5fd 70%, #c4b5fd);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.ch-sub { font-size: 15px; color: #64748b; margin-bottom: 24px; }
+.ch-pills { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.ch-pill {
+    font-size: 11px; font-weight: 700; letter-spacing: .04em;
+    padding: 5px 14px; border-radius: 99px;
+    border: 1px solid;
+}
+.cp-java    { background: rgba(251,191,36,.1);  color: #fbbf24; border-color: rgba(251,191,36,.3); }
+.cp-antlr   { background: rgba(165,180,252,.1); color: #a5b4fc; border-color: rgba(165,180,252,.3); }
+.cp-python  { background: rgba(52,211,153,.1);  color: #34d399; border-color: rgba(52,211,153,.3); }
+.cp-jinja   { background: rgba(196,181,253,.1); color: #c4b5fd; border-color: rgba(196,181,253,.3); }
+.cp-checks  { background: rgba(248,113,113,.1); color: #f87171; border-color: rgba(248,113,113,.3); }
+
+/* ═══════════════════════════════════════════════════════════
+   PIPELINE
+═══════════════════════════════════════════════════════════ */
+.pipeline-wrap {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px 24px;
+    margin-bottom: 32px;
+    box-shadow: var(--shadow);
+    transition: background .25s;
+}
+.pipeline-label {
+    font-size: 11px; font-weight: 800; color: var(--gray);
+    letter-spacing: .08em; text-transform: uppercase;
+    margin-bottom: 18px;
+    display: flex; align-items: center; gap: 8px;
+}
+.pipeline-label::after { content:''; flex:1; height:1px; background: var(--border); }
+.pipeline {
+    display: flex; align-items: center; gap: 0;
+    position: relative;
+}
+.pipe-step {
+    flex: 1;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 0;
+    position: relative;
+    padding: 0 8px;
+}
+.pipe-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 22px; left: calc(50% + 22px);
+    width: calc(100% - 44px);
+    height: 2px;
+    background: var(--border);
+    transition: background .4s;
+    z-index: 0;
+}
+.pipe-step.ps-done:not(:last-child)::after { background: var(--success); }
+.pipe-step.ps-active:not(:last-child)::after {
+    background: linear-gradient(90deg, var(--primary), var(--border));
+}
+.ps-circle {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--white);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    position: relative; z-index: 1;
+    transition: all .35s cubic-bezier(.34,1.56,.64,1);
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+.pipe-step:hover .ps-circle {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(37,99,235,.1);
+    transform: scale(1.08);
+}
+.pipe-step.ps-active .ps-circle {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    box-shadow: 0 0 0 4px rgba(37,99,235,.15), 0 0 20px rgba(37,99,235,.2);
+    animation: circle-pulse .5s ease;
+}
+.pipe-step.ps-done .ps-circle {
+    border-color: var(--success);
+    background: var(--success-light);
+    box-shadow: 0 0 0 3px rgba(5,150,105,.15);
+}
+.ps-done .ps-circle::after {
+    content: '✓';
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 900; color: var(--success);
+    background: var(--success-light);
+    border-radius: 50%;
+}
+@keyframes circle-pulse {
+    0%   { transform: scale(.85); }
+    60%  { transform: scale(1.12); }
+    100% { transform: scale(1); }
+}
+.ps-body { text-align: center; margin-top: 10px; }
+.ps-title { font-size: 11px; font-weight: 800; color: var(--dark); line-height: 1.3; }
+.ps-sub   { font-size: 10px; color: var(--gray); margin-top: 2px; line-height: 1.3; }
+.ps-num-badge {
+    position: absolute; top: -4px; right: -4px;
+    width: 16px; height: 16px;
+    background: var(--dark);
+    color: #fff; font-size: 9px; font-weight: 900;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    z-index: 2;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   STATS CARDS (dark gradient style)
+═══════════════════════════════════════════════════════════ */
+.compiler-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+}
+@media(max-width:700px){ .compiler-stats { grid-template-columns: repeat(2,1fr); } }
+.cs-card {
+    border-radius: var(--radius);
+    padding: 22px 20px;
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column; gap: 4px;
+    transition: transform var(--transition), box-shadow var(--transition);
+    cursor: default;
+}
+.cs-card:hover { transform: translateY(-3px); }
+.cs-card.cc-err-py  { background: linear-gradient(135deg,#1a0a0a,#2d1515); border: 1px solid #7f1d1d; box-shadow: 0 4px 20px rgba(220,38,38,.12); }
+.cs-card.cc-wrn-py  { background: linear-gradient(135deg,#1a1400,#2d2600); border: 1px solid #78350f; box-shadow: 0 4px 20px rgba(217,119,6,.12); }
+.cs-card.cc-err-j2  { background: linear-gradient(135deg,#10081a,#1e1030); border: 1px solid #4c1d95; box-shadow: 0 4px 20px rgba(124,58,237,.12); }
+.cs-card.cc-wrn-j2  { background: linear-gradient(135deg,#0a1a12,#0d2d1a); border: 1px solid #14532d; box-shadow: 0 4px 20px rgba(5,150,105,.12); }
+html:not(.dark) .cs-card.cc-err-py { background: linear-gradient(135deg,#fff5f5,#fee2e2); border-color: #fca5a5; box-shadow: 0 4px 20px rgba(220,38,38,.08); }
+html:not(.dark) .cs-card.cc-wrn-py { background: linear-gradient(135deg,#fffbeb,#fef3c7); border-color: #fcd34d; box-shadow: 0 4px 20px rgba(217,119,6,.08); }
+html:not(.dark) .cs-card.cc-err-j2 { background: linear-gradient(135deg,#faf5ff,#f3e8ff); border-color: #d8b4fe; box-shadow: 0 4px 20px rgba(124,58,237,.08); }
+html:not(.dark) .cs-card.cc-wrn-j2 { background: linear-gradient(135deg,#f0fdf4,#dcfce7); border-color: #86efac; box-shadow: 0 4px 20px rgba(5,150,105,.08); }
+.cs-top { display: flex; justify-content: space-between; align-items: flex-start; }
+.cs-icon-box {
+    width: 38px; height: 38px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+}
+.cc-err-py .cs-icon-box { background: rgba(220,38,38,.2); }
+.cc-wrn-py .cs-icon-box { background: rgba(217,119,6,.2); }
+.cc-err-j2 .cs-icon-box { background: rgba(124,58,237,.2); }
+.cc-wrn-j2 .cs-icon-box { background: rgba(5,150,105,.2); }
+html:not(.dark) .cc-err-py .cs-icon-box { background: rgba(220,38,38,.1); }
+html:not(.dark) .cc-wrn-py .cs-icon-box { background: rgba(217,119,6,.1); }
+html:not(.dark) .cc-err-j2 .cs-icon-box { background: rgba(124,58,237,.1); }
+html:not(.dark) .cc-wrn-j2 .cs-icon-box { background: rgba(5,150,105,.1); }
+.cs-tag { font-size: 9px; font-weight: 800; padding: 3px 8px; border-radius: 99px; letter-spacing:.05em; text-transform: uppercase; }
+.cc-err-py .cs-tag { background: rgba(220,38,38,.2);  color: #f87171; }
+.cc-wrn-py .cs-tag { background: rgba(217,119,6,.2);  color: #fbbf24; }
+.cc-err-j2 .cs-tag { background: rgba(124,58,237,.2); color: #c4b5fd; }
+.cc-wrn-j2 .cs-tag { background: rgba(5,150,105,.2);  color: #34d399; }
+html:not(.dark) .cc-err-py .cs-tag { background: rgba(220,38,38,.12); color: #dc2626; }
+html:not(.dark) .cc-wrn-py .cs-tag { background: rgba(217,119,6,.12); color: #d97706; }
+html:not(.dark) .cc-err-j2 .cs-tag { background: rgba(124,58,237,.12);color: #7c3aed; }
+html:not(.dark) .cc-wrn-j2 .cs-tag { background: rgba(5,150,105,.12); color: #059669; }
+.cs-num {
+    font-size: 52px; font-weight: 900; letter-spacing: -.06em; line-height: 1;
+    margin: 8px 0 2px;
+}
+.cc-err-py .cs-num { color: #f87171; }
+.cc-wrn-py .cs-num { color: #fbbf24; }
+.cc-err-j2 .cs-num { color: #c4b5fd; }
+.cc-wrn-j2 .cs-num { color: #34d399; }
+html:not(.dark) .cc-err-py .cs-num { color: #dc2626; }
+html:not(.dark) .cc-wrn-py .cs-num { color: #d97706; }
+html:not(.dark) .cc-err-j2 .cs-num { color: #7c3aed; }
+html:not(.dark) .cc-wrn-j2 .cs-num { color: #059669; }
+.cs-label { font-size: 12px; font-weight: 600; color: var(--gray); }
+
+/* ═══════════════════════════════════════════════════════════
+   CSS CHARTS
+═══════════════════════════════════════════════════════════ */
+.charts-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+    margin-bottom: 24px;
+}
+@media(max-width:700px){ .charts-row{ grid-template-columns:1fr; } }
+.chart-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+    transition: background .25s;
+}
+.chart-title {
+    font-size: 12px; font-weight: 800; color: var(--gray);
+    letter-spacing: .06em; text-transform: uppercase;
+    margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+}
+.chart-title::after { content:''; flex:1; height:1px; background: var(--border); }
+.cbar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.cbar-lbl { font-size: 12px; font-weight: 700; color: var(--dark-3); min-width: 120px; text-align: right; }
+.cbar-track { flex: 1; height: 20px; background: var(--light); border-radius: 99px; overflow: hidden; border: 1px solid var(--border); }
+.cbar-fill {
+    height: 100%; border-radius: 99px;
+    width: 0%;
+    transition: width 1.1s cubic-bezier(.25,.46,.45,.94);
+    display: flex; align-items: center; justify-content: flex-start;
+    padding-right: 8px;
+}
+.cbar-fill span { font-size: 10px; font-weight: 900; color: #fff; opacity: 0; transition: opacity .5s .8s; }
+.cbar-fill[style*="width: 0%"] span,
+.cbar-fill[style*="width:0%"] span { opacity: 0 !important; }
+.cbar-n { font-size: 14px; font-weight: 900; color: var(--dark); min-width: 26px; text-align: center; }
+.cb-red { background: linear-gradient(90deg, #fca5a5, #ef4444); }
+.cb-amber{ background: linear-gradient(90deg, #fcd34d, #f59e0b); }
+.cb-blue { background: linear-gradient(90deg, #93c5fd, #3b82f6); }
+.cb-purple{background: linear-gradient(90deg, #d8b4fe, #8b5cf6); }
+.cb-green{ background: linear-gradient(90deg, #6ee7b7, #10b981); }
+
+/* ═══════════════════════════════════════════════════════════
+   SUMMARY BAR
+═══════════════════════════════════════════════════════════ */
+.summary-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 20px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-sm);
+    transition: background .25s;
+}
+.sb-chips { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sb-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 12px; border-radius: 99px;
+    font-size: 13px; font-weight: 700;
+    border: 1px solid;
+}
+.sb-chip.sc-err   { background: var(--danger-light); color: var(--danger); border-color: #fca5a5; }
+.sb-chip.sc-wrn   { background: var(--warning-light); color: var(--warning); border-color: #fcd34d; }
+.sb-chip.sc-total { background: var(--light); color: var(--gray); border-color: var(--border); }
+.sb-chip.sc-ok    { background: var(--success-light); color: var(--success); border-color: #6ee7b7; }
+.sb-actions { display: flex; gap: 8px; }
+
+/* ═══════════════════════════════════════════════════════════
+   TABS (redesigned)
+═══════════════════════════════════════════════════════════ */
+.tabs {
+    display: flex; gap: 6px;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+.tab-btn {
+    padding: 10px 18px;
+    border: none; background: transparent;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 14px; font-weight: 700;
+    color: var(--gray); cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all var(--transition);
+    border-radius: 8px 8px 0 0;
+    display: flex; align-items: center; gap: 7px;
+}
+.tab-btn:hover  { color: var(--primary); background: var(--primary-light); }
+.tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); background: var(--primary-light); }
+.tab-count {
+    background: var(--primary); color: #fff;
+    font-size: 10px; font-weight: 800;
+    padding: 1px 6px; border-radius: 99px; min-width: 18px; text-align: center;
+}
+.tab-count.tc-warn { background: var(--warning); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ═══════════════════════════════════════════════════════════
+   ISSUE CARDS (redesigned)
+═══════════════════════════════════════════════════════════ */
+.issue-list { display: flex; flex-direction: column; gap: 8px; }
+.issue-card {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 14px 16px;
+    border-radius: 10px; border: 1px solid;
+    transition: transform var(--transition), box-shadow var(--transition);
+}
+.issue-card:hover { transform: translateX(-3px); box-shadow: var(--shadow-sm); }
+.issue-card.ic-error   { background: var(--danger-light);  border-color: #fca5a5; }
+.issue-card.ic-warning { background: var(--warning-light); border-color: #fcd34d; }
+.ic-left { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; }
+.issue-tag {
+    display: inline-flex; padding: 3px 8px; border-radius: 5px;
+    font-size: 9px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+    white-space: nowrap;
+}
+.tag-error   { background: var(--danger);  color: #fff; }
+.tag-warning { background: var(--warning); color: #fff; }
+.ic-lnum {
+    font-size: 10px; font-weight: 700; color: var(--gray);
+    background: var(--light); padding: 2px 6px; border-radius: 4px;
+    border: 1px solid var(--border); font-family: monospace; white-space: nowrap;
+}
+.issue-msg { font-size: 13px; color: var(--dark-2); font-weight: 600; line-height: 1.45; padding-top: 2px; }
+
+/* ═══════════════════════════════════════════════════════════
+   BRIDGE TABLE
+═══════════════════════════════════════════════════════════ */
+.bridge-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.bridge-table th {
+    padding: 11px 16px; text-align: right;
+    font-size: 11px; font-weight: 800; color: var(--gray);
+    text-transform: uppercase; letter-spacing: .05em;
+    background: var(--light); border-bottom: 2px solid var(--border);
+}
+.bridge-table td { padding: 13px 16px; border-bottom: 1px solid var(--border-light); vertical-align: middle; }
+.bridge-table tr:last-child td { border-bottom: none; }
+.bridge-table tr:hover td { background: var(--light); }
+.var-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; background: var(--primary-light); color: var(--primary);
+    border-radius: 99px; font-size: 11px; font-weight: 700;
+    margin: 2px 3px; border: 1px solid rgba(37,99,235,.2);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CHECKS REFERENCE
+═══════════════════════════════════════════════════════════ */
+.checks-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media(max-width:700px){ .checks-grid{ grid-template-columns:1fr; } }
+.check-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: 8px;
+    background: var(--light); margin-bottom: 5px;
+    transition: background var(--transition);
+}
+.check-row:hover { background: var(--primary-light); }
+.check-num { font-size: 11px; color: var(--gray); font-weight: 700; min-width: 22px; }
+
+/* ═══════════════════════════════════════════════════════════
+   LIVE ANALYZER  (dark terminal style)
+═══════════════════════════════════════════════════════════ */
+.live-section {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: var(--radius-lg);
+    margin-bottom: 32px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,.3);
+}
+html:not(.dark) .live-section { background: #0d1117; border-color: #30363d; }
+.live-header {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
+    padding: 14px 20px;
+    background: #161b22;
+    border-bottom: 1px solid #21262d;
+}
+.live-title-row { display: flex; align-items: center; gap: 10px; }
+.live-dots { display: flex; gap: 5px; }
+.live-dot { width: 12px; height: 12px; border-radius: 50%; }
+.live-dot.ld-red   { background: #ff5f57; }
+.live-dot.ld-amber { background: #ffbd2e; }
+.live-dot.ld-green { background: #28c840; }
+.live-title { font-size: 13px; font-weight: 700; color: #58a6ff; font-family: 'Courier New', monospace; }
+.live-sub   { font-size: 11px; color: #6e7681; font-family: 'Courier New', monospace; }
+.live-controls { display: flex; gap: 8px; align-items: center; }
+.lang-toggle { display: flex; border: 1px solid #30363d; border-radius: 6px; overflow: hidden; }
+.lang-btn {
+    padding: 6px 14px; font-family: 'Tajawal', sans-serif;
+    font-size: 12px; font-weight: 700;
+    background: transparent; color: #6e7681; border: none;
+    cursor: pointer; transition: all .2s;
+}
+.lang-btn.active { background: #1f6feb; color: #fff; }
+.live-body { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+@media(max-width:800px){ .live-body { grid-template-columns: 1fr; } }
+.live-editor-side {
+    border-left: 1px solid #21262d;
+    display: flex; flex-direction: column;
+}
+.live-results-side { display: flex; flex-direction: column; }
+.live-panel-header {
+    padding: 8px 16px; background: #161b22;
+    border-bottom: 1px solid #21262d;
+    font-size: 11px; font-weight: 700; color: #6e7681;
+    font-family: 'Courier New', monospace;
+    letter-spacing: .04em;
+}
+.live-textarea {
+    width: 100%; min-height: 200px; flex: 1;
+    padding: 16px; font-family: 'Courier New', monospace; font-size: 13px;
+    color: #e6edf3; background: #0d1117; line-height: 1.7;
+    border: none; resize: vertical;
+    direction: ltr; text-align: left;
+}
+.live-textarea:focus { outline: none; }
+.live-textarea::placeholder { color: #3d444d; }
+.live-results-inner {
+    padding: 12px; min-height: 200px;
+    overflow-y: auto; max-height: 320px;
+    background: #0d1117;
+}
+.live-placeholder {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    height: 100%; min-height: 180px;
+    gap: 10px; color: #3d444d; text-align: center;
+}
+.live-placeholder .lp-icon { font-size: 28px; }
+.live-placeholder .lp-text { font-size: 12px; font-family: 'Courier New', monospace; }
+.live-footer {
+    padding: 10px 16px; background: #161b22;
+    border-top: 1px solid #21262d;
+    display: flex; align-items: center; gap: 10px;
+}
+.live-run-btn {
+    padding: 7px 20px;
+    background: #238636; color: #fff;
+    border: 1px solid #2ea043; border-radius: 6px;
+    font-family: 'Tajawal', sans-serif; font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: all .2s;
+}
+.live-run-btn:hover { background: #2ea043; box-shadow: 0 0 12px rgba(46,160,67,.3); }
+.live-clear-btn {
+    padding: 7px 14px;
+    background: transparent; color: #6e7681;
+    border: 1px solid #30363d; border-radius: 6px;
+    font-family: 'Tajawal', sans-serif; font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: all .2s;
+}
+.live-clear-btn:hover { color: #e6edf3; border-color: #6e7681; }
+.live-status { font-size: 11px; color: #3d444d; font-family: 'Courier New', monospace; }
+.spinner {
+    width: 14px; height: 14px;
+    border: 2px solid #30363d; border-top-color: #58a6ff;
+    border-radius: 50%; animation: spin .7s linear infinite; display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+/* Terminal issue lines */
+.term-issue {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 7px 10px; border-radius: 6px;
+    margin-bottom: 6px; font-family: 'Courier New', monospace;
+    font-size: 12px; line-height: 1.5;
+    border: 1px solid;
+}
+.term-issue.ti-err { background: rgba(248,81,73,.08); border-color: rgba(248,81,73,.25); color: #f85149; }
+.term-issue.ti-wrn { background: rgba(210,153,34,.08); border-color: rgba(210,153,34,.25); color: #d2a520; }
+.ti-tag { font-weight: 900; font-size: 10px; flex-shrink: 0; opacity: .8; }
+.ti-loc { color: #8b949e; flex-shrink: 0; }
+.ti-msg { flex: 1; color: #e6edf3; }
+
+/* ═══════════════════════════════════════════════════════════
+   LANDING (not ran yet)
+═══════════════════════════════════════════════════════════ */
+.run-section { text-align: center; padding: 56px 24px; }
+.run-cards {
+    display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;
+    margin-bottom: 40px;
+}
+.run-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 22px 28px;
+    min-width: 130px; box-shadow: var(--shadow-sm);
+    transition: transform var(--transition), background .25s;
+}
+.run-card:hover { transform: translateY(-2px); }
+.rc-num { font-size: 40px; font-weight: 900; margin-bottom: 4px; }
+.rc-lbl { font-size: 12px; color: var(--gray); font-weight: 600; }
+.rc-1 .rc-num { color: var(--primary); }
+.rc-2 .rc-num { color: var(--secondary); }
+.rc-3 .rc-num { color: var(--success); }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ═══ Pipeline ════════════════════════════════════════════════════ -->
+<div class="pipeline-wrap">
+    <div class="pipeline-label">Compiler Pipeline — 5 مراحل</div>
+    <div class="pipeline">
+        <div class="pipe-step" id="pipe1">
+            <div class="ps-circle">
+                <span>📖</span>
+                <span class="ps-num-badge">1</span>
+            </div>
+            <div class="ps-body">
+                <div class="ps-title">Lexer / Parser</div>
+                <div class="ps-sub">تحليل الرموز</div>
+            </div>
+        </div>
+        <div class="pipe-step" id="pipe2">
+            <div class="ps-circle">
+                <span>🌳</span>
+                <span class="ps-num-badge">2</span>
+            </div>
+            <div class="ps-body">
+                <div class="ps-title">AST Builder</div>
+                <div class="ps-sub">شجرة البنية</div>
+            </div>
+        </div>
+        <div class="pipe-step" id="pipe3">
+            <div class="ps-circle">
+                <span>📋</span>
+                <span class="ps-num-badge">3</span>
+            </div>
+            <div class="ps-body">
+                <div class="ps-title">Symbol Table</div>
+                <div class="ps-sub">جدول الرموز</div>
+            </div>
+        </div>
+        <div class="pipe-step" id="pipe4">
+            <div class="ps-circle">
+                <span>🔍</span>
+                <span class="ps-num-badge">4</span>
+            </div>
+            <div class="ps-body">
+                <div class="ps-title">Semantic Analysis</div>
+                <div class="ps-sub">25 فحصاً دلالياً</div>
+            </div>
+        </div>
+        <div class="pipe-step" id="pipe5">
+            <div class="ps-circle">
+                <span>🔗</span>
+                <span class="ps-num-badge">5</span>
+            </div>
+            <div class="ps-body">
+                <div class="ps-title">Generator Bridge</div>
+                <div class="ps-sub">Python → Jinja2</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ Live Analyzer (always visible) ════════════════════════════ -->
+<div class="live-section">
+    <div class="live-header">
+        <div class="live-title-row">
+            <div class="live-dots">
+                <div class="live-dot ld-red"></div>
+                <div class="live-dot ld-amber"></div>
+                <div class="live-dot ld-green"></div>
+            </div>
+            <div>
+                <div class="live-title">live_analyzer.py</div>
+                <div class="live-sub">⚡ تحليل كودك مباشرةً بدون إعادة تحميل</div>
+            </div>
+        </div>
+        <div class="live-controls">
+            <div class="lang-toggle">
+                <button class="lang-btn active" id="btn-python" onclick="setLang('python')">🐍 Python</button>
+                <button class="lang-btn" id="btn-jinja"  onclick="setLang('jinja')">🎨 Jinja2</button>
+            </div>
+        </div>
+    </div>
+    <div class="live-body">
+        <div class="live-editor-side">
+            <div class="live-panel-header">// input — الصق الكود هنا</div>
+            <textarea class="live-textarea" id="live-code"
+                placeholder="# مثال Python:&#10;def greet(name, name):  # duplicate param&#10;    x = 5&#10;    return x / 0           # div by zero&#10;&#10;# أو اكتب كودك الخاص وجرّب!"></textarea>
+        </div>
+        <div class="live-results-side">
+            <div class="live-panel-header">// output — نتائج التحليل</div>
+            <div class="live-results-inner" id="live-results">
+                <div class="live-placeholder">
+                    <div class="lp-icon">$_</div>
+                    <div class="lp-text">&gt; اضغط Run لبدء التحليل...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="live-footer">
+        <button class="live-run-btn" onclick="runLiveAnalysis()">▶ Run Analysis</button>
+        <button class="live-clear-btn" onclick="clearLive()">✕ Clear</button>
+        <span class="live-status" id="live-status">ready</span>
+    </div>
+</div>
+
+{% if not ran %}
+<!-- ═══ Landing ══════════════════════════════════════════════════ -->
+<div class="run-section">
+    <div style="font-size:60px;margin-bottom:16px;">🔬</div>
+    <h2 style="font-size:1.7rem;font-weight:900;margin-bottom:10px;color:var(--dark);">ابدأ التحليل الكامل للمشروع</h2>
+    <p style="color:var(--gray);margin-bottom:32px;font-size:15px;max-width:460px;margin-left:auto;margin-right:auto;line-height:1.8;">
+        اضغط تشغيل لتنفيذ مترجم Java على الكود الحقيقي وعرض جميع الأخطاء الدلالية
+    </p>
+    <div class="run-cards">
+        <div class="run-card rc-1"><div class="rc-num">25</div><div class="rc-lbl">نوع فحص دلالي</div></div>
+        <div class="run-card rc-2"><div class="rc-num">15</div><div class="rc-lbl">فحوصات Python</div></div>
+        <div class="run-card rc-3"><div class="rc-num">10</div><div class="rc-lbl">فحوصات Jinja2</div></div>
+    </div>
+    <form method="POST" action="{{ url_for('compiler_page') }}">
+        <button type="submit" class="btn btn-gradient btn-lg"
+                style="padding:15px 44px;font-size:17px;letter-spacing:.02em;"
+                onclick="animatePipeline()">
+            ▶ تشغيل التحليل الآن
+        </button>
+    </form>
+</div>
+
+{% else %}
+<!-- ═══ Results ═══════════════════════════════════════════════════ -->
+
+{% if error_msg %}
+<div style="background:var(--danger-light);border:1px solid #fca5a5;border-radius:10px;padding:16px 20px;margin-bottom:24px;color:var(--danger);display:flex;align-items:flex-start;gap:12px;">
+    <span style="font-size:20px;">⚠</span>
+    <div>
+        <strong style="display:block;margin-bottom:4px;">خطأ في تشغيل المترجم</strong>
+        <code style="font-size:13px;">{{ error_msg }}</code>
+    </div>
+</div>
+{% endif %}
+
+<!-- Stats -->
+{% set total_e = (python_errors|length) + (jinja_errors|length) %}
+{% set total_w = (python_warnings|length) + (jinja_warnings|length) %}
+{% set total   = total_e + total_w %}
+{% set py_all  = (python_errors|length) + (python_warnings|length) %}
+{% set j2_all  = (jinja_errors|length) + (jinja_warnings|length) %}
+
+<div class="compiler-stats">
+    <div class="cs-card cc-err-py">
+        <div class="cs-top">
+            <div class="cs-icon-box">🔴</div>
+            <span class="cs-tag">ERROR · PY</span>
+        </div>
+        <div class="cs-num" data-count="{{ python_errors|length }}">{{ python_errors|length }}</div>
+        <div class="cs-label">أخطاء Python</div>
+    </div>
+    <div class="cs-card cc-wrn-py">
+        <div class="cs-top">
+            <div class="cs-icon-box">🟡</div>
+            <span class="cs-tag">WARN · PY</span>
+        </div>
+        <div class="cs-num" data-count="{{ python_warnings|length }}">{{ python_warnings|length }}</div>
+        <div class="cs-label">تحذيرات Python</div>
+    </div>
+    <div class="cs-card cc-err-j2">
+        <div class="cs-top">
+            <div class="cs-icon-box">🔴</div>
+            <span class="cs-tag">ERROR · J2</span>
+        </div>
+        <div class="cs-num" data-count="{{ jinja_errors|length }}">{{ jinja_errors|length }}</div>
+        <div class="cs-label">أخطاء Jinja2</div>
+    </div>
+    <div class="cs-card cc-wrn-j2">
+        <div class="cs-top">
+            <div class="cs-icon-box">🟢</div>
+            <span class="cs-tag">WARN · J2</span>
+        </div>
+        <div class="cs-num" data-count="{{ jinja_warnings|length }}">{{ jinja_warnings|length }}</div>
+        <div class="cs-label">تحذيرات Jinja2</div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="charts-row">
+    <div class="chart-card">
+        <div class="chart-title">📊 توزيع المشاكل حسب النوع</div>
+        <div class="cbar-row">
+            <div class="cbar-lbl">أخطاء Python</div>
+            <div class="cbar-track"><div class="cbar-fill cb-red" data-w="{{ ((python_errors|length)/total*100)|int if total>0 else 0 }}"><span>{{ python_errors|length }}</span></div></div>
+            <div class="cbar-n">{{ python_errors|length }}</div>
+        </div>
+        <div class="cbar-row">
+            <div class="cbar-lbl">تحذيرات Python</div>
+            <div class="cbar-track"><div class="cbar-fill cb-amber" data-w="{{ ((python_warnings|length)/total*100)|int if total>0 else 0 }}"><span>{{ python_warnings|length }}</span></div></div>
+            <div class="cbar-n">{{ python_warnings|length }}</div>
+        </div>
+        <div class="cbar-row">
+            <div class="cbar-lbl">أخطاء Jinja2</div>
+            <div class="cbar-track"><div class="cbar-fill cb-purple" data-w="{{ ((jinja_errors|length)/total*100)|int if total>0 else 0 }}"><span>{{ jinja_errors|length }}</span></div></div>
+            <div class="cbar-n">{{ jinja_errors|length }}</div>
+        </div>
+        <div class="cbar-row">
+            <div class="cbar-lbl">تحذيرات Jinja2</div>
+            <div class="cbar-track"><div class="cbar-fill cb-green" data-w="{{ ((jinja_warnings|length)/total*100)|int if total>0 else 0 }}"><span>{{ jinja_warnings|length }}</span></div></div>
+            <div class="cbar-n">{{ jinja_warnings|length }}</div>
+        </div>
+    </div>
+    <div class="chart-card">
+        <div class="chart-title">⚖ مقارنة Python مقابل Jinja2</div>
+        <div class="cbar-row">
+            <div class="cbar-lbl">Python — إجمالي</div>
+            <div class="cbar-track"><div class="cbar-fill cb-blue" data-w="{{ (py_all/total*100)|int if total>0 else 0 }}"><span>{{ py_all }}</span></div></div>
+            <div class="cbar-n">{{ py_all }}</div>
+        </div>
+        <div class="cbar-row">
+            <div class="cbar-lbl">Jinja2 — إجمالي</div>
+            <div class="cbar-track"><div class="cbar-fill cb-green" data-w="{{ (j2_all/total*100)|int if total>0 else 0 }}"><span>{{ j2_all }}</span></div></div>
+            <div class="cbar-n">{{ j2_all }}</div>
+        </div>
+        <div class="cbar-row">
+            <div class="cbar-lbl">كل الأخطاء</div>
+            <div class="cbar-track"><div class="cbar-fill cb-red" data-w="{{ (total_e/total*100)|int if total>0 else 0 }}"><span>{{ total_e }}</span></div></div>
+            <div class="cbar-n">{{ total_e }}</div>
+        </div>
+        <div class="cbar-row">
+            <div class="cbar-lbl">كل التحذيرات</div>
+            <div class="cbar-track"><div class="cbar-fill cb-amber" data-w="{{ (total_w/total*100)|int if total>0 else 0 }}"><span>{{ total_w }}</span></div></div>
+            <div class="cbar-n">{{ total_w }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary bar -->
+<div class="summary-bar">
+    <div class="sb-chips">
+        <span style="font-size:14px;font-weight:800;color:var(--dark);">النتائج:</span>
+        <span class="sb-chip sc-err">⛔ {{ total_e }} خطأ</span>
+        <span class="sb-chip sc-wrn">⚠ {{ total_w }} تحذير</span>
+        <span class="sb-chip sc-total">📊 {{ total }} مشكلة</span>
+        <span class="sb-chip sc-ok">✅ 25 فحص</span>
+    </div>
+    <div class="sb-actions">
+        <button class="btn btn-ghost btn-sm" onclick="exportJSON()">⬇ JSON</button>
+        <form method="POST" action="{{ url_for('compiler_page') }}" style="margin:0;">
+            <button type="submit" class="btn btn-ghost btn-sm">↻ إعادة</button>
+        </form>
+    </div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+    <button class="tab-btn active" id="tab-python" onclick="switchTab('python')">
+        🐍 Python <span class="tab-count">{{ py_all }}</span>
+    </button>
+    <button class="tab-btn" id="tab-jinja" onclick="switchTab('jinja')">
+        🎨 Jinja2 <span class="tab-count tc-warn">{{ j2_all }}</span>
+    </button>
+    <button class="tab-btn" id="tab-bridge" onclick="switchTab('bridge')">
+        🔗 Generator Bridge <span class="tab-count" style="background:var(--success);">{{ bridge|length }}</span>
+    </button>
+    <button class="tab-btn" id="tab-checks" onclick="switchTab('checks')">
+        📋 الفحوصات <span class="tab-count" style="background:var(--secondary);">25</span>
+    </button>
+</div>
+
+<!-- Tab: Python -->
+<div class="tab-panel active" id="panel-python">
+    <div class="card">
+        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
+            <div>
+                <div style="font-size:15px;font-weight:800;">🐍 تحليل Python</div>
+                <div style="font-size:12px;color:var(--gray);margin-top:2px;font-family:monospace;">test/python/error_demo.txt</div>
+            </div>
+            <div style="display:flex;gap:8px;">
+                <span class="badge badge-red">{{ python_errors|length }} خطأ</span>
+                <span class="badge badge-yellow">{{ python_warnings|length }} تحذير</span>
+            </div>
+        </div>
+        <div class="card-body">
+            {% set py_issues = python_errors + python_warnings %}
+            {% if py_issues %}
+            <div class="issue-list">
+                {% for issue in py_issues %}
+                <div class="issue-card {{ 'ic-error' if issue.type=='ERROR' else 'ic-warning' }}">
+                    <div class="ic-left">
+                        <span class="issue-tag {{ 'tag-error' if issue.type=='ERROR' else 'tag-warning' }}">{{ issue.type }}</span>
+                        <span class="ic-lnum">L{{ issue.line }}</span>
+                    </div>
+                    <div class="issue-msg">{{ issue.msg }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state" style="padding:40px;">
+                <div class="es-icon">✅</div><div class="es-title">لا توجد مشاكل</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Tab: Jinja2 -->
+<div class="tab-panel" id="panel-jinja">
+    <div class="card">
+        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
+            <div>
+                <div style="font-size:15px;font-weight:800;">🎨 تحليل Jinja2</div>
+                <div style="font-size:12px;color:var(--gray);margin-top:2px;font-family:monospace;">test/jinja/error_demo.html</div>
+            </div>
+            <div style="display:flex;gap:8px;">
+                <span class="badge badge-red">{{ jinja_errors|length }} خطأ</span>
+                <span class="badge badge-yellow">{{ jinja_warnings|length }} تحذير</span>
+            </div>
+        </div>
+        <div class="card-body">
+            {% set j2_issues = jinja_errors + jinja_warnings %}
+            {% if j2_issues %}
+            <div class="issue-list">
+                {% for issue in j2_issues %}
+                <div class="issue-card {{ 'ic-error' if issue.type=='ERROR' else 'ic-warning' }}">
+                    <div class="ic-left">
+                        <span class="issue-tag {{ 'tag-error' if issue.type=='ERROR' else 'tag-warning' }}">{{ issue.type }}</span>
+                        <span class="ic-lnum">L{{ issue.line }}</span>
+                    </div>
+                    <div class="issue-msg">{{ issue.msg }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state" style="padding:40px;">
+                <div class="es-icon">✅</div><div class="es-title">لا توجد مشاكل</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Tab: Bridge -->
+<div class="tab-panel" id="panel-bridge">
+    <div class="card">
+        <div class="card-header">
+            <div style="font-size:15px;font-weight:800;">🔗 Generator Bridge — Python → Jinja2</div>
+            <div style="font-size:12px;color:var(--gray);margin-top:4px;">
+                المتغيرات المُمرَّرة من Python لكل قالب عبر <code style="background:var(--light);padding:1px 5px;border-radius:3px;">render_template()</code>
+            </div>
+        </div>
+        <div class="card-body" style="padding:0;">
+            {% if bridge %}
+            <table class="bridge-table">
+                <thead><tr>
+                    <th style="width:36px;">#</th>
+                    <th>القالب</th>
+                    <th>المتغيرات</th>
+                    <th style="width:70px;text-align:center;">العدد</th>
+                </tr></thead>
+                <tbody>
+                {% for row in bridge %}
+                <tr>
+                    <td style="color:var(--gray);font-weight:700;font-size:12px;">{{ loop.index }}</td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span>📄</span>
+                            <div>
+                                <div style="font-weight:800;font-size:13px;">{{ row.template }}</div>
+                                <div style="font-size:10px;color:var(--gray);">Jinja2 Template</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        {% if row.vars %}{% for v in row.vars %}<span class="var-pill">{{ v }}</span>{% endfor %}
+                        {% else %}<span style="color:var(--gray-light);font-size:12px;font-style:italic;">لا يوجد متغيرات</span>{% endif %}
+                    </td>
+                    <td style="text-align:center;">
+                        <span class="badge {{ 'badge-blue' if row.vars else 'badge-dark' }}">{{ row.vars|length }}</span>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div style="text-align:center;padding:40px;color:var(--gray);">لم يتم استخراج بيانات Bridge</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Tab: Checks Reference -->
+<div class="tab-panel" id="panel-checks">
+    <div class="checks-grid">
+        <div class="card">
+            <div class="card-header" style="display:flex;align-items:center;gap:10px;">
+                <span style="font-size:20px;">🐍</span>
+                <div>
+                    <div style="font-size:15px;font-weight:800;">فحوصات Python</div>
+                    <div style="font-size:11px;color:var(--gray);">15 نوع فحص دلالي</div>
+                </div>
+                <div style="margin-right:auto;display:flex;gap:6px;">
+                    <span class="badge badge-red">8 أخطاء</span>
+                    <span class="badge badge-yellow">7 تحذيرات</span>
+                </div>
+            </div>
+            <div class="card-body">
+                {% for sev,num,ar,en in [
+                    ('ERROR',1,'return خارج دالة','return outside function'),
+                    ('ERROR',2,'break خارج حلقة','break outside loop'),
+                    ('ERROR',3,'continue خارج حلقة','continue outside loop'),
+                    ('ERROR',4,'دالة مُعرَّفة أكثر من مرة','duplicate function definition'),
+                    ('ERROR',5,'معامل مكرر في الدالة','duplicate parameter name'),
+                    ('ERROR',6,'global بعد تعيين محلي','global after local assignment'),
+                    ('ERROR',7,'قسمة على صفر','division by zero (constant)'),
+                    ('ERROR',8,'كود بعد return','unreachable code after return'),
+                    ('WARNING',9,'استيراد مكرر','duplicate import'),
+                    ('WARNING',10,'إعادة تعيين اسم دالة','reassign function name'),
+                    ('WARNING',11,'تغطية اسم مدمج','shadow built-in name'),
+                    ('WARNING',12,'متغير غير مستخدم','unused variable'),
+                    ('WARNING',13,'استدعاء دالة غير معرَّفة','call undefined function'),
+                    ('WARNING',14,'جسم دالة فارغ','empty function body (pass only)'),
+                    ('WARNING',15,'استخدام متغير قبل تعيينه','use before assignment'),
+                ] %}
+                <div class="check-row">
+                    <span class="issue-tag {{ 'tag-error' if sev=='ERROR' else 'tag-warning' }}" style="font-size:8px;padding:2px 5px;">{{ sev[:3] }}</span>
+                    <span class="check-num">#{{ num }}</span>
+                    <div style="flex:1;">
+                        <div style="font-size:13px;font-weight:700;color:var(--dark);">{{ ar }}</div>
+                        <div style="font-size:10px;color:var(--gray);font-family:monospace;">{{ en }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header" style="display:flex;align-items:center;gap:10px;">
+                <span style="font-size:20px;">🎨</span>
+                <div>
+                    <div style="font-size:15px;font-weight:800;">فحوصات Jinja2</div>
+                    <div style="font-size:11px;color:var(--gray);">10 أنواع فحص دلالي</div>
+                </div>
+                <div style="margin-right:auto;display:flex;gap:6px;">
+                    <span class="badge badge-red">3 أخطاء</span>
+                    <span class="badge badge-yellow">7 تحذيرات</span>
+                </div>
+            </div>
+            <div class="card-body">
+                {% for sev,num,ar,en in [
+                    ('ERROR',1,'اسم block مكرر','duplicate block name'),
+                    ('ERROR',2,'extends أكثر من مرة','extends used more than once'),
+                    ('ERROR',3,'القالب يرث نفسه','template extends itself (circular)'),
+                    ('WARNING',4,'فلتر غير معروف','unknown filter name'),
+                    ('WARNING',5,'متغير for خارج الحلقة','for-loop var used after loop'),
+                    ('WARNING',6,'include لملف غير موجود','include non-existent file'),
+                    ('WARNING',7,'set يعيد تعريف متغير Python','set redefines Python variable'),
+                    ('WARNING',8,'set يعيد تعريف متغير محلي','set redefines local variable'),
+                    ('WARNING',9,'extends ليس أول تعليمة','extends not first Jinja2 statement'),
+                    ('WARNING',10,'for على قائمة فارغة []','for loop over empty list []'),
+                ] %}
+                <div class="check-row">
+                    <span class="issue-tag {{ 'tag-error' if sev=='ERROR' else 'tag-warning' }}" style="font-size:8px;padding:2px 5px;">{{ sev[:3] }}</span>
+                    <span class="check-num">#{{ num }}</span>
+                    <div style="flex:1;">
+                        <div style="font-size:13px;font-weight:700;color:var(--dark);">{{ ar }}</div>
+                        <div style="font-size:10px;color:var(--gray);font-family:monospace;">{{ en }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JSON data blob for export -->
+<script id="results-data" type="application/json">
+{"python_errors":{{ python_errors|tojson }},"python_warnings":{{ python_warnings|tojson }},"jinja_errors":{{ jinja_errors|tojson }},"jinja_warnings":{{ jinja_warnings|tojson }},"bridge":{{ bridge|tojson }},"summary":{"total_errors":{{ total_e }},"total_warnings":{{ total_w }},"total":{{ total }},"checks_run":25}}
+</script>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+/* ── Pipeline Animation ─────────────────────────────────── */
+function animatePipeline() {
+    ['pipe1','pipe2','pipe3','pipe4','pipe5'].forEach(function(id, i) {
+        setTimeout(function() {
+            var el = document.getElementById(id);
+            if (!el) return;
+            el.classList.add('ps-active');
+            setTimeout(function() {
+                el.classList.remove('ps-active');
+                el.classList.add('ps-done');
+            }, 480);
+        }, i * 300);
+    });
+}
+{% if ran %}
+window.addEventListener('load', function() {
+    setTimeout(animatePipeline, 200);
+    /* Animate chart bars */
+    setTimeout(function() {
+        document.querySelectorAll('.cbar-fill').forEach(function(b) {
+            var w = b.dataset.w || '0';
+            b.style.width = w + '%';
+            if (parseInt(w) > 5) {
+                b.querySelector('span').style.opacity = '1';
+            }
+        });
+    }, 700);
+    /* Count-up animation */
+    document.querySelectorAll('.cs-num[data-count]').forEach(function(el) {
+        var target = parseInt(el.dataset.count);
+        var start  = 0;
+        var dur    = 600;
+        var step   = 16;
+        var inc    = target / (dur / step);
+        var timer  = setInterval(function() {
+            start += inc;
+            if (start >= target) { start = target; clearInterval(timer); }
+            el.textContent = Math.round(start);
+        }, step);
+    });
+});
+{% endif %}
+
+/* ── Live Analyzer ──────────────────────────────────────── */
+var liveLang = 'python';
+
+function setLang(lang) {
+    liveLang = lang;
+    document.getElementById('btn-python').classList.toggle('active', lang === 'python');
+    document.getElementById('btn-jinja').classList.toggle('active',  lang === 'jinja');
+    var ta = document.getElementById('live-code');
+    ta.placeholder = lang === 'python'
+        ? '# مثال Python:\ndef greet(name, name):  # duplicate param\n    x = 5\n    return x / 0           # div by zero\n\n# أو اكتب كودك الخاص!'
+        : '{# مثال Jinja2 #}\n{{ "{% extends" }} "base.html" {{ "%}" }}\n{{ "{% extends" }} "base.html" {{ "%}" }}  {# ERROR: twice! #}\n{{ "{% block" }} body {{ "%}{% endblock %}" }}';
+}
+
+function clearLive() {
+    document.getElementById('live-code').value = '';
+    document.getElementById('live-results').innerHTML =
+        '<div class="live-placeholder"><div class="lp-icon">$_</div><div class="lp-text">> اضغط Run لبدء التحليل...</div></div>';
+    document.getElementById('live-status').textContent = 'ready';
+}
+
+function runLiveAnalysis() {
+    var code = document.getElementById('live-code').value.trim();
+    if (!code) { setStatus('error: no input'); return; }
+    var resultsEl = document.getElementById('live-results');
+    resultsEl.innerHTML = '<div class="live-placeholder"><div><span class="spinner"></span></div><div class="lp-text">> analyzing...</div></div>';
+    setStatus('running...');
+
+    fetch('/api/analyze', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({code: code, lang: liveLang})
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) { renderLive(data, resultsEl); })
+    .catch(function(e) {
+        resultsEl.innerHTML = '<div class="term-issue ti-err"><span class="ti-tag">ERR</span><span class="ti-msg">Connection failed: ' + e.message + '</span></div>';
+        setStatus('error');
+    });
+}
+
+function setStatus(msg) {
+    document.getElementById('live-status').textContent = msg;
+}
+
+function renderLive(data, container) {
+    if (data.parseError) {
+        container.innerHTML = '<div class="term-issue ti-err"><span class="ti-tag">PARSE ERR</span><span class="ti-msg">' + data.parseError + '</span></div>';
+        setStatus('parse error');
+        return;
+    }
+    var errors   = data.errors   || [];
+    var warnings = data.warnings || [];
+    var all      = errors.concat(warnings);
+    if (all.length === 0) {
+        container.innerHTML =
+            '<div style="text-align:center;padding:40px;color:#22c55e;">' +
+            '<div style="font-size:28px;margin-bottom:8px;">✓</div>' +
+            '<div style="font-family:monospace;font-size:13px;">no issues found</div></div>';
+        setStatus('✓ clean');
+        showToast('success:التحليل اكتمل — لا توجد مشاكل دلالية');
+        return;
+    }
+    var html = '<div style="font-family:monospace;font-size:11px;color:#6e7681;padding:6px 10px 10px;">'
+             + '// ' + errors.length + ' errors, ' + warnings.length + ' warnings</div>';
+    all.forEach(function(issue) {
+        var isE = issue.type === 'ERROR';
+        html += '<div class="term-issue ' + (isE ? 'ti-err' : 'ti-wrn') + '">'
+              + '<span class="ti-tag">' + issue.type + '</span>'
+              + '<span class="ti-loc">L' + issue.line + ':' + issue.col + '</span>'
+              + '<span class="ti-msg">' + issue.msg + '</span>'
+              + '</div>';
+    });
+    container.innerHTML = html;
+    setStatus(errors.length + ' err / ' + warnings.length + ' warn');
+    showToast((errors.length > 0 ? 'danger' : 'info') + ':' + all.length + ' مشكلة وُجدت');
+}
+
+/* ── Export JSON ─────────────────────────────────────────── */
+function exportJSON() {
+    var el = document.getElementById('results-data');
+    if (!el) { showToast('info:شغّل التحليل الكامل أولاً'); return; }
+    var blob = new Blob([JSON.stringify(JSON.parse(el.textContent), null, 2)], {type:'application/json'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'semantic-analysis.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    showToast('success:تم تصدير النتائج JSON');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,49 @@
+from flask import Flask, render_template
+import os
+import os
+
+list = [1, 2, 3]
+
+def helper():
+    return 1
+
+def helper():
+    return 2
+
+def empty_helper():
+    pass
+
+def bad_parameters(x, y, x):
+    return x + y
+
+helper = "not a function"
+
+def has_unreachable():
+    x = 1
+    return x
+    y = 2
+
+def compute():
+    value = 100 / 0
+    return value
+
+return 0
+
+def bad_global():
+    count = 0
+    global count
+
+def use_before_assign():
+    print(z)
+    z = 5
+
+def defines_unused():
+    unused_value = 42
+    return "done"
+
+def calls_mystery():
+    ghost_function()
+
+def loop_control_errors():
+    break
+    continue

@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+{% block title %}إضافة منتج جديد{% endblock %}
+
+{% block page_header %}
+<div class="page-header">
+    <div class="ph-eyebrow">📦 إدارة المتجر</div>
+    <h1>إضافة منتج جديد</h1>
+    <p class="ph-sub">أكمل البيانات أدناه لإضافة منتج جديد إلى المتجر</p>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+.add-layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 28px;
+    align-items: start;
+}
+@media(max-width: 900px) { .add-layout { grid-template-columns: 1fr; } }
+
+.form-section { margin-bottom: 28px; }
+.fs-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--dark-3);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+}
+
+.two-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media(max-width: 600px) { .two-cols { grid-template-columns: 1fr; } }
+
+/* Image Preview Box */
+.img-preview-box {
+    background: var(--light);
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    text-align: center;
+    transition: all var(--transition);
+    cursor: pointer;
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.img-preview-box:hover { border-color: var(--primary); background: var(--primary-light); }
+.img-preview-box.has-image { border-style: solid; border-color: var(--primary); }
+.preview-img {
+    width: 100%; border-radius: 10px;
+    max-height: 200px; object-fit: cover;
+    display: none;
+    margin-bottom: 12px;
+}
+.ipb-icon  { font-size: 36px; margin-bottom: 4px; }
+.ipb-title { font-size: 14px; font-weight: 700; color: var(--dark-3); }
+.ipb-sub   { font-size: 12px; color: var(--gray); }
+
+/* Tips card */
+.tips-card { background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; }
+.tips-header {
+    padding: 16px 20px;
+    background: linear-gradient(135deg, var(--primary-light), #f5f3ff);
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--primary);
+}
+.tip-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 13px;
+    color: var(--dark-3);
+    line-height: 1.5;
+}
+.tip-item:last-child { border-bottom: none; }
+.tip-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+input[type=file].form-control {
+    padding: 9px 12px;
+    cursor: pointer;
+    background: var(--light);
+}
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.getElementById('img-input').addEventListener('change', function() {
+    const file = this.files[0];
+    const box  = document.getElementById('img-box');
+    const img  = document.getElementById('img-preview');
+    const ph   = document.getElementById('img-placeholder');
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            img.src = e.target.result;
+            img.style.display = 'block';
+            ph.style.display = 'none';
+            box.classList.add('has-image');
+        };
+        reader.readAsDataURL(file);
+    }
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<form method="POST" action="{{ url_for('add_product') }}"
+      enctype="multipart/form-data" id="add-form">
+
+<div class="add-layout">
+
+    <!-- Left: Form -->
+    <div class="card">
+        <div class="card-header">
+            <div style="font-size:17px;font-weight:800;color:var(--dark);">بيانات المنتج</div>
+            <div style="font-size:13px;color:var(--gray);margin-top:2px;">أدخل جميع الحقول المطلوبة</div>
+        </div>
+        <div class="card-body">
+
+            <!-- Basic Info Section -->
+            <div class="form-section">
+                <div class="fs-title">📋 المعلومات الأساسية</div>
+                <div class="form-group">
+                    <label class="form-label">
+                        اسم المنتج <span class="required">*</span>
+                    </label>
+                    <input type="text" name="name" class="form-control"
+                           placeholder="مثال: هاتف ذكي Galaxy X20" required>
+                    <div class="form-hint">اكتب اسماً واضحاً ومميزاً للمنتج</div>
+                </div>
+                <div class="two-cols">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label">
+                            السعر (دولار) <span class="required">*</span>
+                        </label>
+                        <input type="number" name="price" class="form-control"
+                               step="0.01" min="0.01" placeholder="0.00" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label">التصنيف</label>
+                        <input type="text" class="form-control"
+                               placeholder="مثال: إلكترونيات" disabled
+                               style="background:var(--light);color:var(--gray);">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Description Section -->
+            <div class="form-section">
+                <div class="fs-title">📝 الوصف والتفاصيل</div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label class="form-label">
+                        وصف المنتج <span class="required">*</span>
+                    </label>
+                    <textarea name="details" class="form-control" rows="5"
+                              placeholder="اكتب وصفاً تفصيلياً للمنتج، مميزاته، مواصفاته..." required></textarea>
+                    <div class="form-hint">وصف جيد يساعد العملاء على اتخاذ قرار الشراء</div>
+                </div>
+            </div>
+
+            <!-- Image Section -->
+            <div class="form-section" style="margin-bottom:0;">
+                <div class="fs-title">🖼 صورة المنتج</div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label class="form-label">
+                        رفع الصورة <span class="required">*</span>
+                    </label>
+                    <input type="file" id="img-input" name="image_file"
+                           class="form-control"
+                           accept=".jpg,.jpeg,.png,.gif" required>
+                    <div class="form-hint">الصيغ المقبولة: JPG، PNG، GIF — الحجم الأقصى 5MB</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer" style="display:flex;gap:12px;justify-content:flex-end;">
+            <a href="{{ url_for('product_list') }}" class="btn btn-ghost">
+                ← إلغاء والعودة
+            </a>
+            <button type="submit" class="btn btn-success btn-lg">
+                ✓ حفظ وإضافة المنتج
+            </button>
+        </div>
+    </div>
+
+    <!-- Right: Preview + Tips -->
+    <div style="display:flex;flex-direction:column;gap:20px;">
+
+        <!-- Image Preview -->
+        <div class="card">
+            <div class="card-header">
+                <div style="font-size:14px;font-weight:800;color:var(--dark);">🖼 معاينة الصورة</div>
+            </div>
+            <div class="card-body" style="padding:16px;">
+                <div class="img-preview-box" id="img-box"
+                     onclick="document.getElementById('img-input').click()">
+                    <img id="img-preview" class="preview-img" src="" alt="معاينة">
+                    <div id="img-placeholder">
+                        <div class="ipb-icon">📷</div>
+                        <div class="ipb-title">اضغط لاختيار صورة</div>
+                        <div class="ipb-sub">أو اختر من خلال الحقل أعلاه</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tips -->
+        <div class="tips-card">
+            <div class="tips-header">💡 نصائح لإضافة منتج مميز</div>
+            <div class="tip-item">
+                <span class="tip-icon">✏️</span>
+                <span>اختر اسماً واضحاً ومحدداً يصف المنتج بدقة</span>
+            </div>
+            <div class="tip-item">
+                <span class="tip-icon">💰</span>
+                <span>حدد سعراً تنافسياً ومناسباً لجودة المنتج</span>
+            </div>
+            <div class="tip-item">
+                <span class="tip-icon">📸</span>
+                <span>استخدم صورة واضحة بجودة عالية وخلفية نظيفة</span>
+            </div>
+            <div class="tip-item">
+                <span class="tip-icon">📝</span>
+                <span>اكتب وصفاً تفصيلياً يشمل المواصفات والمميزات</span>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+</form>
+{% endblock %}

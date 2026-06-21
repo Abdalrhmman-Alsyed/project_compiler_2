@@ -1,0 +1,44 @@
+package ast.python.declarations;
+
+import ast.python.PythonNode;
+import ast.python.expressions.IdentifierNode;
+import ast.python.visitors.PythonASTVisitor;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class ImportNode extends PythonNode {
+    private String module;
+    private List<IdentifierNode> imports;
+    private boolean isFromImport;
+    private boolean importAll; // import *
+
+    public ImportNode(int line, int column) {
+        super(line, column);
+        this.imports = new ArrayList<>();
+    }
+
+    public ImportNode(int line, int column, String module) {
+        this(line, column);
+        this.module = module;
+        this.isFromImport = false;
+    }
+
+    public String getModule() { return module; }
+    public void setModule(String module) { this.module = module; }
+
+    public List<IdentifierNode> getImports() { return imports; }
+    public void addImport(IdentifierNode importName) { imports.add(importName); }
+    public void addImports(List<IdentifierNode> imports) { this.imports.addAll(imports); }
+
+    public boolean isFromImport() { return isFromImport; }
+    public void setFromImport(boolean fromImport) { isFromImport = fromImport; }
+
+    public boolean isImportAll() { return importAll; }
+    public void setImportAll(boolean importAll) { this.importAll = importAll; }
+
+    @Override
+    public <T> T accept(PythonASTVisitor<T> visitor) {
+        return visitor.visit(this);
+    }
+}

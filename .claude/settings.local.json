@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(java -cp \"out;libs/antlr-4.13.2-complete.jar\" Main)",
+      "Bash(python -c \"import flask; print\\('Flask', flask.__version__\\)\")",
+      "Bash(java -Dfile.encoding=UTF-8 -cp \"out;libs/antlr-4.13.2-complete.jar\" Main)",
+      "Bash(python -c ' *)",
+      "Bash(timeout 5 python -c ' *)"
+    ]
+  }
+}

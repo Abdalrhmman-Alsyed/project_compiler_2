@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+{% block premature %}Premature block before extends{% endblock %}
+{% extends "error_demo.html" %}
+{% extends "error_demo.html" %}
+{% block content %}
+  <h1>{{ title | safe }}</h1>
+  <p>{{ products | unknownFilter }}</p>
+  {% set products = [] %}
+  {% set products = "other" %}
+  {% for item in products %}
+    <li>{{ item | safe }}</li>
+  {% endfor %}
+  <p>{{ item.name }}</p>
+  {% for empty_item in [] %}
+    <li>{{ empty_item }}</li>
+  {% endfor %}
+  {% block content %}Duplicate block content{% endblock %}
+  {% include "ghost_template.html" %}
+{% endblock %}
+</html>
