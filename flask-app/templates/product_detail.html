@@ -2,15 +2,19 @@
 {% block title %}{{ product.name }}{% endblock %}
 
 {% block page_header %}
-<div class="page-header" style="padding:32px;">
-    <div style="max-width:1320px;margin:0 auto;text-align:right;">
-        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#64748b;">
-            <a href="{{ url_for('product_list') }}" style="color:#60a5fa;text-decoration:none;font-weight:600;">🏠 المتجر</a>
-            <span style="color:#334155;">›</span>
-            <a href="{{ url_for('product_list') }}" style="color:#60a5fa;text-decoration:none;font-weight:600;">المنتجات</a>
-            <span style="color:#334155;">›</span>
-            <span style="color:#94a3b8;">{{ product.name }}</span>
-        </div>
+<div class="page-header">
+    <div class="ph-eyebrow">📦 تفاصيل المنتج</div>
+    <h1>{{ product.name }}</h1>
+    <p class="ph-sub" style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;">
+        <a href="{{ url_for('product_list') }}" style="color:#60a5fa;text-decoration:none;font-weight:600;">🏠 المتجر</a>
+        <span style="color:#334155;">›</span>
+        <a href="{{ url_for('product_list') }}" style="color:#60a5fa;text-decoration:none;font-weight:600;">المنتجات</a>
+        <span style="color:#334155;">›</span>
+        <span style="color:#94a3b8;">{{ product.name[:30] }}{% if product.name|length > 30 %}…{% endif %}</span>
+    </p>
+    <div class="ph-actions">
+        <span class="btn btn-dark btn-lg" style="cursor:default;">💰 {{ product.price }} دولار</span>
+        <span class="btn" style="background:rgba(5,150,105,.15);color:#34d399;border:1px solid rgba(52,211,153,.3);cursor:default;">✓ متاح في المتجر</span>
     </div>
 </div>
 {% endblock %}
@@ -44,6 +48,7 @@
     position: absolute;
     top: 16px; right: 16px;
     background: rgba(15,23,42,.7);
+    -webkit-backdrop-filter: blur(6px);
     backdrop-filter: blur(6px);
     color: #e2e8f0;
     font-size: 12px;

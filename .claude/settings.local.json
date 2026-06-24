@@ -5,7 +5,10 @@
       "Bash(python -c \"import flask; print\\('Flask', flask.__version__\\)\")",
       "Bash(java -Dfile.encoding=UTF-8 -cp \"out;libs/antlr-4.13.2-complete.jar\" Main)",
       "Bash(python -c ' *)",
-      "Bash(timeout 5 python -c ' *)"
+      "Bash(timeout 5 python -c ' *)",
+      "Bash(java \"-Dfile.encoding=UTF-8\" -cp \"out;libs/antlr-4.13.2-complete.jar\" Main)",
+      "Bash(python -c \"from app import app; c = app.test_client\\(\\); r = c.get\\('/'\\); print\\('index:', r.status_code\\); r2 = c.get\\('/compiler'\\); print\\('compiler:', r2.status_code\\)\")",
+      "PowerShell(cd \"C:\\\\Users\\\\abdal\\\\Desktop\\\\New folder \\(9\\)\\\\flask-compiler-python-main\"; $out = & java -cp \"out;libs/antlr-4.13.2-complete.jar\" Main; $text = $out -join \"`n\"; $start = $text.IndexOf\\('--- AST ---'\\); if \\($start -ge 0\\) { $cs = $start + '--- AST ---'.Length; $next = $text.IndexOf\\(\"`n---\", $cs\\); $section = if \\($next -ge 0\\) { $text.Substring\\($cs, $next - $cs\\).Trim\\(\\) } else { $text.Substring\\($cs\\).Trim\\(\\) }; $lines = $section -split \"`n\"; Write-Host \"AST lines: $\\($lines.Count\\)\"; $lines | Select-Object -First 15 } else { Write-Host \"AST section NOT found\" })"
     ]
   }
 }

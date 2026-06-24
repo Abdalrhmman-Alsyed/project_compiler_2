@@ -105,6 +105,42 @@ def _parse_bridge(text):
             bridge.append({'template': tmpl, 'vars': vars_})
     return bridge
 
+def _parse_ast(text):
+    """Extract Python AST tree section from Main.java output."""
+    marker = '--- AST ---'
+    start = text.find(marker)
+    if start == -1:
+        return ''
+    content_start = start + len(marker)
+    next_marker = text.find('\n---', content_start)
+    section = text[content_start:next_marker].strip() if next_marker != -1 else text[content_start:].strip()
+    lines = section.splitlines()
+    if len(lines) > 300:
+        section = '\n'.join(lines[:300]) + f'\n... (+{len(lines)-300} سطر إضافي)'
+    return section
+
+
+def _parse_symbol_table(text):
+    """Extract Python Symbol Table section from Main.java output."""
+    marker = '--- Symbol Table ---'
+    start = text.find(marker)
+    if start == -1:
+        return ''
+    content_start = start + len(marker)
+    # The symbol table content itself starts with '===...DETAILED SCOPE TREE...'
+    # The section ends when the Python Semantic Analysis block begins.
+    end = -1
+    for end_marker in ('PYTHON SEMANTIC', 'SEMANTIC ERROR DEMO', 'GENERATOR:'):
+        pos = text.find(end_marker, content_start)
+        if pos != -1 and (end == -1 or pos < end):
+            end = pos
+    section = text[content_start:end].strip() if end != -1 else text[content_start:].strip()
+    lines = section.splitlines()
+    if len(lines) > 200:
+        section = '\n'.join(lines[:200]) + f'\n... (+{len(lines)-200} سطر إضافي)'
+    return section
+
+
 # ── Routes: Store ──────────────────────────────────────────────────────────────
 
 @app.route('/')
@@ -175,18 +211,20 @@ def delete_product(product_id):
 @app.route('/compiler', methods=['GET', 'POST'])
 def compiler_page():
     if request.method == 'GET':
-        return render_template('compiler.html', ran=False)
+        return render_template('compiler.html', ran=False, ast_text='', symbol_table_text='')
 
     # Run the Java compiler
     sep = ';' if sys.platform == 'win32' else ':'
     cp  = f'out{sep}libs/antlr-4.13.2-complete.jar'
 
-    error_msg      = None
-    python_errors  = []
-    python_warnings= []
-    jinja_errors   = []
-    jinja_warnings = []
-    bridge         = []
+    error_msg         = None
+    python_errors     = []
+    python_warnings   = []
+    jinja_errors      = []
+    jinja_warnings    = []
+    bridge            = []
+    ast_text          = ''
+    symbol_table_text = ''
 
     try:
         result = subprocess.run(
@@ -218,6 +256,11 @@ def compiler_page():
         # Parse Generator bridge
         bridge = _parse_bridge(full)
 
+        # Parse AST tree and Symbol Table from full output
+        # (both sections appear before SEMANTIC ERROR DEMO, not inside py_section)
+        ast_text          = _parse_ast(full)
+        symbol_table_text = _parse_symbol_table(full)
+
     except FileNotFoundError:
         error_msg = "تعذّر العثور على Java — تأكد أن Java 17+ مثبتة وموجودة في PATH"
     except subprocess.TimeoutExpired:
@@ -227,13 +270,15 @@ def compiler_page():
 
     return render_template(
         'compiler.html',
-        ran             = True,
-        error_msg       = error_msg,
-        python_errors   = python_errors,
-        python_warnings = python_warnings,
-        jinja_errors    = jinja_errors,
-        jinja_warnings  = jinja_warnings,
-        bridge          = bridge,
+        ran               = True,
+        error_msg         = error_msg,
+        python_errors     = python_errors,
+        python_warnings   = python_warnings,
+        jinja_errors      = jinja_errors,
+        jinja_warnings    = jinja_warnings,
+        bridge            = bridge,
+        ast_text          = ast_text,
+        symbol_table_text = symbol_table_text,
     )
 
 

@@ -47,3 +47,18 @@ def calls_mystery():
 def loop_control_errors():
     break
     continue
+
+def too_many_params(a, b, c, d, e, f, g, h):
+    return a + b
+
+def compare_none(x):
+    if x == None:
+        return True
+    if x != None:
+        return False
+
+def compare_bool(flag):
+    if flag == True:
+        return 1
+    if flag == False:
+        return 0

@@ -22,7 +22,7 @@ import java.util.*;
  *   7. Division by zero (constant literal)
  *   8. Unreachable code after 'return'
  *
- * WARNINGS (9-15):
+ * WARNINGS (9-18):
  *   9.  Duplicate import of same module
  *  10.  Assignment overwrites a function name
  *  11.  Assignment shadows a Python built-in name
@@ -30,6 +30,9 @@ import java.util.*;
  *  13.  Call to a name that cannot be resolved
  *  14.  Empty function body (only 'pass')
  *  15.  Name used before it is assigned in local scope
+ *  16.  Function has too many parameters (> 7)
+ *  17.  Comparison with None using == / != instead of is / is not
+ *  18.  Comparison with True/False using == / != instead of truthiness
  */
 public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
 
@@ -134,7 +137,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
 
     public void printReport() {
         System.out.println("\n" + "=".repeat(60));
-        System.out.println("  PYTHON SEMANTIC ANALYSIS  (15 checks)");
+        System.out.println("  PYTHON SEMANTIC ANALYSIS  (18 checks)");
         System.out.println("=".repeat(60));
 
         if (errors.isEmpty() && warnings.isEmpty()) {
@@ -210,6 +213,13 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
                 && blk.getStatements().size() == 1
                 && blk.getStatements().get(0) instanceof PassNode) {
             warning("Function '" + n.getName() + "' has an empty body (only 'pass')",
+                    n.getLine(), n.getColumn());
+        }
+
+        // Check 16: too many parameters (> 7)
+        if (n.getParameters().size() > 7) {
+            warning("Function '" + n.getName() + "' has too many parameters ("
+                    + n.getParameters().size() + ") — consider using a dict or dataclass",
                     n.getLine(), n.getColumn());
         }
 
@@ -427,6 +437,24 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
             error("Division by zero detected (constant divisor is 0)",
                     n.getLine(), n.getColumn());
         }
+
+        // Check 17: == None or != None (use 'is None' / 'is not None' instead)
+        if ((op.equals("==") || op.equals("!="))
+                && (n.getRight() instanceof NoneLiteralNode
+                 || n.getLeft()  instanceof NoneLiteralNode)) {
+            warning("Use 'is None' or 'is not None' instead of '" + op + " None'",
+                    n.getLine(), n.getColumn());
+        }
+
+        // Check 18: == True/False or != True/False (use truthiness instead)
+        if ((op.equals("==") || op.equals("!="))
+                && (n.getRight() instanceof BoolLiteralNode
+                 || n.getLeft()  instanceof BoolLiteralNode)) {
+            warning("Comparing with True/False using '" + op
+                    + "' is not Pythonic — use the value directly (e.g. 'if flag:')",
+                    n.getLine(), n.getColumn());
+        }
+
         return null;
     }
 

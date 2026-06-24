@@ -177,6 +177,7 @@
         ═══════════════════════════════════════════════ */
         .navbar {
             background: var(--nav-bg);
+            -webkit-backdrop-filter: blur(12px);
             backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--nav-border);
             box-shadow: 0 1px 0 rgba(0,0,0,.05), var(--shadow-sm);
@@ -761,7 +762,7 @@
                 <a href="{{ url_for('compiler_page') }}"
                    class="nav-link nav-compiler {% if request.endpoint == 'compiler_page' %}active{% endif %}">
                     ⚙ المحلل الدلالي
-                    <span class="nav-count">25</span>
+                    <span class="nav-count">28</span>
                 </a>
             </li>
         </ul>
@@ -804,7 +805,7 @@
             <ul>
                 <li><strong>اللغة:</strong> Java 17 + ANTLR4 v4.13.2</li>
                 <li><strong>الواجهة:</strong> Python Flask 3 + Jinja2</li>
-                <li><strong>الفحوصات:</strong> 15 Python + 10 Jinja2 = 25</li>
+                <li><strong>الفحوصات:</strong> 18 Python + 10 Jinja2 = 28</li>
                 <li><strong>المادة:</strong> Compilers 2025/2026</li>
             </ul>
         </div>
@@ -823,10 +824,12 @@
 <script>
 /* ── Tab switcher ── */
 function switchTab(id) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    document.getElementById('tab-' + id).classList.add('active');
-    document.getElementById('panel-' + id).classList.add('active');
+    document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+    var btn = document.getElementById('tab-' + id);
+    var pan = document.getElementById('panel-' + id);
+    if (btn) btn.classList.add('active');
+    if (pan) pan.classList.add('active');
 }
 
 /* ── Dark Mode ── */

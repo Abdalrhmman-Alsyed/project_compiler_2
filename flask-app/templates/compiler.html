@@ -15,7 +15,7 @@
             <span class="ch-pill cp-antlr">ANTLR4</span>
             <span class="ch-pill cp-python">Python AST</span>
             <span class="ch-pill cp-jinja">Jinja2 Parse Tree</span>
-            <span class="ch-pill cp-checks">25 Semantic Checks</span>
+            <span class="ch-pill cp-checks">28 Semantic Checks</span>
         </div>
     </div>
 </div>
@@ -323,19 +323,24 @@ html:not(.dark) .cc-wrn-j2 .cs-num { color: #059669; }
    TABS (redesigned)
 ═══════════════════════════════════════════════════════════ */
 .tabs {
-    display: flex; gap: 6px;
+    display: flex; gap: 4px;
     border-bottom: 2px solid var(--border);
     margin-bottom: 24px;
-    flex-wrap: wrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    white-space: nowrap;
 }
+.tabs::-webkit-scrollbar { display: none; }
 .tab-btn {
-    padding: 10px 18px;
+    padding: 10px 16px;
     border: none; background: transparent;
     font-family: 'Tajawal', sans-serif;
-    font-size: 14px; font-weight: 700;
+    font-size: 13px; font-weight: 700;
     color: var(--gray); cursor: pointer;
     border-bottom: 2px solid transparent;
     margin-bottom: -2px;
+    flex-shrink: 0;
     transition: all var(--transition);
     border-radius: 8px 8px 0 0;
     display: flex; align-items: center; gap: 7px;
@@ -412,6 +417,104 @@ html:not(.dark) .cc-wrn-j2 .cs-num { color: #059669; }
 }
 .check-row:hover { background: var(--primary-light); }
 .check-num { font-size: 11px; color: var(--gray); font-weight: 700; min-width: 22px; }
+
+/* ═══════════════════════════════════════════════════════════
+   LINE-NUMBER GUTTER
+═══════════════════════════════════════════════════════════ */
+.editor-wrap {
+    display: flex; flex: 1; overflow: hidden;
+}
+.ln-gutter {
+    padding: 16px 6px 16px 4px;
+    background: #0d1117;
+    color: #484f58;
+    font-family: 'Courier New', monospace;
+    font-size: 13px; line-height: 1.7;
+    min-width: 34px; text-align: right;
+    user-select: none;
+    border-left: 1px solid #21262d;
+    overflow: hidden; flex-shrink: 0;
+    white-space: pre;
+}
+.ln-active-bg { color: #e6edf3; }
+
+/* ═══════════════════════════════════════════════════════════
+   FIX HINTS
+═══════════════════════════════════════════════════════════ */
+.fix-hint {
+    padding: 4px 10px 6px 28px;
+    margin-top: -5px; margin-bottom: 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px; color: #79c0ff;
+    display: flex; align-items: flex-start; gap: 5px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   AST TREE VIEWER
+═══════════════════════════════════════════════════════════ */
+.ast-viewer {
+    background: #0d1117;
+    border-radius: 0 0 10px 10px;
+    overflow: auto;
+    max-height: 580px;
+    padding: 20px 20px 24px;
+    font-family: 'Courier New', monospace;
+    font-size: 12.5px;
+    line-height: 1.65;
+    color: #6e7681;
+}
+.ast-line { display: block; white-space: pre; }
+.ast-line:hover { background: rgba(255,255,255,.04); border-radius: 3px; }
+.ast-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 20px;
+    background: #161b22;
+    border-bottom: 1px solid #21262d;
+    font-family: 'Courier New', monospace;
+    font-size: 11px; color: #6e7681;
+    gap: 12px;
+}
+.ast-stat { color: #58a6ff; font-weight: 700; }
+.ast-legend { display: flex; gap: 14px; flex-wrap: wrap; }
+.ast-litem { display: flex; align-items: center; gap: 4px; font-size: 10px; }
+.ast-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+/* node colors */
+.an-program  { color: #e6edf3; font-weight: 700; }
+.an-function { color: #7ee787; font-weight: 700; }
+.an-import   { color: #79c0ff; }
+.an-assign   { color: #d2a520; }
+.an-return   { color: #f85149; }
+.an-call     { color: #ffa657; }
+.an-control  { color: #c084fc; font-weight: 600; }
+.an-param    { color: #a5d6ff; }
+.an-ident    { color: #79c0ff; }
+.an-literal  { color: #a5d6ff; }
+.an-bool     { color: #ff7b72; }
+.an-binary   { color: #e6edf3; }
+.an-deco     { color: #7ee787; }
+.an-other    { color: #8b949e; }
+.ast-empty {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    min-height: 220px; color: #484f58;
+    font-family: 'Courier New', monospace; text-align: center;
+    gap: 12px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PDF / PRINT STYLES
+═══════════════════════════════════════════════════════════ */
+@media print {
+    nav, header, .compiler-hero, .pipeline-wrap,
+    .live-section, .run-section, .tabs,
+    .sb-actions, .ch-pills, #toast-container { display: none !important; }
+    .tab-panel { display: block !important; }
+    body { background: #fff !important; color: #000 !important; }
+    .issue-card, .cs-card { break-inside: avoid; box-shadow: none !important; }
+    .charts-row { break-inside: avoid; }
+    .compiler-stats { grid-template-columns: repeat(4,1fr) !important; }
+    .cs-card { background: #f9f9f9 !important; border-color: #ccc !important; }
+}
 
 /* ═══════════════════════════════════════════════════════════
    LIVE ANALYZER  (dark terminal style)
@@ -547,6 +650,83 @@ html:not(.dark) .live-section { background: #0d1117; border-color: #30363d; }
 .rc-1 .rc-num { color: var(--primary); }
 .rc-2 .rc-num { color: var(--secondary); }
 .rc-3 .rc-num { color: var(--success); }
+
+/* ── Pipeline steps clickable ─────────────────────────────── */
+.ps-clickable { cursor: pointer; transition: background var(--transition); border-radius: 10px; padding: 6px; margin: -6px; }
+.ps-clickable:hover .ps-circle { border-color: var(--primary); background: var(--primary-light); transform: scale(1.06); }
+.ps-clickable .ps-body .ps-tip { display: none; font-size: 9px; color: var(--primary); font-weight: 700; margin-top: 3px; }
+.ps-clickable:hover .ps-body .ps-tip { display: block; }
+
+/* ── Tab step badge ────────────────────────────────────────── */
+.tab-step-badge {
+    display: inline-flex; align-items: center;
+    background: rgba(0,0,0,.08); color: var(--gray);
+    font-size: 9px; font-weight: 900; letter-spacing: .04em;
+    padding: 1px 5px; border-radius: 4px;
+}
+.tab-btn.active .tab-step-badge { background: rgba(37,99,235,.2); color: var(--primary); }
+
+/* ── Phase context box ─────────────────────────────────────── */
+.phase-box {
+    display: flex; align-items: flex-start; gap: 16px;
+    background: var(--light); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 18px;
+    margin-bottom: 20px;
+    transition: background .25s, border-color .25s;
+}
+.phase-step {
+    font-size: 11px; font-weight: 900; font-family: monospace;
+    padding: 3px 9px; border-radius: 6px;
+    flex-shrink: 0; margin-top: 1px;
+    letter-spacing: .04em;
+}
+.ps-4a { background: rgba(52,211,153,.12); color: #059669; border: 1px solid rgba(52,211,153,.3); }
+.ps-4b { background: rgba(196,181,253,.15); color: #7c3aed; border: 1px solid rgba(196,181,253,.3); }
+.ps-2  { background: rgba(37,99,235,.1);   color: #1d4ed8; border: 1px solid rgba(37,99,235,.25); }
+.ps-3  { background: rgba(245,158,11,.1);  color: #92400e; border: 1px solid rgba(245,158,11,.25); }
+.ps-5  { background: rgba(99,102,241,.1);  color: #4338ca; border: 1px solid rgba(99,102,241,.25); }
+.ps-ref{ background: rgba(100,116,139,.1); color: var(--gray); border: 1px solid var(--border); }
+.phase-box-body .pb-title { font-size: 14px; font-weight: 800; color: var(--dark); margin-bottom: 3px; }
+.phase-box-body .pb-desc  { font-size: 12px; color: var(--gray); line-height: 1.55; }
+
+/* ── Symbol Table HTML Table ───────────────────────────────── */
+.st-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.st-table thead th {
+    background: #161b22; color: #8b949e;
+    font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .07em;
+    padding: 8px 16px; text-align: right; border-bottom: 1px solid #30363d;
+    position: sticky; top: 0; z-index: 1;
+}
+.st-table tbody tr:hover { background: rgba(255,255,255,.025); }
+.st-table td {
+    padding: 6px 16px; border-bottom: 1px solid rgba(48,54,61,.6);
+    vertical-align: middle; font-family: 'Fira Code', monospace;
+}
+.st-scope-row td {
+    background: #1c2128; color: #79c0ff; font-weight: 800; font-size: 12px;
+    padding: 10px 16px; border-top: 1px solid #30363d; letter-spacing: .03em;
+}
+.st-scope-row.sl-1 td { color: #7ee787; }
+.st-scope-row.sl-2 td { color: #d2a520; }
+.st-scope-row.sl-3 td { color: #ffa657; }
+.st-scope-row.sl-4 td { color: #c084fc; }
+.st-sym-name { color: #e6edf3; font-weight: 600; }
+.st-kind-badge {
+    display: inline-block; font-size: 9px; font-weight: 900;
+    padding: 2px 7px; border-radius: 4px; letter-spacing: .06em;
+    text-transform: uppercase; font-family: monospace;
+}
+.st-k-var  { background: rgba(121,192,255,.12); color: #79c0ff; border: 1px solid rgba(121,192,255,.25); }
+.st-k-func { background: rgba(126,231,135,.12); color: #7ee787; border: 1px solid rgba(126,231,135,.25); }
+.st-k-param{ background: rgba(210,165,32,.12);  color: #d2a520; border: 1px solid rgba(210,165,32,.25); }
+.st-k-imp  { background: rgba(192,132,252,.12); color: #c084fc; border: 1px solid rgba(192,132,252,.25); }
+.st-type-cell { color: #6e7681; font-size: 11px; }
+.st-val-cell  { color: #a5d6ff; font-size: 12px; }
+.st-empty-row td { color: #484f58; font-style: italic; font-size: 11px; }
+.st-nodata { text-align:center; padding:40px; color:#6e7681; font-size:13px; }
+
+/* ── AST connector chars ────────────────────────────────────── */
+.ast-conn { color: #30363d; user-select: none; }
 </style>
 {% endblock %}
 
@@ -566,7 +746,8 @@ html:not(.dark) .live-section { background: #0d1117; border-color: #30363d; }
                 <div class="ps-sub">تحليل الرموز</div>
             </div>
         </div>
-        <div class="pipe-step" id="pipe2">
+        <div class="pipe-step {% if ran %}ps-clickable{% endif %}" id="pipe2"
+             {% if ran %}onclick="switchTab('ast')" title="انقر لعرض شجرة AST"{% endif %}>
             <div class="ps-circle">
                 <span>🌳</span>
                 <span class="ps-num-badge">2</span>
@@ -574,9 +755,11 @@ html:not(.dark) .live-section { background: #0d1117; border-color: #30363d; }
             <div class="ps-body">
                 <div class="ps-title">AST Builder</div>
                 <div class="ps-sub">شجرة البنية</div>
+                {% if ran %}<div class="ps-tip">▶ عرض الشجرة</div>{% endif %}
             </div>
         </div>
-        <div class="pipe-step" id="pipe3">
+        <div class="pipe-step {% if ran %}ps-clickable{% endif %}" id="pipe3"
+             {% if ran %}onclick="switchTab('symtable')" title="انقر لعرض جدول الرموز"{% endif %}>
             <div class="ps-circle">
                 <span>📋</span>
                 <span class="ps-num-badge">3</span>
@@ -584,19 +767,23 @@ html:not(.dark) .live-section { background: #0d1117; border-color: #30363d; }
             <div class="ps-body">
                 <div class="ps-title">Symbol Table</div>
                 <div class="ps-sub">جدول الرموز</div>
+                {% if ran %}<div class="ps-tip">▶ عرض الجدول</div>{% endif %}
             </div>
         </div>
-        <div class="pipe-step" id="pipe4">
+        <div class="pipe-step {% if ran %}ps-clickable{% endif %}" id="pipe4"
+             {% if ran %}onclick="switchTab('python')" title="انقر لعرض الأخطاء"{% endif %}>
             <div class="ps-circle">
                 <span>🔍</span>
                 <span class="ps-num-badge">4</span>
             </div>
             <div class="ps-body">
                 <div class="ps-title">Semantic Analysis</div>
-                <div class="ps-sub">25 فحصاً دلالياً</div>
+                <div class="ps-sub">28 فحصاً دلالياً</div>
+                {% if ran %}<div class="ps-tip">▶ عرض الأخطاء</div>{% endif %}
             </div>
         </div>
-        <div class="pipe-step" id="pipe5">
+        <div class="pipe-step {% if ran %}ps-clickable{% endif %}" id="pipe5"
+             {% if ran %}onclick="switchTab('bridge')" title="انقر لعرض Generator Bridge"{% endif %}>
             <div class="ps-circle">
                 <span>🔗</span>
                 <span class="ps-num-badge">5</span>
@@ -604,6 +791,7 @@ html:not(.dark) .live-section { background: #0d1117; border-color: #30363d; }
             <div class="ps-body">
                 <div class="ps-title">Generator Bridge</div>
                 <div class="ps-sub">Python → Jinja2</div>
+                {% if ran %}<div class="ps-tip">▶ عرض النتائج</div>{% endif %}
             </div>
         </div>
     </div>
@@ -632,9 +820,12 @@ html:not(.dark) .live-section { background: #0d1117; border-color: #30363d; }
     </div>
     <div class="live-body">
         <div class="live-editor-side">
-            <div class="live-panel-header">// input — الصق الكود هنا</div>
-            <textarea class="live-textarea" id="live-code"
-                placeholder="# مثال Python:&#10;def greet(name, name):  # duplicate param&#10;    x = 5&#10;    return x / 0           # div by zero&#10;&#10;# أو اكتب كودك الخاص وجرّب!"></textarea>
+            <div class="live-panel-header">// input — الصق الكود هنا &nbsp;<span style="color:#484f58;font-size:10px;">Ctrl+Enter لتشغيل</span></div>
+            <div class="editor-wrap">
+                <div class="ln-gutter" id="ln-gutter">1</div>
+                <textarea class="live-textarea" id="live-code"
+                    placeholder="# مثال Python:&#10;def greet(name, name):  # duplicate param&#10;    x = 5&#10;    return x / 0           # div by zero&#10;&#10;# أو اكتب كودك الخاص وجرّب!"></textarea>
+            </div>
         </div>
         <div class="live-results-side">
             <div class="live-panel-header">// output — نتائج التحليل</div>
@@ -662,8 +853,8 @@ html:not(.dark) .live-section { background: #0d1117; border-color: #30363d; }
         اضغط تشغيل لتنفيذ مترجم Java على الكود الحقيقي وعرض جميع الأخطاء الدلالية
     </p>
     <div class="run-cards">
-        <div class="run-card rc-1"><div class="rc-num">25</div><div class="rc-lbl">نوع فحص دلالي</div></div>
-        <div class="run-card rc-2"><div class="rc-num">15</div><div class="rc-lbl">فحوصات Python</div></div>
+        <div class="run-card rc-1"><div class="rc-num">28</div><div class="rc-lbl">نوع فحص دلالي</div></div>
+        <div class="run-card rc-2"><div class="rc-num">18</div><div class="rc-lbl">فحوصات Python</div></div>
         <div class="run-card rc-3"><div class="rc-num">10</div><div class="rc-lbl">فحوصات Jinja2</div></div>
     </div>
     <form method="POST" action="{{ url_for('compiler_page') }}">
@@ -787,29 +978,36 @@ html:not(.dark) .live-section { background: #0d1117; border-color: #30363d; }
         <span class="sb-chip sc-err">⛔ {{ total_e }} خطأ</span>
         <span class="sb-chip sc-wrn">⚠ {{ total_w }} تحذير</span>
         <span class="sb-chip sc-total">📊 {{ total }} مشكلة</span>
-        <span class="sb-chip sc-ok">✅ 25 فحص</span>
+        <span class="sb-chip sc-ok">✅ 28 فحص</span>
     </div>
     <div class="sb-actions">
         <button class="btn btn-ghost btn-sm" onclick="exportJSON()">⬇ JSON</button>
+        <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨 PDF</button>
         <form method="POST" action="{{ url_for('compiler_page') }}" style="margin:0;">
             <button type="submit" class="btn btn-ghost btn-sm">↻ إعادة</button>
         </form>
     </div>
 </div>
 
-<!-- Tabs -->
+<!-- Tabs — مرتبة بترتيب Pipeline -->
 <div class="tabs">
+    <button class="tab-btn" id="tab-ast" onclick="switchTab('ast')">
+        <span class="tab-step-badge">2</span> 🌳 AST
+    </button>
+    <button class="tab-btn" id="tab-symtable" onclick="switchTab('symtable')">
+        <span class="tab-step-badge">3</span> 📊 الرموز
+    </button>
     <button class="tab-btn active" id="tab-python" onclick="switchTab('python')">
-        🐍 Python <span class="tab-count">{{ py_all }}</span>
+        <span class="tab-step-badge">4a</span> 🐍 Python <span class="tab-count">{{ py_all }}</span>
     </button>
     <button class="tab-btn" id="tab-jinja" onclick="switchTab('jinja')">
-        🎨 Jinja2 <span class="tab-count tc-warn">{{ j2_all }}</span>
+        <span class="tab-step-badge">4b</span> 🎨 Jinja2 <span class="tab-count tc-warn">{{ j2_all }}</span>
     </button>
     <button class="tab-btn" id="tab-bridge" onclick="switchTab('bridge')">
-        🔗 Generator Bridge <span class="tab-count" style="background:var(--success);">{{ bridge|length }}</span>
+        <span class="tab-step-badge">5</span> 🔗 Bridge <span class="tab-count" style="background:var(--success);">{{ bridge|length }}</span>
     </button>
     <button class="tab-btn" id="tab-checks" onclick="switchTab('checks')">
-        📋 الفحوصات <span class="tab-count" style="background:var(--secondary);">25</span>
+        ✅ الفحوصات <span class="tab-count" style="background:var(--secondary);">28</span>
     </button>
 </div>
 
@@ -827,6 +1025,13 @@ html:not(.dark) .live-section { background: #0d1117; border-color: #30363d; }
             </div>
         </div>
         <div class="card-body">
+            <div class="phase-box">
+                <span class="phase-step ps-4a">الخطوة 4a</span>
+                <div class="phase-box-body">
+                    <div class="pb-title">التحليل الدلالي — Python</div>
+                    <div class="pb-desc">يتحقق المحلل من 18 قاعدة دلالية لكود Python: أخطاء كـ return خارج دالة وتكرار الأسماء، وتحذيرات كمتغيرات غير مستخدمة واستدعاء دوال غير معرَّفة. الملف المُحلَّل: <code>test/python/error_demo.txt</code></div>
+                </div>
+            </div>
             {% set py_issues = python_errors + python_warnings %}
             {% if py_issues %}
             <div class="issue-list">
@@ -863,6 +1068,13 @@ html:not(.dark) .live-section { background: #0d1117; border-color: #30363d; }
             </div>
         </div>
         <div class="card-body">
+            <div class="phase-box">
+                <span class="phase-step ps-4b">الخطوة 4b</span>
+                <div class="phase-box-body">
+                    <div class="pb-title">التحليل الدلالي — Jinja2</div>
+                    <div class="pb-desc">يُطبَّق نفس مبدأ التحليل الدلالي على قوالب Jinja2: 10 فحوصات تشمل أسماء blocks المكررة وfلاتر غير معروفة ومتغيرات for خارج حلقتها. الملف المُحلَّل: <code>test/jinja/error_demo.html</code></div>
+                </div>
+            </div>
             {% set j2_issues = jinja_errors + jinja_warnings %}
             {% if j2_issues %}
             <div class="issue-list">
@@ -894,7 +1106,16 @@ html:not(.dark) .live-section { background: #0d1117; border-color: #30363d; }
                 المتغيرات المُمرَّرة من Python لكل قالب عبر <code style="background:var(--light);padding:1px 5px;border-radius:3px;">render_template()</code>
             </div>
         </div>
-        <div class="card-body" style="padding:0;">
+        <div class="card-body">
+            <div class="phase-box">
+                <span class="phase-step ps-5">الخطوة 5</span>
+                <div class="phase-box-body">
+                    <div class="pb-title">Generator Bridge — ربط Python بـ Jinja2</div>
+                    <div class="pb-desc">يستخرج المحلل كل استدعاء <code>render_template()</code> في كود Python ويُعدّد المتغيرات التي تُمرَّر لكل قالب — هذا هو "الجسر" الذي يربط طبقة Python بطبقة Jinja2 في التطبيق.</div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body" style="padding:0;border-top:1px solid var(--border);">
             {% if bridge %}
             <table class="bridge-table">
                 <thead><tr>
@@ -936,17 +1157,24 @@ html:not(.dark) .live-section { background: #0d1117; border-color: #30363d; }
 
 <!-- Tab: Checks Reference -->
 <div class="tab-panel" id="panel-checks">
+    <div class="phase-box" style="margin-bottom:20px;">
+        <span class="phase-step ps-ref">مرجع</span>
+        <div class="phase-box-body">
+            <div class="pb-title">قائمة الفحوصات الدلالية — 28 فحصاً</div>
+            <div class="pb-desc">هذا الجدول يستعرض جميع الفحوصات التي يُجريها المحلل: 18 فحصاً لـ Python (8 أخطاء + 10 تحذيرات) و10 فحوصات لـ Jinja2 (3 أخطاء + 7 تحذيرات). يمكن استخدامه شرحاً للمعيد أو توثيقاً للمشروع.</div>
+        </div>
+    </div>
     <div class="checks-grid">
         <div class="card">
             <div class="card-header" style="display:flex;align-items:center;gap:10px;">
                 <span style="font-size:20px;">🐍</span>
                 <div>
                     <div style="font-size:15px;font-weight:800;">فحوصات Python</div>
-                    <div style="font-size:11px;color:var(--gray);">15 نوع فحص دلالي</div>
+                    <div style="font-size:11px;color:var(--gray);">18 نوع فحص دلالي</div>
                 </div>
                 <div style="margin-right:auto;display:flex;gap:6px;">
                     <span class="badge badge-red">8 أخطاء</span>
-                    <span class="badge badge-yellow">7 تحذيرات</span>
+                    <span class="badge badge-yellow">10 تحذيرات</span>
                 </div>
             </div>
             <div class="card-body">
@@ -966,6 +1194,9 @@ html:not(.dark) .live-section { background: #0d1117; border-color: #30363d; }
                     ('WARNING',13,'استدعاء دالة غير معرَّفة','call undefined function'),
                     ('WARNING',14,'جسم دالة فارغ','empty function body (pass only)'),
                     ('WARNING',15,'استخدام متغير قبل تعيينه','use before assignment'),
+                    ('WARNING',16,'دالة بمعاملات كثيرة (> 7)','too many parameters (> 7)'),
+                    ('WARNING',17,'مقارنة بـ None بدل is None','== None instead of is None'),
+                    ('WARNING',18,'مقارنة بـ True/False بدل truthiness','== True/False instead of truthiness'),
                 ] %}
                 <div class="check-row">
                     <span class="issue-tag {{ 'tag-error' if sev=='ERROR' else 'tag-warning' }}" style="font-size:8px;padding:2px 5px;">{{ sev[:3] }}</span>
@@ -1017,16 +1248,96 @@ html:not(.dark) .live-section { background: #0d1117; border-color: #30363d; }
     </div>
 </div>
 
+<!-- Tab: AST Tree -->
+<div class="tab-panel" id="panel-ast">
+    <div class="card" style="overflow:hidden;">
+        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+            <div>
+                <div style="font-size:15px;font-weight:800;">🌳 شجرة البنية المجردة — Python AST</div>
+                <div style="font-size:12px;color:var(--gray);margin-top:2px;font-family:monospace;">
+                    Abstract Syntax Tree · بُنيت بواسطة PythonASTBuilderVisitor + ANTLR4
+                </div>
+            </div>
+            <div style="font-size:11px;color:var(--gray);font-family:monospace;">test/python/error_demo.txt</div>
+        </div>
+        <div class="card-body">
+            <div class="phase-box">
+                <span class="phase-step ps-2">الخطوة 2</span>
+                <div class="phase-box-body">
+                    <div class="pb-title">بناء شجرة البنية المجردة — AST</div>
+                    <div class="pb-desc">بعد التحليل اللغوي (Parse Tree)، يتجوّل الـ Visitor على الشجرة ويبني AST مبسَّطاً يمثّل البنية المنطقية للكود: دوال ومتغيرات وتعبيرات واستدعاءات — بدون تفاصيل النحو الزائدة.</div>
+                </div>
+            </div>
+        </div>
+        {% if ast_text %}
+        <div class="ast-header">
+            <span>// AST Output — انقر على سطر لعرضه</span>
+            <div class="ast-legend">
+                <span class="ast-litem"><span class="ast-dot" style="background:#7ee787;"></span> Function</span>
+                <span class="ast-litem"><span class="ast-dot" style="background:#79c0ff;"></span> Import/Ident</span>
+                <span class="ast-litem"><span class="ast-dot" style="background:#d2a520;"></span> Assignment</span>
+                <span class="ast-litem"><span class="ast-dot" style="background:#f85149;"></span> Return</span>
+                <span class="ast-litem"><span class="ast-dot" style="background:#ffa657;"></span> Call</span>
+                <span class="ast-litem"><span class="ast-dot" style="background:#c084fc;"></span> Control</span>
+            </div>
+        </div>
+        <div class="ast-viewer" id="ast-viewer"></div>
+        <script id="ast-raw" type="application/json">{{ ast_text | tojson }}</script>
+        {% else %}
+        <div class="ast-empty">
+            <div style="font-size:36px;">🌳</div>
+            <div>شغّل التحليل الكامل لعرض شجرة AST</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Tab: Symbol Table -->
+<div class="tab-panel" id="panel-symtable">
+    <div class="card" style="overflow:hidden;">
+        <div class="card-header">
+            <div style="font-size:15px;font-weight:800;">📊 جدول الرموز — Symbol Table</div>
+            <div style="font-size:12px;color:var(--gray);margin-top:4px;">
+                الدوال والمتغيرات المُعرَّفة · بُني بواسطة SymbolTable.java
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="phase-box">
+                <span class="phase-step ps-3">الخطوة 3</span>
+                <div class="phase-box-body">
+                    <div class="pb-title">بناء جدول الرموز — Symbol Table</div>
+                    <div class="pb-desc">يُجمع المحلل كل الأسماء المُعرَّفة (دوال، متغيرات، معاملات) مع نطاقاتها (scope) ونوع كل منها. يُستخدَم هذا الجدول لاحقاً في التحليل الدلالي للتحقق من الاستخدام السليم للأسماء.</div>
+                </div>
+            </div>
+        </div>
+        {% if symbol_table_text %}
+        <div class="ast-header" style="border-top:none;">
+            <span>// Symbol Table — الرموز المعرَّفة في النطاقات</span>
+            <span style="font-size:11px;color:var(--gray);">{{ symbol_table_text.splitlines()|length }} سطر</span>
+        </div>
+        <div id="symtable-container" style="overflow:auto;max-height:620px;background:#0d1117;border-radius:0 0 12px 12px;"></div>
+        <script id="symtable-raw" type="application/json">{{ symbol_table_text | tojson }}</script>
+        {% else %}
+        <div class="ast-empty">
+            <div style="font-size:36px;">📊</div>
+            <div>شغّل التحليل الكامل لعرض جدول الرموز</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
 <!-- JSON data blob for export -->
 <script id="results-data" type="application/json">
-{"python_errors":{{ python_errors|tojson }},"python_warnings":{{ python_warnings|tojson }},"jinja_errors":{{ jinja_errors|tojson }},"jinja_warnings":{{ jinja_warnings|tojson }},"bridge":{{ bridge|tojson }},"summary":{"total_errors":{{ total_e }},"total_warnings":{{ total_w }},"total":{{ total }},"checks_run":25}}
+{"python_errors":{{ python_errors|tojson }},"python_warnings":{{ python_warnings|tojson }},"jinja_errors":{{ jinja_errors|tojson }},"jinja_warnings":{{ jinja_warnings|tojson }},"bridge":{{ bridge|tojson }},"summary":{"total_errors":{{ total_e }},"total_warnings":{{ total_w }},"total":{{ total }},"checks_run":28}}
 </script>
 {% endif %}
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
-/* ── Pipeline Animation ─────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════
+   PIPELINE ANIMATION
+══════════════════════════════════════════════════════════ */
 function animatePipeline() {
     ['pipe1','pipe2','pipe3','pipe4','pipe5'].forEach(function(id, i) {
         setTimeout(function() {
@@ -1043,34 +1354,33 @@ function animatePipeline() {
 {% if ran %}
 window.addEventListener('load', function() {
     setTimeout(animatePipeline, 200);
-    /* Animate chart bars */
     setTimeout(function() {
         document.querySelectorAll('.cbar-fill').forEach(function(b) {
             var w = b.dataset.w || '0';
             b.style.width = w + '%';
-            if (parseInt(w) > 5) {
-                b.querySelector('span').style.opacity = '1';
-            }
+            if (parseInt(w) > 5) b.querySelector('span').style.opacity = '1';
         });
     }, 700);
-    /* Count-up animation */
     document.querySelectorAll('.cs-num[data-count]').forEach(function(el) {
-        var target = parseInt(el.dataset.count);
-        var start  = 0;
-        var dur    = 600;
-        var step   = 16;
-        var inc    = target / (dur / step);
-        var timer  = setInterval(function() {
+        var target = parseInt(el.dataset.count), start = 0, dur = 600, step = 16;
+        var inc = target / (dur / step);
+        var timer = setInterval(function() {
             start += inc;
             if (start >= target) { start = target; clearInterval(timer); }
             el.textContent = Math.round(start);
         }, step);
     });
+    /* Render AST tree with connectors + Symbol Table as HTML table */
+    renderASTTree();
+    renderSymbolTable();
 });
 {% endif %}
 
-/* ── Live Analyzer ──────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════
+   LIVE ANALYZER — core
+══════════════════════════════════════════════════════════ */
 var liveLang = 'python';
+var debounceTimer = null;
 
 function setLang(lang) {
     liveLang = lang;
@@ -1080,20 +1390,29 @@ function setLang(lang) {
     ta.placeholder = lang === 'python'
         ? '# مثال Python:\ndef greet(name, name):  # duplicate param\n    x = 5\n    return x / 0           # div by zero\n\n# أو اكتب كودك الخاص!'
         : '{# مثال Jinja2 #}\n{{ "{% extends" }} "base.html" {{ "%}" }}\n{{ "{% extends" }} "base.html" {{ "%}" }}  {# ERROR: twice! #}\n{{ "{% block" }} body {{ "%}{% endblock %}" }}';
+    updateLineNumbers();
 }
 
 function clearLive() {
     document.getElementById('live-code').value = '';
     document.getElementById('live-results').innerHTML =
-        '<div class="live-placeholder"><div class="lp-icon">$_</div><div class="lp-text">> اضغط Run لبدء التحليل...</div></div>';
+        '<div class="live-placeholder"><div class="lp-icon">$_</div>'
+        + '<div class="lp-text">&gt; اضغط Run أو Ctrl+Enter...</div></div>';
     document.getElementById('live-status').textContent = 'ready';
+    updateLineNumbers();
+}
+
+function setStatus(msg) {
+    document.getElementById('live-status').textContent = msg;
 }
 
 function runLiveAnalysis() {
     var code = document.getElementById('live-code').value.trim();
     if (!code) { setStatus('error: no input'); return; }
     var resultsEl = document.getElementById('live-results');
-    resultsEl.innerHTML = '<div class="live-placeholder"><div><span class="spinner"></span></div><div class="lp-text">> analyzing...</div></div>';
+    resultsEl.innerHTML =
+        '<div class="live-placeholder"><div><span class="spinner"></span></div>'
+        + '<div class="lp-text">&gt; analyzing...</div></div>';
     setStatus('running...');
 
     fetch('/api/analyze', {
@@ -1104,18 +1423,130 @@ function runLiveAnalysis() {
     .then(function(r) { return r.json(); })
     .then(function(data) { renderLive(data, resultsEl); })
     .catch(function(e) {
-        resultsEl.innerHTML = '<div class="term-issue ti-err"><span class="ti-tag">ERR</span><span class="ti-msg">Connection failed: ' + e.message + '</span></div>';
+        resultsEl.innerHTML = '<div class="term-issue ti-err">'
+            + '<span class="ti-tag">ERR</span>'
+            + '<span class="ti-msg">Connection failed: ' + esc(e.message) + '</span></div>';
         setStatus('error');
     });
 }
 
-function setStatus(msg) {
-    document.getElementById('live-status').textContent = msg;
+/* ── Keyboard shortcut: Ctrl+Enter ─────────────────────── */
+document.addEventListener('DOMContentLoaded', function() {
+    var ta = document.getElementById('live-code');
+    if (!ta) return;
+
+    ta.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            e.preventDefault();
+            clearTimeout(debounceTimer);
+            runLiveAnalysis();
+        }
+    });
+
+    /* Debounce: auto-analyze 800ms after user stops typing */
+    ta.addEventListener('input', function() {
+        updateLineNumbers();
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(function() {
+            if (ta.value.trim().length > 5) runLiveAnalysis();
+        }, 800);
+    });
+
+    /* Sync line-number scroll with textarea scroll */
+    ta.addEventListener('scroll', function() {
+        var ln = document.getElementById('ln-gutter');
+        if (ln) ln.scrollTop = ta.scrollTop;
+    });
+
+    updateLineNumbers();
+});
+
+/* ── Line numbers ────────────────────────────────────────── */
+function updateLineNumbers() {
+    var ta = document.getElementById('live-code');
+    var ln = document.getElementById('ln-gutter');
+    if (!ta || !ln) return;
+    var count = ta.value ? ta.value.split('\n').length : 1;
+    var nums = '';
+    for (var i = 1; i <= count; i++) nums += i + '\n';
+    ln.textContent = nums;
+    ln.scrollTop = ta.scrollTop;
+}
+
+/* ── Click error → jump + highlight line ────────────────── */
+function highlightLine(lineNum) {
+    var ta = document.getElementById('live-code');
+    if (!ta || lineNum < 1) return;
+    var lines = ta.value.split('\n');
+    var start = 0;
+    for (var i = 0; i < lineNum - 1 && i < lines.length; i++) {
+        start += lines[i].length + 1;
+    }
+    var end = start + (lines[lineNum - 1] || '').length;
+    ta.focus();
+    ta.setSelectionRange(start, end);
+    var lineH = parseFloat(getComputedStyle(ta).lineHeight) || 22;
+    ta.scrollTop = Math.max(0, (lineNum - 4) * lineH);
+    var ln = document.getElementById('ln-gutter');
+    if (ln) ln.scrollTop = ta.scrollTop;
+    /* flash border */
+    ta.style.boxShadow = '0 0 0 2px #58a6ff';
+    setTimeout(function() { ta.style.boxShadow = ''; }, 900);
+}
+
+/* ── Fix hints map ───────────────────────────────────────── */
+var FIX_HINTS = {
+    'outside function':           'ضع هذا داخل دالة def',
+    'outside loop':               'ضع هذا داخل حلقة for أو while',
+    'defined more than once':     'غيّر اسم إحدى الدوال المكررة',
+    'Duplicate parameter':        'غيّر اسم أحد المعاملات في تعريف الدالة',
+    'division by zero':           'تأكد أن المقسوم عليه ليس صفراً ثابتاً',
+    'Unreachable code':           'احذف الكود الموجود بعد تعليمة return',
+    'assigned locally before':    'ضع تعليمة global قبل أي تعيين للمتغير',
+    'imported more than once':    'احذف الاستيراد المكرر',
+    'overwrites function':        'غيّر اسم المتغير لتجنب تغطية اسم الدالة',
+    'shadows the built-in':       'اختر اسماً مختلفاً يتجنب الأسماء المدمجة',
+    'defined but never used':     'استخدم المتغير أو استبدل اسمه بـ _ للإشارة لتجاهله',
+    'Call to undefined':          'عرّف الدالة قبل استدعائها أو أضفها للاستيرادات',
+    'empty body':                 'أضف محتوى حقيقياً للدالة بدلاً من pass',
+    'used before being assigned': 'أسند قيمة للمتغير قبل استخدامه',
+    'too many parameters':        'استخدم **kwargs أو dataclass لتقليل المعاملات',
+    'is None':                    'استخدم: if x is None — بدلاً من: if x == None',
+    'True.*False|False.*True':    'استخدم قيمة المتغير مباشرة: if flag — بدلاً من: if flag == True',
+    'defined more than once.*Block|Block.*defined': 'احذف أحد تعريفي الـ block',
+    'more than once.*template|extends.*once':       'احتفظ بـ extends واحد فقط في القالب',
+    'extends itself':             'غيّر اسم القالب الموروث لتجنب الحلقة اللانهائية',
+    'Unknown.*filter':            'استخدم فلتراً معروفاً مثل: safe | length | lower',
+    'for-loop variable':          'لا تستخدم متغير الحلقة خارج نطاق الـ for',
+    'does not exist':             'تأكد من وجود الملف في نفس مجلد القوالب',
+    'redefines.*Python':          'غيّر اسم متغير القالب لتجنب التعارض مع متغير Python',
+    'redefines a template':       'استخدم اسماً مختلفاً للمتغير الجديد',
+    'empty list':                 'مرر قائمة غير فارغة أو تحقق من البيانات قبل الحلقة',
+    'should be the first':        'انقل تعليمة extends لأول سطر في القالب',
+};
+
+function getHint(msg) {
+    for (var pattern in FIX_HINTS) {
+        try {
+            if (new RegExp(pattern, 'i').test(msg)) return FIX_HINTS[pattern];
+        } catch(e) { /* skip bad regex */ }
+    }
+    return null;
+}
+
+/* ── Render results ─────────────────────────────────────── */
+function esc(s) {
+    return String(s)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 function renderLive(data, container) {
     if (data.parseError) {
-        container.innerHTML = '<div class="term-issue ti-err"><span class="ti-tag">PARSE ERR</span><span class="ti-msg">' + data.parseError + '</span></div>';
+        container.innerHTML =
+            '<div class="term-issue ti-err">'
+            + '<span class="ti-tag">PARSE ERR</span>'
+            + '<span class="ti-msg">' + esc(data.parseError) + '</span></div>';
         setStatus('parse error');
         return;
     }
@@ -1124,33 +1555,220 @@ function renderLive(data, container) {
     var all      = errors.concat(warnings);
     if (all.length === 0) {
         container.innerHTML =
-            '<div style="text-align:center;padding:40px;color:#22c55e;">' +
-            '<div style="font-size:28px;margin-bottom:8px;">✓</div>' +
-            '<div style="font-family:monospace;font-size:13px;">no issues found</div></div>';
+            '<div style="text-align:center;padding:40px;color:#22c55e;">'
+            + '<div style="font-size:28px;margin-bottom:8px;">✓</div>'
+            + '<div style="font-family:monospace;font-size:13px;">no issues found</div></div>';
         setStatus('✓ clean');
         showToast('success:التحليل اكتمل — لا توجد مشاكل دلالية');
         return;
     }
-    var html = '<div style="font-family:monospace;font-size:11px;color:#6e7681;padding:6px 10px 10px;">'
-             + '// ' + errors.length + ' errors, ' + warnings.length + ' warnings</div>';
+    var html = '<div style="font-family:monospace;font-size:11px;color:#6e7681;'
+             + 'padding:6px 10px 10px;">'
+             + '// ' + errors.length + ' errors, ' + warnings.length + ' warnings'
+             + ' &nbsp;<span style="color:#484f58;">↑ انقر للانتقال للسطر</span></div>';
+
     all.forEach(function(issue) {
-        var isE = issue.type === 'ERROR';
-        html += '<div class="term-issue ' + (isE ? 'ti-err' : 'ti-wrn') + '">'
-              + '<span class="ti-tag">' + issue.type + '</span>'
+        var isE  = issue.type === 'ERROR';
+        var hint = getHint(issue.msg);
+        html += '<div class="term-issue ' + (isE ? 'ti-err' : 'ti-wrn') + '" '
+              + 'style="cursor:pointer;" '
+              + 'onclick="highlightLine(' + issue.line + ')" '
+              + 'title="انتقل للسطر ' + issue.line + '">'
+              + '<span class="ti-tag">' + esc(issue.type) + '</span>'
               + '<span class="ti-loc">L' + issue.line + ':' + issue.col + '</span>'
-              + '<span class="ti-msg">' + issue.msg + '</span>'
+              + '<span class="ti-msg">' + esc(issue.msg) + '</span>'
               + '</div>';
+        if (hint) {
+            html += '<div class="fix-hint">💡 ' + esc(hint) + '</div>';
+        }
     });
     container.innerHTML = html;
     setStatus(errors.length + ' err / ' + warnings.length + ' warn');
     showToast((errors.length > 0 ? 'danger' : 'info') + ':' + all.length + ' مشكلة وُجدت');
 }
 
+/* ══════════════════════════════════════════════════════════
+   AST TREE — syntax coloring + tree connectors
+══════════════════════════════════════════════════════════ */
+var AST_RULES = [
+    ['Program',    'an-program'],
+    ['Function',   'an-function'],
+    ['Decorator',  'an-deco'],
+    ['Parameter',  'an-param'],
+    ['ImportFrom', 'an-import'],
+    ['Import',     'an-import'],
+    ['Assignment', 'an-assign'],
+    ['Return',     'an-return'],
+    ['Call',       'an-call'],
+    ['If',         'an-control'],
+    ['Elif',       'an-control'],
+    ['Else',       'an-control'],
+    ['For',        'an-control'],
+    ['While',      'an-control'],
+    ['Break',      'an-control'],
+    ['Continue',   'an-control'],
+    ['Identifier', 'an-ident'],
+    ['String',     'an-literal'],
+    ['Int',        'an-literal'],
+    ['Float',      'an-literal'],
+    ['Bool',       'an-bool'],
+    ['None',       'an-bool'],
+    ['BinaryOp',   'an-binary'],
+    ['Attribute',  'an-ident'],
+];
+
+function getASTNodeClass(line) {
+    var t = line.replace(/^\s+/, '');
+    for (var i = 0; i < AST_RULES.length; i++) {
+        if (t.indexOf(AST_RULES[i][0]) === 0) return AST_RULES[i][1];
+    }
+    return 'an-other';
+}
+
+function renderASTTree() {
+    var rawEl  = document.getElementById('ast-raw');
+    var viewer = document.getElementById('ast-viewer');
+    if (!rawEl || !viewer) return;
+
+    var rawLines;
+    try { rawLines = JSON.parse(rawEl.textContent).split('\n'); }
+    catch(e) { rawLines = rawEl.textContent.split('\n'); }
+
+    /* trim trailing empty lines */
+    while (rawLines.length && !rawLines[rawLines.length - 1].trim()) rawLines.pop();
+
+    /* indent level per line (2 spaces = 1 level) */
+    var levels = rawLines.map(function(l) {
+        return Math.floor((l.match(/^(\s*)/)[1].length) / 2);
+    });
+
+    /*
+     * colActive(i, k): should column k draw a │ bar for line i?
+     * True when there is a line j > i with levels[j] == k+1
+     * and no line between i and j has levels[m] <= k.
+     */
+    function colActive(i, k) {
+        for (var j = i + 1; j < rawLines.length; j++) {
+            if (levels[j] <= k)     return false;   // left this branch
+            if (levels[j] === k+1)  return true;    // sibling of k-th ancestor exists
+        }
+        return false;
+    }
+
+    var html = '';
+    for (var i = 0; i < rawLines.length; i++) {
+        var content = rawLines[i].trim();
+        if (!content) continue;
+        var L = levels[i];
+
+        var prefix = '';
+        for (var k = 0; k < L; k++) {
+            var act = colActive(i, k);
+            if (k === L - 1) {
+                prefix += act ? '├── ' : '└── ';
+            } else {
+                prefix += act ? '│   ' : '    ';
+            }
+        }
+
+        var cls = getASTNodeClass(content);
+        html += '<span class="ast-line ' + cls + '">'
+              + '<span class="ast-conn">' + esc(prefix) + '</span>'
+              + esc(content) + '\n</span>';
+    }
+    viewer.innerHTML = html || '<span class="an-other">// empty tree</span>';
+}
+
+/* ══════════════════════════════════════════════════════════
+   SYMBOL TABLE — parsed HTML table
+══════════════════════════════════════════════════════════ */
+function renderSymbolTable() {
+    var rawEl = document.getElementById('symtable-raw');
+    var cont  = document.getElementById('symtable-container');
+    if (!rawEl || !cont) return;
+
+    var text;
+    try { text = JSON.parse(rawEl.textContent); }
+    catch(e) { text = rawEl.textContent; }
+    if (!text) return;
+
+    var STYPES = 'GLOBAL|FUNCTION|FOR_LOOP|IF_BLOCK|ELIF_BLOCK|ELSE_BLOCK'
+               + '|WHILE_LOOP|WITH_BLOCK|TRY_BLOCK|EXCEPT_BLOCK|FINALLY_BLOCK'
+               + '|CLASS|COMP|LAMBDA';
+    var scopeRe = new RegExp('^(' + STYPES + ')\\s+#(\\d+)(?:\\s+"([^"]*)")?');
+    var symRe   = /^(\w[\w.]*)\s+:\s+(variable|function|parameter|import)\s+\[([^\]]+)\](?:\s+=\s+(.+))?/;
+
+    var kindAr  = { variable:'متغير', function:'دالة', parameter:'معامل', import:'مكتبة' };
+    var kindCls = { variable:'st-k-var', function:'st-k-func', parameter:'st-k-param', import:'st-k-imp' };
+    var scopeIcon = {
+        GLOBAL:'🌐', FUNCTION:'⚙️', FOR_LOOP:'🔁',
+        IF_BLOCK:'❓', ELIF_BLOCK:'❓', ELSE_BLOCK:'↩️',
+        WHILE_LOOP:'🔄', CLASS:'📦', LAMBDA:'λ',
+        WITH_BLOCK:'🔒', TRY_BLOCK:'🛡️', EXCEPT_BLOCK:'⚠️', FINALLY_BLOCK:'✅', COMP:'🔢'
+    };
+
+    var rows = '';
+    text.split('\n').forEach(function(line) {
+        var indent = line.match(/^(\s*)/)[1].length;
+        var level  = Math.floor(indent / 2);
+        /* strip Unicode replacement chars (�) and leading ? noise */
+        var clean  = line.trim().replace(/�/g, '').replace(/^\?+\s*/, '').trim();
+
+        if (!clean || /^={3,}/.test(clean) || clean === 'DETAILED SCOPE TREE') return;
+
+        /* ── scope header ── */
+        var sm = clean.match(scopeRe);
+        if (sm) {
+            var slCls = level > 0 ? ' sl-' + Math.min(level, 4) : '';
+            var icon  = scopeIcon[sm[1]] || '📍';
+            var lbl   = sm[1] + ' #' + sm[2]
+                      + (sm[3] ? ' &nbsp;<span style="opacity:.55;font-weight:400;">"' + esc(sm[3]) + '"</span>' : '');
+            var pad   = 16 + level * 18;
+            rows += '<tr class="st-scope-row' + slCls + '">'
+                  + '<td colspan="4" style="padding-right:' + pad + 'px;">'
+                  + icon + ' ' + lbl + '</td></tr>';
+            return;
+        }
+
+        /* ── empty scope ── */
+        if (clean === '[no symbols]') {
+            rows += '<tr class="st-empty-row">'
+                  + '<td colspan="4" style="padding-right:' + (16 + level*18) + 'px;">'
+                  + '— لا رموز في هذا النطاق —</td></tr>';
+            return;
+        }
+
+        /* ── symbol row ── */
+        var sym = clean.match(symRe);
+        if (sym) {
+            var pad2 = 16 + level * 18;
+            rows += '<tr>'
+                  + '<td class="st-sym-name" style="padding-right:' + pad2 + 'px;">' + esc(sym[1]) + '</td>'
+                  + '<td><span class="st-kind-badge ' + (kindCls[sym[2]] || '') + '">'
+                  +   (kindAr[sym[2]] || sym[2]) + '</span></td>'
+                  + '<td class="st-type-cell">[' + esc(sym[3]) + ']</td>'
+                  + '<td class="st-val-cell">' + esc(sym[4] || '') + '</td>'
+                  + '</tr>';
+        }
+    });
+
+    if (!rows) {
+        cont.innerHTML = '<div class="st-nodata">لا يوجد بيانات لعرضها</div>';
+        return;
+    }
+
+    cont.innerHTML =
+        '<table class="st-table"><thead><tr>'
+        + '<th>الاسم</th><th>النوع</th><th>الصنف</th><th>القيمة</th>'
+        + '</tr></thead><tbody>' + rows + '</tbody></table>';
+}
+
 /* ── Export JSON ─────────────────────────────────────────── */
 function exportJSON() {
     var el = document.getElementById('results-data');
     if (!el) { showToast('info:شغّل التحليل الكامل أولاً'); return; }
-    var blob = new Blob([JSON.stringify(JSON.parse(el.textContent), null, 2)], {type:'application/json'});
+    var blob = new Blob([JSON.stringify(JSON.parse(el.textContent), null, 2)],
+                        {type:'application/json'});
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = 'semantic-analysis.json';
