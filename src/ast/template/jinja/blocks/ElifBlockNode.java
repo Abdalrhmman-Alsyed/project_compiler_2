@@ -26,6 +26,9 @@ public class ElifBlockNode extends JinjaBlockNode {
 
     @Override
     public List<TemplateNode> getChildren() {
-        return List.of();
+        List<TemplateNode> children = new java.util.ArrayList<>();
+        if (condition != null) children.add(condition);
+        children.addAll(getContent());
+        return children;
     }
 }

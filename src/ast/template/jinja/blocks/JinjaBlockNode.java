@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 
 public abstract class JinjaBlockNode extends JinjaNode {
     private List<TemplateNode> content;
-    public abstract List<TemplateNode> getChildren();
 
     public JinjaBlockNode(NodeKind blockType, int line, int column) {
         super(blockType, line, column);
@@ -81,6 +80,11 @@ public abstract class JinjaBlockNode extends JinjaNode {
                 .filter(type::isInstance)
                 .map(type::cast)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<TemplateNode> getChildren() {
+        return new ArrayList<>(content);
     }
 
     public List<JinjaBlockNode> getNestedBlocks() {

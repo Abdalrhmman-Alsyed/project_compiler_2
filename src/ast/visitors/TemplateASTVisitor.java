@@ -60,4 +60,5 @@ public interface TemplateASTVisitor<T> {
     T visit(WithBlockNode node);
     T visit(ExtendsBlockNode node);
     T visit(GenericBlockNode node);
+    T visit(MacroBlockNode node);
 }

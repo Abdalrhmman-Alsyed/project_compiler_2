@@ -42,6 +42,7 @@ public enum NodeKind {
     JINJA_INCLUDE_BLOCK, //done
     JINJA_WITH_BLOCK, //done
     JINJA_SET_BLOCK, //done
+    JINJA_MACRO_BLOCK,
 
     JINJA_EXPR_ATTRIBUTE_ACCESS, //done
     JINJA_EXPR_BINARY, //done

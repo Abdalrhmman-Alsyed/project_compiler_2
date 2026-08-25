@@ -80,7 +80,13 @@ attrJinjaExprContent
     ;
 
 attrJinjaBlock
-    : ATTR_JINJA_BLOCK_START jinjaBlockStatement BLOCK_END
+    : ATTR_JINJA_BLOCK_START attrBlockStatement BLOCK_END
+    ;
+
+attrBlockStatement
+    : BLOCK_SET BLOCK_ID BLOCK_EQ blockExpression     # attrSetBlock
+    | BLOCK_INCLUDE BLOCK_STRING                      # attrIncludeBlock
+    | BLOCK_ID (BLOCK_EQ blockExpression)?            # attrGenericBlock
     ;
 
 htmlText
@@ -88,32 +94,99 @@ htmlText
     ;
 
 // ============ JINJA2 BLOCKS ============
+// Each construct consumes its opening {% %}, body, and matching end tag
+// so the AST can nest content instead of leaving bodies as siblings.
+
 jinjaBlock
-    : TEMPLATE_JINJA_BLOCK_START jinjaBlockStatement BLOCK_END #jinjaBlockNode
+    : ifBlock
+    | forBlock
+    | namedBlock
+    | withBlock
+    | macroBlock
+    | setBlock
+    | includeBlock
+    | importBlock
+    | fromImportBlock
+    | extendsBlock
+    | genericBlock
     ;
 
-jinjaBlockStatement
-    : BLOCK_IF blockExpression templateContent?             # ifStart
-    | BLOCK_ELIF blockExpression templateContent? BLOCK_ENDIF                      # elifBlock
-    | BLOCK_ELSE templateContent?                                      # elseBlock
-    | BLOCK_FOR BLOCK_ID BLOCK_IN blockExpression templateContent?  # forStart
-    | BLOCK_BLOCK BLOCK_ID templateContent?             # blockStart
-    | BLOCK_SET BLOCK_ID BLOCK_EQ blockExpression                     # setBlock
-    | BLOCK_INCLUDE BLOCK_STRING                                      # includeBlock
-    | BLOCK_IMPORT BLOCK_STRING (BLOCK_AS BLOCK_ID)?                  # importBlock
-    | BLOCK_FROM BLOCK_STRING BLOCK_IMPORT importList                 # fromImportBlock
-    | BLOCK_WITH blockExpression templateContent? BLOCK_ENDWITH       # withStart
-    | BLOCK_EXTENDS BLOCK_STRING                                      # extendsBlock
-    | BLOCK_ID (BLOCK_EQ blockExpression)? templateContent?           # genericBlock
-    | BLOCK_MACRO BLOCK_ID BLOCK_LPAREN macroParameters? BLOCK_RPAREN templateContent? BLOCK_ENDMACRO  # macroBlock
-    | BLOCK_ENDBLOCK  #endblock
-    | BLOCK_ENDIF  #endIf
-    | BLOCK_ENDFOR #endFor
+ifBlock
+    : TEMPLATE_JINJA_BLOCK_START BLOCK_IF blockExpression BLOCK_END
+      templateContent
+      elifBlock*
+      elseBlock?
+      TEMPLATE_JINJA_BLOCK_START BLOCK_ENDIF BLOCK_END
+      # ifStart
     ;
 
-    macroParameters
-        : BLOCK_ID (BLOCK_COMMA BLOCK_ID)*
-        ;
+elifBlock
+    : TEMPLATE_JINJA_BLOCK_START BLOCK_ELIF blockExpression BLOCK_END
+      templateContent
+    ;
+
+elseBlock
+    : TEMPLATE_JINJA_BLOCK_START BLOCK_ELSE BLOCK_END
+      templateContent
+    ;
+
+forBlock
+    : TEMPLATE_JINJA_BLOCK_START BLOCK_FOR BLOCK_ID BLOCK_IN blockExpression BLOCK_END
+      templateContent
+      elseBlock?
+      TEMPLATE_JINJA_BLOCK_START BLOCK_ENDFOR BLOCK_END
+      # forStart
+    ;
+
+namedBlock
+    : TEMPLATE_JINJA_BLOCK_START BLOCK_BLOCK BLOCK_ID BLOCK_END
+      templateContent
+      TEMPLATE_JINJA_BLOCK_START BLOCK_ENDBLOCK BLOCK_END
+      # blockStart
+    ;
+
+withBlock
+    : TEMPLATE_JINJA_BLOCK_START BLOCK_WITH blockExpression BLOCK_END
+      templateContent
+      TEMPLATE_JINJA_BLOCK_START BLOCK_ENDWITH BLOCK_END
+      # withStart
+    ;
+
+macroBlock
+    : TEMPLATE_JINJA_BLOCK_START BLOCK_MACRO BLOCK_ID BLOCK_LPAREN macroParameters? BLOCK_RPAREN BLOCK_END
+      templateContent
+      TEMPLATE_JINJA_BLOCK_START BLOCK_ENDMACRO BLOCK_END
+    ;
+
+setBlock
+    : TEMPLATE_JINJA_BLOCK_START BLOCK_SET BLOCK_ID BLOCK_EQ blockExpression BLOCK_END
+    ;
+
+includeBlock
+    : TEMPLATE_JINJA_BLOCK_START BLOCK_INCLUDE BLOCK_STRING BLOCK_END
+    ;
+
+importBlock
+    : TEMPLATE_JINJA_BLOCK_START BLOCK_IMPORT BLOCK_STRING (BLOCK_AS BLOCK_ID)? BLOCK_END
+    ;
+
+fromImportBlock
+    : TEMPLATE_JINJA_BLOCK_START BLOCK_FROM BLOCK_STRING BLOCK_IMPORT importList BLOCK_END
+    ;
+
+extendsBlock
+    : TEMPLATE_JINJA_BLOCK_START BLOCK_EXTENDS BLOCK_STRING BLOCK_END
+    ;
+
+genericBlock
+    : TEMPLATE_JINJA_BLOCK_START BLOCK_ID (BLOCK_EQ blockExpression)? BLOCK_END
+    ;
+
+macroParameters
+    : BLOCK_ID (BLOCK_COMMA BLOCK_ID)*
+    ;
+
+importList: BLOCK_ID (BLOCK_COMMA BLOCK_ID)*;
 
 // ============ BLOCK EXPRESSIONS ============
 blockExpression
@@ -172,7 +245,12 @@ blockPostfix
     ;
 
 blockArgumentList
-    : blockExpression (BLOCK_COMMA blockExpression)*
+    : blockArgument (BLOCK_COMMA blockArgument)*
+    ;
+
+blockArgument
+    : BLOCK_ID BLOCK_EQ blockExpression  #blockKeywordArg
+    | blockExpression                    #blockPositionalArg
     ;
 
 blockExpressionList
@@ -186,8 +264,6 @@ blockDictPairList
 blockDictPair
     : blockExpression BLOCK_COLON blockExpression
     ;
-
-importList: BLOCK_ID (BLOCK_COMMA BLOCK_ID)*;
 
 // ============ JINJA2 EXPRESSIONS ============
 jinjaExpr
@@ -227,13 +303,17 @@ multiplicativeExpression
     ;
 
 unaryExpression
-    : (EXPR_PLUS | EXPR_MINUS | EXPR_NOT)? primaryExpression #unaryExpr
+    : (EXPR_PLUS | EXPR_MINUS | EXPR_NOT) unaryExpression #unaryOp
+    | primaryExpression                                   #unaryBase
     ;
 
 primaryExpression
+    : atom postfix* #primary
+    ;
+
+atom
     : EXPR_LPAREN expression EXPR_RPAREN                     # parenExpr
-    | EXPR_ID (EXPR_DOT EXPR_ID)*                            # identifierExpr
-    | EXPR_ID EXPR_LPAREN argumentList? EXPR_RPAREN          # callExpr
+    | EXPR_ID                                                # identifierExpr
     | EXPR_STRING                                            # stringExpr
     | EXPR_NUMBER                                            # numberExpr
     | EXPR_TRUE                                              # trueExpr
@@ -241,11 +321,21 @@ primaryExpression
     | EXPR_NONE                                              # noneExpr
     | EXPR_LBRACK expressionList? EXPR_RBRACK                # listExpr
     | EXPR_LBRACE dictPairList? EXPR_RBRACE                  # dictExpr
-    | primaryExpression EXPR_PIPE EXPR_ID argumentList?      # filterExpr
+    ;
+
+postfix
+    : EXPR_PIPE EXPR_ID argumentList?      # filterExpr
+    | EXPR_LPAREN argumentList? EXPR_RPAREN # callExpr
+    | EXPR_DOT EXPR_ID                      # memberOp
     ;
 
 argumentList
-    : expression (EXPR_COMMA expression)* (EXPR_EQ expression)* #argList
+    : argument (EXPR_COMMA argument)* #argList
+    ;
+
+argument
+    : EXPR_ID EXPR_EQ expression  #keywordArg
+    | expression                  #positionalArg
     ;
 
 expressionList

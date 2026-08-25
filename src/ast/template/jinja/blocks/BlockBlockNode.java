@@ -19,7 +19,7 @@ public class BlockBlockNode extends JinjaBlockNode {
 
     @Override
     public List<TemplateNode> getChildren() {
-        return List.of();
+        return super.getChildren();
     }
     @Override
     public <T> T accept(TemplateASTVisitor<T> visitor) {

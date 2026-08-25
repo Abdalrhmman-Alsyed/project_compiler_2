@@ -78,10 +78,6 @@ public class PrintASTVisitor {
 
         else if (node instanceof HTMLTextNode textNode) {
             String text = textNode.getText().trim();
-            // إزالة أي أقواس مربعة إذا كانت موجودة
-            if (text.startsWith("[") && text.endsWith("]")) {
-                text = text.substring(1, text.length() - 1);
-            }
             System.out.println(padding + "  TEXT: \"" + text.replace("\n", "\\n") + "\"");
         }
 
@@ -133,8 +129,16 @@ public class PrintASTVisitor {
         else if (node instanceof CallExpressionNode callNode) {
             System.out.println(padding + "  CALL:");
             printExpression(callNode.getCallee(), indent + 2);
-            for (ExpressionNode arg : callNode.getArguments()) {
-                printExpression(arg, indent + 2);
+            List<String> keywordNames = callNode.getKeywordNames();
+            List<ExpressionNode> arguments = callNode.getArguments();
+            for (int i = 0; i < arguments.size(); i++) {
+                String keyword = i < keywordNames.size() ? keywordNames.get(i) : null;
+                if (keyword != null) {
+                    System.out.println(padding + "    KWARG " + keyword + "=");
+                    printExpression(arguments.get(i), indent + 3);
+                } else {
+                    printExpression(arguments.get(i), indent + 2);
+                }
             }
         }
 
@@ -175,6 +179,12 @@ public class PrintASTVisitor {
             printExpression(ifNode.getCondition(), indent + 4);
             System.out.println(padding + "    CONTENT:");
             ifNode.getContent().forEach(child -> printNode(child, indent + 4));
+            for (ElifBlockNode elifNode : ifNode.getElifBlocks()) {
+                printNode(elifNode, indent + 2);
+            }
+            if (ifNode.getElseBlock() != null) {
+                printNode(ifNode.getElseBlock(), indent + 2);
+            }
 
         }
 
@@ -244,6 +254,12 @@ public class PrintASTVisitor {
                 printExpression(genericNode.getExpression(), indent + 4);
             }
             genericNode.getContent().forEach(child -> printNode(child, indent + 2));
+        }
+
+        else if (node instanceof MacroBlockNode macroNode) {
+            System.out.println(padding + "  MACRO: " + macroNode.getName()
+                    + "(" + String.join(", ", macroNode.getParameters()) + ")");
+            macroNode.getContent().forEach(child -> printNode(child, indent + 2));
         }
         // نسخة مبسطة للطباعة
         else if (node instanceof CSSStyleNode cssStyle) {
@@ -322,8 +338,16 @@ public class PrintASTVisitor {
         else if (expr instanceof CallExpressionNode callNode) {
             System.out.println(padding + "  CALL:");
             printExpression(callNode.getCallee(), indent + 1);
-            for (ExpressionNode arg : callNode.getArguments()) {
-                printExpression(arg, indent + 1);
+            List<String> keywordNames = callNode.getKeywordNames();
+            List<ExpressionNode> arguments = callNode.getArguments();
+            for (int i = 0; i < arguments.size(); i++) {
+                String keyword = i < keywordNames.size() ? keywordNames.get(i) : null;
+                if (keyword != null) {
+                    System.out.println(padding + "    KWARG " + keyword + "=");
+                    printExpression(arguments.get(i), indent + 2);
+                } else {
+                    printExpression(arguments.get(i), indent + 1);
+                }
             }
         }
         else if (expr instanceof AttributeAccessNode attrAccess) {

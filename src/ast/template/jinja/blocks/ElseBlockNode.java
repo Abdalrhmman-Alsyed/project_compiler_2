@@ -19,6 +19,6 @@ public class ElseBlockNode extends JinjaBlockNode {
 
     @Override
     public List<TemplateNode> getChildren() {
-        return List.of();
+        return super.getChildren();
     }
 }

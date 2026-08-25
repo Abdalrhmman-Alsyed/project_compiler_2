@@ -73,7 +73,11 @@ public class ForBlockNode extends JinjaBlockNode {
 
     @Override
     public List<TemplateNode> getChildren() {
-        return List.of();
+        List<TemplateNode> children = new java.util.ArrayList<>();
+        if (iterable != null) children.add(iterable);
+        children.addAll(getContent());
+        if (elseBlock != null) children.add(elseBlock);
+        return children;
     }
     @Override
     public <T> T accept(TemplateASTVisitor<T> visitor) {

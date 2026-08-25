@@ -188,8 +188,6 @@ public class JinjaSymbolTableBuilder extends FlaskTemplateParserBaseVisitor<Void
 
     @Override
     public Void visitCallExpr(FlaskTemplateParser.CallExprContext ctx) {
-        String funcName = ctx.EXPR_ID().getText();
-        symbolTable.recordSymbolUsage(funcName, ctx.start.getLine());
         return super.visitCallExpr(ctx);
     }
 

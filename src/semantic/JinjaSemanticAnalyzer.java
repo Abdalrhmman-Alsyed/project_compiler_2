@@ -207,17 +207,10 @@ public class JinjaSemanticAnalyzer extends FlaskTemplateParserBaseVisitor<Void> 
             }
         }
 
-        // Don't pop here — visitEndFor handles expiry so the variable stays
-        // active while the loop body is visited (whether body is a child or sibling
-        // depends on the grammar structure).
-        return super.visitForStart(ctx);
-    }
+        super.visitForStart(ctx);
 
-    @Override
-    public Void visitEndFor(FlaskTemplateParser.EndForContext ctx) {
         if (!activeLoopVars.isEmpty()) {
-            String loopVar = activeLoopVars.pop();
-            expiredLoopVars.add(loopVar);
+            expiredLoopVars.add(activeLoopVars.pop());
         }
         return null;
     }
@@ -281,8 +274,8 @@ public class JinjaSemanticAnalyzer extends FlaskTemplateParserBaseVisitor<Void> 
 
     @Override
     public Void visitIdentifierExpr(FlaskTemplateParser.IdentifierExprContext ctx) {
-        // Gets the base part of a dotted identifier: "product" from "product.name"
-        String name = ctx.EXPR_ID(0).getText();
+        // Gets the base identifier: "product" from a following .name postfix
+        String name = ctx.EXPR_ID().getText();
         checkExpiredLoopVar(name, ctx.start.getLine(), ctx.start.getCharPositionInLine());
         return super.visitIdentifierExpr(ctx);
     }

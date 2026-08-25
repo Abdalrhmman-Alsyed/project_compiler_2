@@ -317,7 +317,7 @@ HTML_COMMENT
 // Jinja2
 TEMPLATE_JINJA_BLOCK_START: '{%' -> pushMode(JINJA_BLOCK_MODE);
 TEMPLATE_JINJA_EXPR_START: '{{' -> pushMode(JINJA_EXPR_MODE);
-TEMPLATE_JINJA_COMMENT_START: '{#' -> pushMode(JINJA_COMMENT_MODE);
+TEMPLATE_JINJA_COMMENT_START: '{#' -> skip, pushMode(JINJA_COMMENT_MODE);
 
 // CSS
 CSS_START:'<style' -> pushMode(CSS_TAG_MODE);
@@ -377,7 +377,7 @@ ATTR_VALUE_QUOTE: '"' -> popMode;
 // jinja2 nested html
 ATTR_JINJA_EXPR_START: '{{' -> pushMode(JINJA_EXPR_MODE);
 ATTR_JINJA_BLOCK_START: '{%' -> pushMode(JINJA_BLOCK_MODE);
-ATTR_JINJA_COMMENT_START: '{#' -> pushMode(JINJA_COMMENT_MODE);
+ATTR_JINJA_COMMENT_START: '{#' -> skip, pushMode(JINJA_COMMENT_MODE);
 ATTR_VALUE_ESCAPE: '\\' .;
 ATTR_VALUE_ID
     : ~["\\{]+
@@ -403,6 +403,8 @@ BLOCK_IMPORT: 'import' ;
 BLOCK_FROM: 'from' ;
 BLOCK_WITH: 'with' ;
 BLOCK_ENDWITH: 'endwith' ;
+BLOCK_MACRO: 'macro' ;
+BLOCK_ENDMACRO: 'endmacro' ;
 BLOCK_DOT : '.' ;
 BLOCK_EQ : '=' ;
 BLOCK_AS : 'as';
@@ -520,11 +522,8 @@ EXPR_WS
 EXPR_END: '}}' -> popMode ;
 
 mode JINJA_COMMENT_MODE;
-COMMENT_TEXT : .+? ;
-COMMENT_WS
-    : [ \t\r\n]+ -> skip
-    ;
-COMMENT_END: '#}' -> popMode ;
+COMMENT_END: '#}' -> skip, popMode;
+COMMENT_CHAR: . -> skip;
 
 
 mode CSS_TAG_MODE;

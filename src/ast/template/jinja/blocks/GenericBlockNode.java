@@ -22,7 +22,10 @@ public class GenericBlockNode extends JinjaBlockNode {
     public void setExpression(ExpressionNode expression) { this.expression = expression; }
     @Override
     public List<TemplateNode> getChildren() {
-        return List.of();
+        List<TemplateNode> children = new java.util.ArrayList<>();
+        if (expression != null) children.add(expression);
+        children.addAll(getContent());
+        return children;
     }
 
     @Override
