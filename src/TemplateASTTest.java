@@ -1,12 +1,12 @@
 import ast.template.TemplateNode;
 import ast.visitors.TemplateASTBuilder;
-import gen.FlaskLexer;
+import gen.FlaskJinjaLexer;
 import gen.FlaskTemplateParser;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import symbolTableJinja.JinjaSymbolTable;
-import symbolTableJinja.JinjaSymbolTableBuilder;
+import symbolTableJinja.JinjaAstSymbolTableBuilder;
 
 import java.nio.file.Path;
 
@@ -22,7 +22,7 @@ public class TemplateASTTest {
 
         // 1. إعداد Lexer
         CharStream charStream = CharStreams.fromPath(templatePath2);
-        FlaskLexer lexer = new FlaskLexer(charStream);
+        FlaskJinjaLexer lexer = new FlaskJinjaLexer(charStream);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
 
         // 2. إعداد Parser
@@ -36,8 +36,8 @@ public class TemplateASTTest {
         TemplateNode rootNode = visitor.visitTemplateRoot(tree);
 
         // 2. بناء جدول الرموز
-        JinjaSymbolTableBuilder builder = new JinjaSymbolTableBuilder("test.html");
-        builder.visit(tree);
+        JinjaAstSymbolTableBuilder builder = new JinjaAstSymbolTableBuilder("test.html", java.util.Set.of());
+        rootNode.accept(builder);
 
         // 3. التحليل
         JinjaSymbolTable symbolTable = builder.getSymbolTable();

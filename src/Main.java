@@ -4,18 +4,19 @@ import ast.python.visitors.PythonASTBuilderVisitor;
 import ast.template.TemplateNode;
 import ast.visitors.PrintASTVisitor;
 import ast.visitors.TemplateASTBuilder;
-import gen.FlaskLexer;
+import gen.FlaskJinjaLexer;
+import gen.FlaskPythonLexer;
 import gen.FlaskPythonParser;
 import gen.FlaskTemplateParser;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.ParseTree;
 import semantic.Generator;
-import semantic.JinjaSemanticAnalyzer;
+import semantic.JinjaAstSemanticAnalyzer;
 import semantic.PythonSemanticAnalyzer;
 import symbolTable.PythonSymbolTable;
 import symbolTable.visitores.PythonSymbolTableBuilder;
 import symbolTableJinja.JinjaSymbolTable;
-import symbolTableJinja.JinjaSymbolTableBuilder;
+import symbolTableJinja.JinjaAstSymbolTableBuilder;
 
 import java.nio.file.Path;
 import java.util.*;
@@ -46,7 +47,7 @@ public class Main {
                 "test/jinja/add_product.html"
         )) {
             String tmplName = Path.of(template).getFileName().toString();
-            Set<String> ctxVars = templateContextVars.getOrDefault(tmplName, Set.of());
+            Set<String> ctxVars = contextFor(tmplName, templateContextVars);
             runTemplatePipeline(template, ctxVars);
         }
 
@@ -55,9 +56,37 @@ public class Main {
         runPythonErrorDemo("test/python/error_demo.txt");
 
         // ── 5. Semantic error demo: Jinja2 ───────────────────────────────────
-        printBanner("SEMANTIC ERROR DEMO — Jinja2 (10 checks)");
+        printBanner("SEMANTIC ERROR DEMO — Jinja2 (11 checks, AST)");
         Set<String> demoCtxVars = new LinkedHashSet<>(List.of("products", "title"));
         runJinjaErrorDemo("test/jinja/error_demo.html", demoCtxVars);
+    }
+
+    /**
+     * A parent layout never appears in a render_template() call: it is rendered
+     * through whichever child extends it, and sees that child's context. So its
+     * context is the union of every child's — otherwise every variable a layout
+     * uses would look unsupplied.
+     */
+    private static Set<String> contextFor(String templateName,
+                                          Map<String, Set<String>> contextVars)
+            throws Exception {
+        Set<String> vars = new LinkedHashSet<>(
+                contextVars.getOrDefault(templateName, Set.of()));
+
+        java.io.File dir = new java.io.File("test/jinja");
+        java.io.File[] siblings = dir.listFiles((d, n) -> n.endsWith(".html"));
+        if (siblings == null) return vars;
+
+        for (java.io.File child : siblings) {
+            String body = java.nio.file.Files.readString(child.toPath());
+            java.util.regex.Matcher m = java.util.regex.Pattern
+                    .compile("\\{%\\s*extends\\s*[\"']([^\"']+)[\"']")
+                    .matcher(body);
+            if (m.find() && m.group(1).equals(templateName)) {
+                vars.addAll(contextVars.getOrDefault(child.getName(), Set.of()));
+            }
+        }
+        return vars;
     }
 
     // ─── Python Pipeline (full) ────────────────────────────────────────────
@@ -66,7 +95,7 @@ public class Main {
         printSection("PYTHON: " + filePath);
 
         CharStream input = CharStreams.fromFileName(filePath);
-        FlaskLexer lexer = new FlaskLexer(input);
+        FlaskPythonLexer lexer = new FlaskPythonLexer(input);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
 
         FlaskPythonParser parser = new FlaskPythonParser(tokens);
@@ -108,7 +137,7 @@ public class Main {
         printSection("TEMPLATE: " + filePath);
 
         CharStream charStream = CharStreams.fromPath(Path.of(filePath));
-        FlaskLexer lexer = new FlaskLexer(charStream);
+        FlaskJinjaLexer lexer = new FlaskJinjaLexer(charStream);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
 
         FlaskTemplateParser parser = new FlaskTemplateParser(tokens);
@@ -130,8 +159,9 @@ public class Main {
         String templateName = Path.of(filePath).getFileName().toString();
         String templateDir  = Path.of(filePath).getParent().toString();
 
-        JinjaSymbolTableBuilder symbolBuilder = new JinjaSymbolTableBuilder(templateName);
-        symbolBuilder.visit(tree);
+        JinjaAstSymbolTableBuilder symbolBuilder =
+                new JinjaAstSymbolTableBuilder(templateName, pythonCtxVars);
+        rootNode.accept(symbolBuilder);
 
         JinjaSymbolTable symbolTable = symbolBuilder.getSymbolTable();
         symbolTable.analyze();
@@ -144,9 +174,9 @@ public class Main {
         PrintASTVisitor.printNode(rootNode, 0);
 
         // Semantic analysis on the template
-        JinjaSemanticAnalyzer jinjaAnalyzer =
-                new JinjaSemanticAnalyzer(templateName, templateDir, pythonCtxVars);
-        jinjaAnalyzer.visit(tree);
+        JinjaAstSemanticAnalyzer jinjaAnalyzer =
+                new JinjaAstSemanticAnalyzer(templateName, templateDir, pythonCtxVars);
+        rootNode.accept(jinjaAnalyzer);
         jinjaAnalyzer.printReport();
     }
 
@@ -155,7 +185,7 @@ public class Main {
         printSection("PYTHON ERROR DEMO: " + filePath);
 
         CharStream input = CharStreams.fromFileName(filePath);
-        FlaskLexer lexer = new FlaskLexer(input);
+        FlaskPythonLexer lexer = new FlaskPythonLexer(input);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
 
         FlaskPythonParser parser = new FlaskPythonParser(tokens);
@@ -184,7 +214,7 @@ public class Main {
         printSection("JINJA2 ERROR DEMO: " + filePath);
 
         CharStream charStream = CharStreams.fromPath(Path.of(filePath));
-        FlaskLexer lexer = new FlaskLexer(charStream);
+        FlaskJinjaLexer lexer = new FlaskJinjaLexer(charStream);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
 
         FlaskTemplateParser parser = new FlaskTemplateParser(tokens);
@@ -203,9 +233,10 @@ public class Main {
         String templateName = Path.of(filePath).getFileName().toString();
         String templateDir  = Path.of(filePath).getParent().toString();
 
-        JinjaSemanticAnalyzer analyzer =
-                new JinjaSemanticAnalyzer(templateName, templateDir, pythonCtxVars);
-        analyzer.visit(tree);
+        TemplateNode rootNode = new TemplateASTBuilder().visitTemplateRoot(tree);
+        JinjaAstSemanticAnalyzer analyzer =
+                new JinjaAstSemanticAnalyzer(templateName, templateDir, pythonCtxVars);
+        rootNode.accept(analyzer);
         analyzer.printReport();
     }
 

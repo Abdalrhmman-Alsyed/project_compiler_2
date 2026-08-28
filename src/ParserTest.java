@@ -1,4 +1,4 @@
-import gen.FlaskLexer;
+import gen.FlaskPythonLexer;
 import gen.FlaskPythonParser;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
@@ -16,7 +16,7 @@ public class ParserTest {
             CharStream input = CharStreams.fromFileName(filePath2);
 
             // 2. Lexer
-            FlaskLexer lexer = new FlaskLexer(input);
+            FlaskPythonLexer lexer = new FlaskPythonLexer(input);
             CommonTokenStream tokens = new CommonTokenStream(lexer);
 
             // (اختياري) طباعة التوكنز
@@ -26,7 +26,7 @@ public class ParserTest {
                         "Line %-3d Col %-3d -> %-15s \"%s\"%n",
                         t.getLine(),
                         t.getCharPositionInLine(),
-                        FlaskLexer.VOCABULARY.getSymbolicName(t.getType()),
+                        FlaskPythonLexer.VOCABULARY.getSymbolicName(t.getType()),
                         t.getText()
                 );
             }

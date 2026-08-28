@@ -1,11 +1,14 @@
 import ast.python.PythonNode;
 import ast.python.visitors.PythonASTBuilderVisitor;
-import gen.FlaskLexer;
+import ast.template.TemplateNode;
+import ast.visitors.TemplateASTBuilder;
+import gen.FlaskJinjaLexer;
+import gen.FlaskPythonLexer;
 import gen.FlaskPythonParser;
 import gen.FlaskTemplateParser;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.ParseTree;
-import semantic.JinjaSemanticAnalyzer;
+import semantic.JinjaAstSemanticAnalyzer;
 import semantic.PythonSemanticAnalyzer;
 import semantic.SemanticError;
 
@@ -35,7 +38,7 @@ public class LiveAnalyzer {
         try {
             if ("python".equals(lang)) {
                 CharStream input = CharStreams.fromFileName(filePath);
-                FlaskLexer lexer = new FlaskLexer(input);
+                FlaskPythonLexer lexer = new FlaskPythonLexer(input);
                 lexer.removeErrorListeners();
                 CommonTokenStream tokens = new CommonTokenStream(lexer);
 
@@ -53,7 +56,7 @@ public class LiveAnalyzer {
 
             } else if ("jinja".equals(lang)) {
                 CharStream input = CharStreams.fromPath(Path.of(filePath));
-                FlaskLexer lexer = new FlaskLexer(input);
+                FlaskJinjaLexer lexer = new FlaskJinjaLexer(input);
                 lexer.removeErrorListeners();
                 CommonTokenStream tokens = new CommonTokenStream(lexer);
 
@@ -63,13 +66,15 @@ public class LiveAnalyzer {
                 FlaskTemplateParser.TemplateRootContext tree =
                         (FlaskTemplateParser.TemplateRootContext) parser.template();
 
+                TemplateNode ast = new TemplateASTBuilder().visitTemplateRoot(tree);
+
                 String templateName = Path.of(filePath).getFileName().toString();
                 String templateDir  = Path.of(filePath).getParent() != null
                         ? Path.of(filePath).getParent().toString() : ".";
 
-                JinjaSemanticAnalyzer analyzer =
-                        new JinjaSemanticAnalyzer(templateName, templateDir, Set.of());
-                analyzer.visit(tree);
+                JinjaAstSemanticAnalyzer analyzer =
+                        new JinjaAstSemanticAnalyzer(templateName, templateDir, Set.of());
+                ast.accept(analyzer);
                 errors.addAll(analyzer.getErrors());
                 warnings.addAll(analyzer.getWarnings());
             }
