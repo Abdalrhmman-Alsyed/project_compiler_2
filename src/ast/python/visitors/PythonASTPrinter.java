@@ -97,7 +97,13 @@ public class PythonASTPrinter extends PythonBaseASTVisitor<Void> {
 
     @Override
     public Void visit(ParameterNode node) {
-        print("Parameter " + node.getName(), node.getLine());
+        print("Parameter " + node.getDisplayName(), node.getLine());
+        if (node.hasDefaultValue()) {
+            withIndent(() -> {
+                print("Default:", node.getLine());
+                withIndent(() -> node.getDefaultValue().accept(this));
+            });
+        }
         return null;
     }
 
@@ -160,6 +166,50 @@ public class PythonASTPrinter extends PythonBaseASTVisitor<Void> {
             print("Body:", node.getLine());
             withIndent(() -> node.getBody().accept(this));
         });
+        return null;
+    }
+
+    @Override
+    public Void visit(WhileNode node) {
+        print("While", node.getLine());
+        withIndent(() -> {
+            print("Condition:", node.getLine());
+            withIndent(() -> node.getCondition().accept(this));
+            print("Body:", node.getLine());
+            withIndent(() -> node.getBody().accept(this));
+        });
+        return null;
+    }
+
+    @Override
+    public Void visit(TryNode node) {
+        print("Try", node.getLine());
+        withIndent(() -> {
+            print("Body:", node.getLine());
+            withIndent(() -> node.getTryBlock().accept(this));
+
+            for (TryNode.ExceptHandler h : node.getHandlers()) {
+                print("Except" + (h.hasAlias() ? " as " + h.getAlias() : ""), node.getLine());
+                withIndent(() -> {
+                    if (h.getExceptionType() != null) h.getExceptionType().accept(this);
+                    h.getBlock().accept(this);
+                });
+            }
+
+            if (node.hasFinally()) {
+                print("Finally:", node.getLine());
+                withIndent(() -> node.getFinallyBlock().accept(this));
+            }
+        });
+        return null;
+    }
+
+    @Override
+    public Void visit(RaiseNode node) {
+        print("Raise", node.getLine());
+        if (node.hasException()) {
+            withIndent(() -> node.getException().accept(this));
+        }
         return null;
     }
 
@@ -264,6 +314,13 @@ public class PythonASTPrinter extends PythonBaseASTVisitor<Void> {
             node.getCollection().accept(this);
             node.getIndex().accept(this);
         });
+        return null;
+    }
+
+    @Override
+    public Void visit(KeywordArgumentNode node) {
+        print("KeywordArg " + node.getName() + "=", node.getLine());
+        withIndent(() -> node.getValue().accept(this));
         return null;
     }
 

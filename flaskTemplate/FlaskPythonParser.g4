@@ -1,6 +1,6 @@
 parser grammar FlaskPythonParser;
 
-options { tokenVocab = FlaskLexer; }
+options { tokenVocab = FlaskPythonLexer; }
 
 @header { package gen; }
 
@@ -43,7 +43,13 @@ decorator
     ;
 
 paramList
-    : ID (COMMA ID)*
+    : parameter (COMMA parameter)*
+    ;
+
+parameter
+    : STAR  ID             #varargParam
+    | POWER ID             #kwargParam
+    | ID (EQ expression)?  #normalParam
     ;
 
 dottedName
@@ -68,6 +74,9 @@ statement
     | exprStatement     #exprStmt
     | ifStatement       #ifStmt
     | forStatement      #forStmt
+    | whileStatement    #whileStmt
+    | tryStatement      #tryStmt
+    | raiseStatement    #raiseStmt
     | returnStatement   #returnStmt
     | passStatement     #passStmt
     | breakStatement    #breakStmt
@@ -110,6 +119,22 @@ ifStatement
 
 forStatement
     : FOR ID IN expression COLON suite #forStatementRule
+    ;
+
+whileStatement
+    : WHILE expression COLON suite #whileStatementRule
+    ;
+
+tryStatement
+    : TRY COLON suite exceptClause* (FINALLY COLON suite)? #tryStatementRule
+    ;
+
+exceptClause
+    : EXCEPT (expression (AS ID)?)? COLON suite
+    ;
+
+raiseStatement
+    : RAISE expression? #raiseStatementRule
     ;
 
 withStatement
@@ -175,7 +200,7 @@ equalityExpression
     ;
 
 comparisonExpression
-    : additiveExpression ((LT | LTEQ | GT | GTEQ | IN | IS) additiveExpression)*
+    : additiveExpression ((LT | LTEQ | GT | GTEQ | NOT? IN | IS NOT?) additiveExpression)*
     ;
 
 additiveExpression

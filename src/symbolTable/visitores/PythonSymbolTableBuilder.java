@@ -56,8 +56,15 @@ public class PythonSymbolTableBuilder extends PythonBaseASTVisitor<Void> {
                     param.getLine(),
                     param.getColumn(),
                     SymbolKind.PARAMETER,
-                    SymbolType.UNKNOWN
+                    param.hasDefaultValue()
+                            ? inferTypeFromExpression(param.getDefaultValue())
+                            : SymbolType.UNKNOWN
             );
+            if (param.hasDefaultValue()) {
+                paramSymbol.setValue(extractValue(param.getDefaultValue()));
+            }
+            if (param.isVararg()) paramSymbol.setAttribute("vararg", true);
+            if (param.isKwarg())  paramSymbol.setAttribute("kwarg", true);
             symbolTable.defineSymbol(paramSymbol);
         }
 
@@ -149,6 +156,43 @@ public class PythonSymbolTableBuilder extends PythonBaseASTVisitor<Void> {
         n.getBody().accept(this);
 
         symbolTable.exitScope();
+        return null;
+    }
+
+    @Override
+    public Void visit(WhileNode n) {
+        n.getCondition().accept(this);
+
+        symbolTable.enterWhileScope();
+        n.getBody().accept(this);
+        symbolTable.exitScope();
+
+        return null;
+    }
+
+    @Override
+    public Void visit(TryNode n) {
+        n.getTryBlock().accept(this);
+
+        for (TryNode.ExceptHandler h : n.getHandlers()) {
+            if (h.getExceptionType() != null) h.getExceptionType().accept(this);
+
+            // 'except E as name' binds 'name' for the duration of the handler
+            if (h.hasAlias()) {
+                symbolTable.defineSymbol(new Symbol(
+                        h.getAlias(), n.getLine(), n.getColumn(),
+                        SymbolKind.VARIABLE, SymbolType.UNKNOWN));
+            }
+            h.getBlock().accept(this);
+        }
+
+        if (n.hasFinally()) n.getFinallyBlock().accept(this);
+        return null;
+    }
+
+    @Override
+    public Void visit(RaiseNode n) {
+        if (n.hasException()) n.getException().accept(this);
         return null;
     }
 
@@ -318,6 +362,12 @@ public class PythonSymbolTableBuilder extends PythonBaseASTVisitor<Void> {
 
     @Override
     public Void visit(WithNode n) {
+        return null;
+    }
+
+    @Override
+    public Void visit(KeywordArgumentNode n) {
+        n.getValue().accept(this);
         return null;
     }
 

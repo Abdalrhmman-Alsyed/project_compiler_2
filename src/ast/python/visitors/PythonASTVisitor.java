@@ -25,6 +25,9 @@ public interface PythonASTVisitor<T> {
     T visit(AssignmentNode n);
     T visit(IfNode n);
     T visit(ForNode n);
+    T visit(WhileNode n);
+    T visit(TryNode n);
+    T visit(RaiseNode n);
     T visit(ReturnNode n);
     T visit(ExpressionStatementNode n);
     T visit(GlobalNode n);
@@ -40,6 +43,7 @@ public interface PythonASTVisitor<T> {
     T visit(AttributeNode n);
     T visit(IndexNode n);
     T visit(IdentifierNode n);
+    T visit(KeywordArgumentNode n);
 
     // Literals
     T visit(IntLiteralNode n);

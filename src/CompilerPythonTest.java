@@ -1,7 +1,7 @@
 import ast.python.visitors.PythonASTPrinter;
 import ast.python.visitors.PythonASTBuilderVisitor;
 import ast.python.PythonNode;
-import gen.FlaskLexer;
+import gen.FlaskPythonLexer;
 import gen.FlaskPythonParser;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -19,7 +19,7 @@ public class CompilerPythonTest {
 
         //   Lexer
         CharStream input = CharStreams.fromString(source);
-        FlaskLexer lexer = new FlaskLexer(input);
+        FlaskPythonLexer lexer = new FlaskPythonLexer(input);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
 
         tokens.fill();

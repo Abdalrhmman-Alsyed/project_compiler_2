@@ -6,6 +6,7 @@ import ast.python.literals.*;
 import ast.python.program.*;
 import ast.python.statements.*;
 import ast.python.visitors.PythonBaseASTVisitor;
+import symbolTable.symbols.SymbolType;
 
 import java.util.*;
 
@@ -33,6 +34,12 @@ import java.util.*;
  *  16.  Function has too many parameters (> 7)
  *  17.  Comparison with None using == / != instead of is / is not
  *  18.  Comparison with True/False using == / != instead of truthiness
+ *
+ * ERRORS (19-20) — required by the course spec:
+ *  19.  Type Mismatch   : unsupported operand types for '+': 'str' and 'int'
+ *  20.  Type Error      : 'int' object is not iterable
+ *  21.  Undefined Var    : variable 'x' is not defined
+ *  22.  Scope Error      : variable 'x' is out of scope
  */
 public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
 
@@ -51,6 +58,15 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
     private final Map<String, Integer> functionParamCount = new LinkedHashMap<>();
     // Maps module name → first-seen line (for duplicate import check)
     private final Map<String, Integer> importedModules   = new LinkedHashMap<>();
+    // Inferred type of each module-level variable (checks 19 and 20)
+    private final Map<String, SymbolType> globalTypes     = new LinkedHashMap<>();
+    // Every name ever bound inside some function body → its first line.
+    // Lets us say "out of scope" instead of "not defined" (checks 3 and 1).
+    private final Map<String, Integer> functionLocalNames  = new LinkedHashMap<>();
+    // Names assigned anywhere in the function currently being walked, collected
+    // up-front so a use that precedes its assignment reads as "used before
+    // assignment" rather than "undefined".
+    private final Deque<Set<String>> assignedAhead         = new ArrayDeque<>();
     // Functions that have already been fully visited (for duplicate detection)
     private final Set<String>          visitedFunctions  = new LinkedHashSet<>();
 
@@ -82,6 +98,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
         final String name;
         final int    line, col;
         boolean      used = false;
+        SymbolType   type = SymbolType.UNKNOWN;
 
         DefInfo(String name, int line, int col) {
             this.name = name; this.line = line; this.col = col;
@@ -104,10 +121,16 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
     }
 
     private void defineLocal(String name, int line, int col) {
+        defineLocal(name, line, col, SymbolType.UNKNOWN);
+    }
+
+    private void defineLocal(String name, int line, int col, SymbolType type) {
         if (scopeStack.isEmpty()) return;
         DefInfo info = new DefInfo(name, line, col);
+        info.type = type;
         scopeStack.peek().put(name, info);
         if (!functionDefLists.isEmpty()) functionDefLists.peek().add(info);
+        if (functionDepth > 0) functionLocalNames.putIfAbsent(name, line);
     }
 
     private DefInfo resolveLocal(String name) {
@@ -129,6 +152,160 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
     private void markUsed(String name) {
         DefInfo d = resolveLocal(name);
         if (d != null) d.used = true;
+    }
+
+    // ── Type inference ───────────────────────────────────────────────────────
+    // Deliberately conservative: anything not provably typed stays UNKNOWN, and
+    // checks 19/20 only fire when every operand type is known. A missed error
+    // is far cheaper than a false one.
+
+    private SymbolType typeOf(ExpressionNode expr) {
+        if (expr == null) return SymbolType.UNKNOWN;
+
+        if (expr instanceof IntLiteralNode)    return SymbolType.INT;
+        if (expr instanceof FloatLiteralNode)  return SymbolType.FLOAT;
+        if (expr instanceof StringLiteralNode) return SymbolType.STRING;
+        if (expr instanceof BoolLiteralNode)   return SymbolType.BOOL;
+        if (expr instanceof NoneLiteralNode)   return SymbolType.NONE;
+        if (expr instanceof ListLiteralNode)   return SymbolType.LIST;
+        if (expr instanceof DictLiteralNode)   return SymbolType.DICT;
+        if (expr instanceof SetLiteralNode)    return SymbolType.SET;
+
+        if (expr instanceof IdentifierNode id) {
+            DefInfo local = resolveLocal(id.getName());
+            if (local != null) return local.type;
+            return globalTypes.getOrDefault(id.getName(), SymbolType.UNKNOWN);
+        }
+
+        if (expr instanceof BinaryOpNode bin)  return typeOfBinary(bin);
+        if (expr instanceof CallNode call)     return typeOfCall(call);
+
+        return SymbolType.UNKNOWN;
+    }
+
+    /** Result type of a constructor-like builtin; UNKNOWN for anything else. */
+    private SymbolType typeOfCall(CallNode call) {
+        if (!(call.getFunction() instanceof IdentifierNode id)) return SymbolType.UNKNOWN;
+        switch (id.getName()) {
+            case "str":   return SymbolType.STRING;
+            case "int":
+            case "len":   return SymbolType.INT;
+            case "float": return SymbolType.FLOAT;
+            case "bool":  return SymbolType.BOOL;
+            case "list":
+            case "range":
+            case "sorted": return SymbolType.LIST;
+            case "dict":  return SymbolType.DICT;
+            case "set":   return SymbolType.SET;
+            default:      return SymbolType.UNKNOWN;
+        }
+    }
+
+    private SymbolType typeOfBinary(BinaryOpNode bin) {
+        SymbolType l = typeOf(bin.getLeft());
+        SymbolType r = typeOf(bin.getRight());
+        String op = bin.getOperator();
+
+        if (isComparison(op)) return SymbolType.BOOL;
+
+        if (op.equals("/")) {
+            return (isNumeric(l) && isNumeric(r)) ? SymbolType.FLOAT : SymbolType.UNKNOWN;
+        }
+        if (isNumeric(l) && isNumeric(r)) {
+            return (l == SymbolType.FLOAT || r == SymbolType.FLOAT)
+                    ? SymbolType.FLOAT : SymbolType.INT;
+        }
+        if (l == r && (l == SymbolType.STRING || l == SymbolType.LIST) && op.equals("+")) {
+            return l;
+        }
+        // str * int  /  list * int  → repetition keeps the sequence type
+        if (op.equals("*")) {
+            if ((l == SymbolType.STRING || l == SymbolType.LIST) && isNumeric(r)) return l;
+            if ((r == SymbolType.STRING || r == SymbolType.LIST) && isNumeric(l)) return r;
+        }
+        return SymbolType.UNKNOWN;
+    }
+
+    // In Python bool is a subtype of int, so True + 1 is legal arithmetic.
+    private boolean isNumeric(SymbolType t) {
+        return t == SymbolType.INT || t == SymbolType.FLOAT || t == SymbolType.BOOL;
+    }
+
+    private boolean isComparison(String op) {
+        return op.equals("==") || op.equals("!=") || op.equals("<") || op.equals(">")
+            || op.equals("<=") || op.equals(">=") || op.equals("in") || op.equals("not in")
+            || op.equals("is") || op.equals("is not") || op.equals("and") || op.equals("or");
+    }
+
+    private boolean isArithmetic(String op) {
+        return op.equals("+") || op.equals("-") || op.equals("*")
+            || op.equals("/") || op.equals("//") || op.equals("%");
+    }
+
+    /** True only when the pair is certainly rejected by Python at runtime. */
+    private boolean isInvalidOperandPair(String op, SymbolType l, SymbolType r) {
+        if (l == SymbolType.UNKNOWN || r == SymbolType.UNKNOWN
+                || l == SymbolType.ANY || r == SymbolType.ANY) return false;
+        if (isNumeric(l) && isNumeric(r)) return false;
+
+        if (op.equals("+")) {
+            return !(l == r && (l == SymbolType.STRING || l == SymbolType.LIST));
+        }
+        if (op.equals("*")) {
+            boolean seqTimesNum = (l == SymbolType.STRING || l == SymbolType.LIST) && isNumeric(r);
+            boolean numTimesSeq = (r == SymbolType.STRING || r == SymbolType.LIST) && isNumeric(l);
+            return !(seqTimesNum || numTimesSeq);
+        }
+        if (op.equals("%")) {
+            return l != SymbolType.STRING;   // '%' also formats strings
+        }
+        // '-', '/', '//' are numeric-only
+        return true;
+    }
+
+    private boolean isIterable(SymbolType t) {
+        return t == SymbolType.STRING || t == SymbolType.LIST
+            || t == SymbolType.DICT   || t == SymbolType.SET
+            || t == SymbolType.UNKNOWN || t == SymbolType.ANY;
+    }
+
+    // ── Name resolution diagnostics (checks 1, 3, 15) ───────────────────────
+    // Three distinct diagnoses for a name that is not visible here:
+    //   assigned later in this function  → used before assignment  (warning)
+    //   bound inside some other function → out of scope            (error)
+    //   bound nowhere at all             → not defined             (error)
+
+    private void checkNameResolution(String name, int line, int col) {
+        if (isKnown(name)) return;
+
+        if (!assignedAhead.isEmpty() && assignedAhead.peek().contains(name)) {
+            warning("Name '" + name + "' used before being assigned in local scope",
+                    line, col);
+        } else if (functionLocalNames.containsKey(name)) {
+            error("variable '" + name + "' is out of scope", line, col);
+        } else {
+            error("variable '" + name + "' is not defined", line, col);
+        }
+    }
+
+    /** Collects every name this function assigns, before walking its body. */
+    private Set<String> collectAssignedNames(ast.python.PythonNode node) {
+        Set<String> names = new LinkedHashSet<>();
+        gatherAssigned(node, names);
+        return names;
+    }
+
+    private void gatherAssigned(ast.python.PythonNode node, Set<String> out) {
+        if (node == null) return;
+        if (node instanceof AssignmentNode asg
+                && asg.getTarget() instanceof IdentifierNode id) {
+            out.add(id.getName());
+        } else if (node instanceof ForNode f) {
+            out.add(f.getVariable().getName());
+        } else if (node instanceof WithNode w && w.hasAlias()) {
+            out.add(w.getAlias().getName());
+        }
+        for (ast.python.PythonNode child : node.getChildren()) gatherAssigned(child, out);
     }
 
     // ── Public API ───────────────────────────────────────────────────────────
@@ -239,12 +416,17 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
                         + "' in function '" + n.getName() + "'",
                         param.getLine(), param.getColumn());
             }
+            if (param.hasDefaultValue()) param.getDefaultValue().accept(this);
+
             DefInfo info = new DefInfo(param.getName(), param.getLine(), param.getColumn());
             info.used = true; // parameters are used by callers
             scopeStack.peek().put(param.getName(), info);
         }
 
+        assignedAhead.push(n.getBody() != null
+                ? collectAssignedNames(n.getBody()) : new LinkedHashSet<>());
         if (n.getBody() != null) n.getBody().accept(this);
+        assignedAhead.pop();
 
         // Check 12: local variables defined but never used
         List<DefInfo> fnDefs = functionDefLists.pop();
@@ -319,10 +501,17 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
                         n.getLine(), n.getColumn());
             }
 
+            // An augmented assignment ('x += 1') refines the existing type
+            // rather than replacing it, so keep what we already knew.
+            SymbolType valueType = n.getOperator().equals("=")
+                    ? typeOf(n.getValue())
+                    : typeOf(new IdentifierNode(id.getLine(), id.getColumn(), name));
+
             if (functionDepth > 0 && !currentGlobals.contains(name)) {
-                defineLocal(name, n.getLine(), n.getColumn());
+                defineLocal(name, n.getLine(), n.getColumn(), valueType);
             } else {
                 globalKind.put(name, "variable");
+                globalTypes.put(name, valueType);
             }
         } else {
             // Complex target (attribute access, index) — just visit for uses
@@ -389,6 +578,14 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
     @Override
     public Void visit(ForNode n) {
         n.getIterable().accept(this);
+
+        // Check 20: iterating something that is provably not iterable
+        SymbolType iterType = typeOf(n.getIterable());
+        if (!isIterable(iterType) && iterType != SymbolType.FUNCTION_TYPE) {
+            error("'" + iterType + "' object is not iterable",
+                    n.getIterable().getLine(), n.getIterable().getColumn());
+        }
+
         loopDepth++;
         pushScope();
 
@@ -402,6 +599,46 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
         n.getBody().accept(this);
         popScope();
         loopDepth--;
+        return null;
+    }
+
+    @Override
+    public Void visit(WhileNode n) {
+        n.getCondition().accept(this);
+
+        // loopDepth must rise so 'break'/'continue' inside a while are legal
+        loopDepth++;
+        pushScope();
+        n.getBody().accept(this);
+        popScope();
+        loopDepth--;
+        return null;
+    }
+
+    @Override
+    public Void visit(TryNode n) {
+        pushScope(); n.getTryBlock().accept(this); popScope();
+
+        for (TryNode.ExceptHandler h : n.getHandlers()) {
+            if (h.getExceptionType() != null) h.getExceptionType().accept(this);
+
+            pushScope();
+            if (h.hasAlias()) {
+                DefInfo info = new DefInfo(h.getAlias(), n.getLine(), n.getColumn());
+                info.used = true;   // exception aliases are conventionally short-lived
+                scopeStack.peek().put(h.getAlias(), info);
+            }
+            h.getBlock().accept(this);
+            popScope();
+        }
+
+        if (n.hasFinally()) { pushScope(); n.getFinallyBlock().accept(this); popScope(); }
+        return null;
+    }
+
+    @Override
+    public Void visit(RaiseNode n) {
+        if (n.hasException()) n.getException().accept(this);
         return null;
     }
 
@@ -446,6 +683,16 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
                     n.getLine(), n.getColumn());
         }
 
+        // Check 19: operands whose types cannot combine under this operator
+        if (isArithmetic(op)) {
+            SymbolType lt = typeOf(n.getLeft());
+            SymbolType rt = typeOf(n.getRight());
+            if (isInvalidOperandPair(op, lt, rt)) {
+                error("unsupported operand types for '" + op + "': '"
+                        + lt + "' and '" + rt + "'", n.getLine(), n.getColumn());
+            }
+        }
+
         // Check 18: == True/False or != True/False (use truthiness instead)
         if ((op.equals("==") || op.equals("!="))
                 && (n.getRight() instanceof BoolLiteralNode
@@ -470,11 +717,8 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
             String name = id.getName();
             markUsed(name);
 
-            // Check 13: call to undefined name
-            if (!isKnown(name)) {
-                warning("Call to undefined name '" + name + "'",
-                        n.getLine(), n.getColumn());
-            }
+            // Checks 1 / 3: the callee must resolve somewhere
+            checkNameResolution(name, n.getLine(), n.getColumn());
         } else {
             n.getFunction().accept(this);
         }
@@ -496,15 +740,18 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
     }
 
     @Override
+    public Void visit(KeywordArgumentNode n) {
+        n.getValue().accept(this);
+        return null;
+    }
+
+    @Override
     public Void visit(IdentifierNode n) {
         String name = n.getName();
         markUsed(name);
 
-        // Check 15: name used before assignment in local function scope
-        if (functionDepth > 0 && resolveLocal(name) == null && !isKnown(name)) {
-            warning("Name '" + name + "' used before being assigned in local scope",
-                    n.getLine(), n.getColumn());
-        }
+        // Checks 1 / 3 / 15
+        checkNameResolution(name, n.getLine(), n.getColumn());
         return null;
     }
 

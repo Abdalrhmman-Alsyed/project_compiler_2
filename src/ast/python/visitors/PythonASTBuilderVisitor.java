@@ -118,13 +118,8 @@ public class PythonASTBuilderVisitor extends FlaskPythonParserBaseVisitor<Python
         }
 
         if (ctx.paramList() != null) {
-            for (var paramCtx : ctx.paramList().ID()) {
-                ParameterNode param = new ParameterNode(
-                    paramCtx.getSymbol().getLine(),
-                    paramCtx.getSymbol().getCharPositionInLine(),
-                    paramCtx.getText()
-                );
-                function.addParameter(param);
+            for (var paramCtx : ctx.paramList().parameter()) {
+                function.addParameter(buildParameter(paramCtx));
             }
         }
         PythonNode body = visit(ctx.suite());
@@ -133,6 +128,87 @@ public class PythonASTBuilderVisitor extends FlaskPythonParserBaseVisitor<Python
         }
 
         return function;
+    }
+
+    private ParameterNode buildParameter(FlaskPythonParser.ParameterContext ctx) {
+        if (ctx instanceof FlaskPythonParser.VarargParamContext v) {
+            return new ParameterNode(v.ID().getSymbol().getLine(),
+                    v.ID().getSymbol().getCharPositionInLine(),
+                    v.ID().getText(), ParameterNode.Kind.VARARG);
+        }
+        if (ctx instanceof FlaskPythonParser.KwargParamContext k) {
+            return new ParameterNode(k.ID().getSymbol().getLine(),
+                    k.ID().getSymbol().getCharPositionInLine(),
+                    k.ID().getText(), ParameterNode.Kind.KWARG);
+        }
+
+        var n = (FlaskPythonParser.NormalParamContext) ctx;
+        ParameterNode param = new ParameterNode(n.ID().getSymbol().getLine(),
+                n.ID().getSymbol().getCharPositionInLine(), n.ID().getText());
+        if (n.expression() != null) {
+            param.setDefaultValue((ExpressionNode) visit(n.expression()));
+        }
+        return param;
+    }
+
+    @Override
+    public PythonNode visitWhileStmt(FlaskPythonParser.WhileStmtContext ctx) {
+        return visit(ctx.whileStatement());
+    }
+
+    @Override
+    public PythonNode visitWhileStatementRule(FlaskPythonParser.WhileStatementRuleContext ctx) {
+        return new WhileNode(
+            ctx.start.getLine(),
+            ctx.start.getCharPositionInLine(),
+            (ExpressionNode) visit(ctx.expression()),
+            (BlockNode) visit(ctx.suite())
+        );
+    }
+
+    @Override
+    public PythonNode visitRaiseStmt(FlaskPythonParser.RaiseStmtContext ctx) {
+        return visit(ctx.raiseStatement());
+    }
+
+    @Override
+    public PythonNode visitRaiseStatementRule(FlaskPythonParser.RaiseStatementRuleContext ctx) {
+        ExpressionNode exc = ctx.expression() != null
+                ? (ExpressionNode) visit(ctx.expression()) : null;
+        return new RaiseNode(ctx.start.getLine(), ctx.start.getCharPositionInLine(), exc);
+    }
+
+    @Override
+    public PythonNode visitTryStmt(FlaskPythonParser.TryStmtContext ctx) {
+        return visit(ctx.tryStatement());
+    }
+
+    @Override
+    public PythonNode visitTryStatementRule(FlaskPythonParser.TryStatementRuleContext ctx) {
+        // suite(0) is the try body; a trailing suite belongs to 'finally'
+        TryNode tryNode = new TryNode(
+            ctx.start.getLine(),
+            ctx.start.getCharPositionInLine(),
+            (BlockNode) visit(ctx.suite(0))
+        );
+
+        for (var handlerCtx : ctx.exceptClause()) {
+            ExpressionNode type = handlerCtx.expression() != null
+                    ? (ExpressionNode) visit(handlerCtx.expression()) : null;
+            String alias = handlerCtx.ID() != null ? handlerCtx.ID().getText() : null;
+            tryNode.addHandler(type, alias, (BlockNode) visit(handlerCtx.suite()));
+        }
+
+        if (ctx.FINALLY() != null) {
+            tryNode.setFinallyBlock((BlockNode) visit(ctx.suite(ctx.suite().size() - 1)));
+        }
+
+        return tryNode;
+    }
+
+    @Override
+    public PythonNode visitExceptClause(FlaskPythonParser.ExceptClauseContext ctx) {
+        return null; // handled inside visitTryStatementRule
     }
 
     @Override
@@ -481,101 +557,45 @@ public class PythonASTBuilderVisitor extends FlaskPythonParserBaseVisitor<Python
         }
     }
 
+    /**
+     * Walks the children left-to-right so mixed chains (a < b == c, a not in b)
+     * build correctly. Handles the two-token operators 'not in' and 'is not'.
+     */
     @Override
     public PythonNode visitComparisonExpression(FlaskPythonParser.ComparisonExpressionContext ctx) {
-        if (ctx.LT() != null && ctx.LT().size() > 0) {
-            PythonNode current = visit(ctx.additiveExpression(0));
+        PythonNode current = visit(ctx.additiveExpression(0));
+        int operandIndex = 1;
+        int i = 1;
 
-            for (int i = 0; i < ctx.LT().size(); i++) {
-                PythonNode right = visit(ctx.additiveExpression(i + 1));
-                current = new BinaryOpNode(
-                    ctx.LT(i).getSymbol().getLine(),
-                    ctx.LT(i).getSymbol().getCharPositionInLine(),
-                    "<",
-                    (ExpressionNode) current,
-                    (ExpressionNode) right
-                );
+        while (i < ctx.getChildCount()) {
+            org.antlr.v4.runtime.tree.ParseTree child = ctx.getChild(i);
+
+            if (!(child instanceof org.antlr.v4.runtime.tree.TerminalNode op)) {
+                i++;
+                continue;
             }
 
-            return current;
-        } else if (ctx.LTEQ() != null && ctx.LTEQ().size() > 0) {
-            PythonNode current = visit(ctx.additiveExpression(0));
+            String operator = op.getText();
+            int    opLine   = op.getSymbol().getLine();
+            int    opCol    = op.getSymbol().getCharPositionInLine();
 
-            for (int i = 0; i < ctx.LTEQ().size(); i++) {
-                PythonNode right = visit(ctx.additiveExpression(i + 1));
-                current = new BinaryOpNode(
-                    ctx.LTEQ(i).getSymbol().getLine(),
-                    ctx.LTEQ(i).getSymbol().getCharPositionInLine(),
-                    "<=",
-                    (ExpressionNode) current,
-                    (ExpressionNode) right
-                );
+            // 'not in' and 'is not' arrive as two adjacent terminals
+            if (i + 1 < ctx.getChildCount()
+                    && ctx.getChild(i + 1) instanceof org.antlr.v4.runtime.tree.TerminalNode next) {
+                String pair = operator + " " + next.getText();
+                if (pair.equals("not in") || pair.equals("is not")) {
+                    operator = pair;
+                    i++;
+                }
             }
 
-            return current;
-        } else if (ctx.GT() != null && ctx.GT().size() > 0) {
-            PythonNode current = visit(ctx.additiveExpression(0));
-
-            for (int i = 0; i < ctx.GT().size(); i++) {
-                PythonNode right = visit(ctx.additiveExpression(i + 1));
-                current = new BinaryOpNode(
-                    ctx.GT(i).getSymbol().getLine(),
-                    ctx.GT(i).getSymbol().getCharPositionInLine(),
-                    ">",
-                    (ExpressionNode) current,
-                    (ExpressionNode) right
-                );
-            }
-
-            return current;
-        } else if (ctx.GTEQ() != null && ctx.GTEQ().size() > 0) {
-            PythonNode current = visit(ctx.additiveExpression(0));
-
-            for (int i = 0; i < ctx.GTEQ().size(); i++) {
-                PythonNode right = visit(ctx.additiveExpression(i + 1));
-                current = new BinaryOpNode(
-                    ctx.GTEQ(i).getSymbol().getLine(),
-                    ctx.GTEQ(i).getSymbol().getCharPositionInLine(),
-                    ">=",
-                    (ExpressionNode) current,
-                    (ExpressionNode) right
-                );
-            }
-
-            return current;
-        } else if (ctx.IN() != null && ctx.IN().size() > 0) {
-            PythonNode current = visit(ctx.additiveExpression(0));
-
-            for (int i = 0; i < ctx.IN().size(); i++) {
-                PythonNode right = visit(ctx.additiveExpression(i + 1));
-                current = new BinaryOpNode(
-                    ctx.IN(i).getSymbol().getLine(),
-                    ctx.IN(i).getSymbol().getCharPositionInLine(),
-                    "in",
-                    (ExpressionNode) current,
-                    (ExpressionNode) right
-                );
-            }
-
-            return current;
-        } else if (ctx.IS() != null && ctx.IS().size() > 0) {
-            PythonNode current = visit(ctx.additiveExpression(0));
-
-            for (int i = 0; i < ctx.IS().size(); i++) {
-                PythonNode right = visit(ctx.additiveExpression(i + 1));
-                current = new BinaryOpNode(
-                    ctx.IS(i).getSymbol().getLine(),
-                    ctx.IS(i).getSymbol().getCharPositionInLine(),
-                    "is",
-                    (ExpressionNode) current,
-                    (ExpressionNode) right
-                );
-            }
-
-            return current;
-        } else {
-            return visit(ctx.additiveExpression(0));
+            PythonNode right = visit(ctx.additiveExpression(operandIndex++));
+            current = new BinaryOpNode(opLine, opCol, operator,
+                    (ExpressionNode) current, (ExpressionNode) right);
+            i++;
         }
+
+        return current;
     }
 
     @Override
@@ -877,7 +897,12 @@ public class PythonASTBuilderVisitor extends FlaskPythonParserBaseVisitor<Python
 
     @Override
     public PythonNode visitKeywordArgument(FlaskPythonParser.KeywordArgumentContext ctx) {
-        return visit(ctx.expression());
+        return new KeywordArgumentNode(
+            ctx.start.getLine(),
+            ctx.start.getCharPositionInLine(),
+            ctx.ID().getText(),
+            (ExpressionNode) visit(ctx.expression())
+        );
     }
 
     @Override

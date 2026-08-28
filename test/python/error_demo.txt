@@ -62,3 +62,21 @@ def compare_bool(flag):
         return 1
     if flag == False:
         return 0
+
+# ── الأخطاء الدلالية المطلوبة في التوصيف ─────────────────────────────
+
+# Type Mismatch: str + int
+age = '25'
+next_age = age + 1
+
+# Type Error: iterating an int
+count = 10
+for item in count:
+    print(item)
+
+# Scope Error: 'users' is local to load_users
+def load_users():
+    users = ['Ali', 'Sara']
+    return users
+
+print(users)
