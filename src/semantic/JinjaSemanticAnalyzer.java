@@ -46,7 +46,16 @@ public class JinjaSemanticAnalyzer extends FlaskTemplateParserBaseVisitor<Void> 
 
     // ── For-loop variable tracking (check 5) ─────────────────────────────────
     private final Deque<String> activeLoopVars = new ArrayDeque<>();
+    // Names bound by {% with x = ... %} while that block is being walked
+    private final Deque<String> activeWithVars = new ArrayDeque<>();
     private final Set<String>   expiredLoopVars = new LinkedHashSet<>();
+
+    // ── Always available: Jinja globals + Flask context processors ───────────
+    private static final Set<String> BUILTIN_NAMES = Set.of(
+        "loop", "range", "dict", "list", "cycler", "namespace", "lipsum", "joiner",
+        "url_for", "get_flashed_messages", "request", "session", "g", "config",
+        "self", "super", "true", "false", "none", "True", "False", "None"
+    );
 
     // ── Known Jinja2 built-in filters ─────────────────────────────────────────
     private static final Set<String> KNOWN_FILTERS = Set.of(
@@ -87,7 +96,7 @@ public class JinjaSemanticAnalyzer extends FlaskTemplateParserBaseVisitor<Void> 
     // ── Report ────────────────────────────────────────────────────────────────
     public void printReport() {
         System.out.println("\n" + "=".repeat(60));
-        System.out.println("  JINJA2 SEMANTIC ANALYSIS: " + templateName + "  (10 checks)");
+        System.out.println("  JINJA2 SEMANTIC ANALYSIS: " + templateName + "  (11 checks)");
         System.out.println("=".repeat(60));
 
         if (errors.isEmpty() && warnings.isEmpty()) {
@@ -111,8 +120,8 @@ public class JinjaSemanticAnalyzer extends FlaskTemplateParserBaseVisitor<Void> 
     // ════════════════════════════════════════════════════════════════════════
 
     @Override
-    public Void visitBlockStart(FlaskTemplateParser.BlockStartContext ctx) {
-        String blockName = ctx.BLOCK_ID().getText();
+    public Void visitBlockBlock(FlaskTemplateParser.BlockBlockContext ctx) {
+        String blockName = ctx.BLOCK_ID(0).getText();
         int    line      = ctx.start.getLine();
         int    col       = ctx.start.getCharPositionInLine();
 
@@ -125,7 +134,7 @@ public class JinjaSemanticAnalyzer extends FlaskTemplateParserBaseVisitor<Void> 
         }
 
         markOtherJinjaStatement();
-        return super.visitBlockStart(ctx);
+        return super.visitBlockBlock(ctx);
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -193,32 +202,25 @@ public class JinjaSemanticAnalyzer extends FlaskTemplateParserBaseVisitor<Void> 
     // ════════════════════════════════════════════════════════════════════════
 
     @Override
-    public Void visitForStart(FlaskTemplateParser.ForStartContext ctx) {
+    public Void visitForBlock(FlaskTemplateParser.ForBlockContext ctx) {
         String loopVar = ctx.BLOCK_ID().getText();
-        activeLoopVars.push(loopVar);
         markOtherJinjaStatement();
 
         // Check 10: for loop over a literal empty list
-        if (ctx.blockExpression() != null) {
-            String iterableText = ctx.blockExpression().getText().trim();
-            if (iterableText.equals("[]")) {
-                warning("{% for " + loopVar + " in [] %} iterates over a literal empty list — loop body never executes",
-                        ctx.start.getLine(), ctx.start.getCharPositionInLine());
-            }
+        if (ctx.blockExpression() != null
+                && ctx.blockExpression().getText().trim().equals("[]")) {
+            warning("{% for " + loopVar + " in [] %} iterates over a literal empty list"
+                    + " — loop body never executes",
+                    ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
-        // Don't pop here — visitEndFor handles expiry so the variable stays
-        // active while the loop body is visited (whether body is a child or sibling
-        // depends on the grammar structure).
-        return super.visitForStart(ctx);
-    }
+        // The block now owns its body, so the variable's scope is exactly the
+        // span of this rule: push, walk the children, pop.
+        activeLoopVars.push(loopVar);
+        super.visitForBlock(ctx);
+        activeLoopVars.pop();
+        expiredLoopVars.add(loopVar);
 
-    @Override
-    public Void visitEndFor(FlaskTemplateParser.EndForContext ctx) {
-        if (!activeLoopVars.isEmpty()) {
-            String loopVar = activeLoopVars.pop();
-            expiredLoopVars.add(loopVar);
-        }
         return null;
     }
 
@@ -281,17 +283,44 @@ public class JinjaSemanticAnalyzer extends FlaskTemplateParserBaseVisitor<Void> 
 
     @Override
     public Void visitIdentifierExpr(FlaskTemplateParser.IdentifierExprContext ctx) {
-        // Gets the base part of a dotted identifier: "product" from "product.name"
-        String name = ctx.EXPR_ID(0).getText();
-        checkExpiredLoopVar(name, ctx.start.getLine(), ctx.start.getCharPositionInLine());
+        // Member access is now a postfix AST/parse-tree node, so this atom is
+        // always the root identifier itself (for example "product").
+        String name = ctx.EXPR_ID().getText();
+        int line = ctx.start.getLine(), col = ctx.start.getCharPositionInLine();
+        // order matters: checkExpiredLoopVar clears the name once reported,
+        // so ask the context check first or it would see a clean slate
+        checkContextVariable(name, line, col);
+        checkExpiredLoopVar(name, line, col);
         return super.visitIdentifierExpr(ctx);
     }
 
     @Override
     public Void visitBlockIdentifier(FlaskTemplateParser.BlockIdentifierContext ctx) {
         String name = ctx.BLOCK_ID().getText();
-        checkExpiredLoopVar(name, ctx.start.getLine(), ctx.start.getCharPositionInLine());
+        int line = ctx.start.getLine(), col = ctx.start.getCharPositionInLine();
+        // order matters: checkExpiredLoopVar clears the name once reported,
+        // so ask the context check first or it would see a clean slate
+        checkContextVariable(name, line, col);
+        checkExpiredLoopVar(name, line, col);
         return super.visitBlockIdentifier(ctx);
+    }
+
+    /**
+     * Check 11 (spec #5): a name used in the template must come from one of
+     * six places — render_template kwargs (incl. those of any child template
+     * that extends this one), {% set %}, a for-loop variable, a {% with %}
+     * binding, or a Jinja/Flask builtin. Anything else was never supplied.
+     */
+    private void checkContextVariable(String name, int line, int col) {
+        if (BUILTIN_NAMES.contains(name))    return;   // builtin
+        if (pythonContextVars.contains(name)) return;  // render_template kwarg
+        if (setVarLines.containsKey(name))   return;   // {% set %}
+        if (activeLoopVars.contains(name))   return;   // {% for x in ... %}
+        if (activeWithVars.contains(name))   return;   // {% with x = ... %}
+        if (expiredLoopVars.contains(name))  return;   // reported by check 5 instead
+
+        error("template variable '" + name + "' is not passed from render_template",
+                line, col);
     }
 
     private void checkExpiredLoopVar(String name, int line, int col) {
@@ -316,9 +345,22 @@ public class JinjaSemanticAnalyzer extends FlaskTemplateParserBaseVisitor<Void> 
     }
 
     @Override
-    public Void visitWithStart(FlaskTemplateParser.WithStartContext ctx) {
+    public Void visitWithBlock(FlaskTemplateParser.WithBlockContext ctx) {
         markOtherJinjaStatement();
-        return super.visitWithStart(ctx);
+
+        // {% with messages = get_flashed_messages() %} binds 'messages' for
+        // exactly this block — without it every use inside reads as undefined.
+        // The grammar deliberately keeps the binding outside blockExpression:
+        // {% with messages = get_flashed_messages() %}.  Looking for '=' in
+        // the expression therefore always fails and falsely reports messages
+        // as an undefined template variable.
+        String bound = ctx.BLOCK_ID() == null ? null : ctx.BLOCK_ID().getText();
+        if (bound != null && !bound.isEmpty()) activeWithVars.push(bound);
+
+        super.visitWithBlock(ctx);
+
+        if (bound != null && !bound.isEmpty()) activeWithVars.pop();
+        return null;
     }
 
     // ── Utility ──────────────────────────────────────────────────────────────

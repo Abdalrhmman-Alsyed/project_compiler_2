@@ -4,6 +4,7 @@ import ast.template.NodeKind;
 import ast.template.TemplateNode;
 import ast.visitors.TemplateASTVisitor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class BlockBlockNode extends JinjaBlockNode {
@@ -19,7 +20,7 @@ public class BlockBlockNode extends JinjaBlockNode {
 
     @Override
     public List<TemplateNode> getChildren() {
-        return List.of();
+        return new ArrayList<>(getContent());
     }
     @Override
     public <T> T accept(TemplateASTVisitor<T> visitor) {

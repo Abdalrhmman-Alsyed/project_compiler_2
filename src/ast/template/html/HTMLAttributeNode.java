@@ -76,11 +76,11 @@ public class HTMLAttributeNode extends HTMLNode {
 
     @Override
     public List<TemplateNode> getChildren() {
-        return List.of();
+        return new ArrayList<>(valueParts);
     }
 
     @Override
     public <T> T accept(TemplateASTVisitor<T> visitor) {
-        return null;
+        return visitor.visit(this);
     }
 }

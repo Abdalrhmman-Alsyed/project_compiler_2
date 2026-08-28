@@ -5,16 +5,22 @@ import ast.template.TemplateNode;
 import ast.template.jinja.expressions.ExpressionNode;
 import ast.visitors.TemplateASTVisitor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
 public class WithBlockNode extends JinjaBlockNode {
+    private String variable;          // null for a bare {% with expr %}
     private ExpressionNode expression;
 
     public WithBlockNode(int line, int column, ExpressionNode expression) {
         super(NodeKind.JINJA_WITH_BLOCK, line, column);
         this.expression = expression;
     }
+
+    public String getVariable() { return variable; }
+    public void setVariable(String variable) { this.variable = variable; }
+    public boolean hasVariable() { return variable != null && !variable.isEmpty(); }
 
     public ExpressionNode getExpression() { return expression; }
 
@@ -28,7 +34,10 @@ public class WithBlockNode extends JinjaBlockNode {
 
     @Override
     public List<TemplateNode> getChildren() {
-        return List.of();
+        List<TemplateNode> kids = new ArrayList<>();
+        if (expression != null) kids.add(expression);
+        kids.addAll(getContent());
+        return kids;
     }
 }
 

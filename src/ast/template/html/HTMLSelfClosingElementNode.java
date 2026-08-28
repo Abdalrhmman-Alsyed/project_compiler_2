@@ -5,6 +5,7 @@ import ast.template.NodeKind;
 import ast.template.TemplateNode;
 import ast.visitors.TemplateASTVisitor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public final class HTMLSelfClosingElementNode extends HTMLElementNode {
@@ -14,7 +15,7 @@ public final class HTMLSelfClosingElementNode extends HTMLElementNode {
 
     @Override
     public List<TemplateNode> getChildren() {
-        return List.of();
+        return new ArrayList<>(getAttributes());
     }
     @Override
     public <T> T accept(TemplateASTVisitor<T> visitor) {

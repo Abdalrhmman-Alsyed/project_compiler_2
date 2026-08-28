@@ -10,6 +10,8 @@ import java.util.List;
 public class CallExpressionNode extends ExpressionNode {
     private ExpressionNode callee;
     private List<ExpressionNode> arguments;
+    /** Parallel to arguments: null means positional, otherwise its keyword. */
+    private final List<String> keywordNames = new ArrayList<>();
 
     public CallExpressionNode(int line, int column, ExpressionNode callee) {
         super(NodeKind.JINJA_EXPR_CALL, line, column);
@@ -26,6 +28,14 @@ public class CallExpressionNode extends ExpressionNode {
         return Collections.unmodifiableList(arguments);
     }
 
+    public List<String> getKeywordNames() {
+        return Collections.unmodifiableList(keywordNames);
+    }
+
+    public String getKeywordName(int index) {
+        return index >= 0 && index < keywordNames.size() ? keywordNames.get(index) : null;
+    }
+
     public int getArgumentCount() {
         return arguments.size();
     }
@@ -39,31 +49,45 @@ public class CallExpressionNode extends ExpressionNode {
     public void addArgument(ExpressionNode argument) {
         if (argument != null) {
             this.arguments.add(argument);
+            this.keywordNames.add(null);
+        }
+    }
+
+    public void addKeywordArgument(String name, ExpressionNode argument) {
+        if (argument != null) {
+            this.arguments.add(argument);
+            this.keywordNames.add(name);
         }
     }
 
     public void addAllArguments(List<ExpressionNode> arguments) {
         if (arguments != null) {
-            this.arguments.addAll(arguments);
+            for (ExpressionNode argument : arguments) addArgument(argument);
         }
     }
 
     public void addArgument(int index, ExpressionNode argument) {
         if (argument != null && index >= 0 && index <= arguments.size()) {
             this.arguments.add(index, argument);
+            this.keywordNames.add(index, null);
         }
     }
 
     // Remove methods
     public ExpressionNode removeArgument(int index) {
         if (index >= 0 && index < arguments.size()) {
+            keywordNames.remove(index);
             return this.arguments.remove(index);
         }
         return null;
     }
 
     public boolean removeArgument(ExpressionNode argument) {
-        return this.arguments.remove(argument);
+        int index = arguments.indexOf(argument);
+        if (index < 0) return false;
+        arguments.remove(index);
+        keywordNames.remove(index);
+        return true;
     }
 
     // Utility methods
@@ -73,6 +97,7 @@ public class CallExpressionNode extends ExpressionNode {
 
     public void clearArguments() {
         this.arguments.clear();
+        this.keywordNames.clear();
     }
 
     public ExpressionNode getArgument(int index) {
@@ -104,10 +129,10 @@ public class CallExpressionNode extends ExpressionNode {
 
     @Override
     public List<TemplateNode> getChildren() {
-        List<TemplateNode> children = new ArrayList<>();
-        if (callee != null) children.add(callee);
-        if (arguments != null) children.addAll(arguments);
-        return children;
+        List<TemplateNode> kids = new ArrayList<>();
+        if (callee != null) kids.add(callee);
+        kids.addAll(arguments);
+        return kids;
     }
 
     @Override

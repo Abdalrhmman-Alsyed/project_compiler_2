@@ -5,6 +5,7 @@ import ast.template.TemplateNode;
 import ast.template.jinja.expressions.ExpressionNode;
 import ast.visitors.TemplateASTVisitor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ElifBlockNode extends JinjaBlockNode {
@@ -26,6 +27,9 @@ public class ElifBlockNode extends JinjaBlockNode {
 
     @Override
     public List<TemplateNode> getChildren() {
-        return List.of();
+        List<TemplateNode> kids = new ArrayList<>();
+        if (condition != null) kids.add(condition);
+        kids.addAll(getContent());
+        return kids;
     }
 }

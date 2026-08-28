@@ -11,6 +11,8 @@ public class FilterExpressionNode extends ExpressionNode {
     private ExpressionNode input;
     private String filterName;
     private List<ExpressionNode> arguments;
+    /** Parallel to arguments: null means positional, otherwise its keyword. */
+    private final List<String> keywordNames = new ArrayList<>();
 
     public FilterExpressionNode(int line, int column, ExpressionNode input, String filterName) {
         super(NodeKind.JINJA_EXPR_FILTER, line, column);
@@ -32,6 +34,14 @@ public class FilterExpressionNode extends ExpressionNode {
         return Collections.unmodifiableList(arguments);
     }
 
+    public List<String> getKeywordNames() {
+        return Collections.unmodifiableList(keywordNames);
+    }
+
+    public String getKeywordName(int index) {
+        return index >= 0 && index < keywordNames.size() ? keywordNames.get(index) : null;
+    }
+
     // Setters
     public void setInput(ExpressionNode input) {
         this.input = input;
@@ -45,18 +55,30 @@ public class FilterExpressionNode extends ExpressionNode {
     public void addArgument(ExpressionNode argument) {
         if (argument != null) {
             this.arguments.add(argument);
+            this.keywordNames.add(null);
+        }
+    }
+
+    public void addKeywordArgument(String name, ExpressionNode argument) {
+        if (argument != null) {
+            this.arguments.add(argument);
+            this.keywordNames.add(name);
         }
     }
 
     public void addAllArguments(List<ExpressionNode> arguments) {
         if (arguments != null) {
-            this.arguments.addAll(arguments);
+            for (ExpressionNode argument : arguments) addArgument(argument);
         }
     }
 
     // Remove methods
     public boolean removeArgument(ExpressionNode argument) {
-        return this.arguments.remove(argument);
+        int index = arguments.indexOf(argument);
+        if (index < 0) return false;
+        arguments.remove(index);
+        keywordNames.remove(index);
+        return true;
     }
 
     // Utility methods
@@ -66,6 +88,7 @@ public class FilterExpressionNode extends ExpressionNode {
 
     public void clearArguments() {
         this.arguments.clear();
+        this.keywordNames.clear();
     }
 
     public int getTotalParameters() {
@@ -86,10 +109,10 @@ public class FilterExpressionNode extends ExpressionNode {
 
     @Override
     public List<TemplateNode> getChildren() {
-        List<TemplateNode> children = new ArrayList<>();
-        if (input != null) children.add(input);
-        if (arguments != null) children.addAll(arguments);
-        return children;
+        List<TemplateNode> kids = new ArrayList<>();
+        if (input != null) kids.add(input);
+        kids.addAll(arguments);
+        return kids;
     }
     @Override
     public <T> T accept(TemplateASTVisitor<T> visitor) {

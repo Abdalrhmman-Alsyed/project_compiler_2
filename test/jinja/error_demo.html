@@ -18,4 +18,6 @@
   {% block content %}Duplicate block content{% endblock %}
   {% include "ghost_template.html" %}
 {% endblock %}
+  <!-- Missing Flask Variable: render_template passes products/title only -->
+  <p>Role: {{ user_role }}</p>
 </html>

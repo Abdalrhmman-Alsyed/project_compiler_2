@@ -64,10 +64,10 @@ public final class HTMLNormalElementNode extends HTMLElementNode {
 
     @Override
     public List<TemplateNode> getChildren() {
-        List<TemplateNode> children = new ArrayList<>();
-        children.addAll(attributes);
-        children.addAll(content);
-        return children;
+        List<TemplateNode> kids = new ArrayList<>();
+        kids.addAll(getAttributes());
+        kids.addAll(getContent());
+        return kids;
     }
     @Override
     public <T> T accept(TemplateASTVisitor<T> visitor) {

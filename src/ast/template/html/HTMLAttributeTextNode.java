@@ -26,6 +26,6 @@ public class HTMLAttributeTextNode extends HTMLNode {
 
     @Override
     public <T> T accept(TemplateASTVisitor<T> visitor) {
-        return null;
+        return visitor.visit(this);
     }
 }

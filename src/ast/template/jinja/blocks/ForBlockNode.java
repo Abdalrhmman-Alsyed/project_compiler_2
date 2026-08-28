@@ -7,6 +7,7 @@ import ast.visitors.TemplateASTVisitor;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -73,7 +74,11 @@ public class ForBlockNode extends JinjaBlockNode {
 
     @Override
     public List<TemplateNode> getChildren() {
-        return List.of();
+        List<TemplateNode> kids = new ArrayList<>();
+        if (iterable != null) kids.add(iterable);
+        kids.addAll(getContent());
+        if (elseBlock != null) kids.add(elseBlock);
+        return kids;
     }
     @Override
     public <T> T accept(TemplateASTVisitor<T> visitor) {

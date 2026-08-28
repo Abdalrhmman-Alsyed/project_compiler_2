@@ -14,8 +14,8 @@ public class JinjaSymbolTableBuilder extends FlaskTemplateParserBaseVisitor<Void
     // Blocks
     // ---------------------------
     @Override
-    public Void visitBlockStart(FlaskTemplateParser.BlockStartContext ctx) {
-        String blockName = ctx.BLOCK_ID().getText();
+    public Void visitBlockBlock(FlaskTemplateParser.BlockBlockContext ctx) {
+        String blockName = ctx.BLOCK_ID(0).getText();
 
         // تعريف البلوك
         BlockSymbol blockSymbol = new BlockSymbol(
@@ -29,7 +29,7 @@ public class JinjaSymbolTableBuilder extends FlaskTemplateParserBaseVisitor<Void
         symbolTable.enterScope("block:" + blockName, JinjaSymbolType.BLOCK);
 
         // زيارة محتوى البلوك
-        super.visitBlockStart(ctx);
+        super.visitBlockBlock(ctx);
 
         // خروج من نطاق البلوك
         symbolTable.exitScope();
@@ -41,7 +41,7 @@ public class JinjaSymbolTableBuilder extends FlaskTemplateParserBaseVisitor<Void
     // Loops
     // ---------------------------
     @Override
-    public Void visitForStart(FlaskTemplateParser.ForStartContext ctx) {
+    public Void visitForBlock(FlaskTemplateParser.ForBlockContext ctx) {
         String loopVar = ctx.BLOCK_ID().getText();
 
         // تعريف متغير الحلقة
@@ -52,12 +52,11 @@ public class JinjaSymbolTableBuilder extends FlaskTemplateParserBaseVisitor<Void
                 "any",
                 true
         );
+        // enter the loop scope FIRST so the loop variable lives inside it
+        symbolTable.enterScope("for:" + loopVar, JinjaSymbolType.LOOP_VARIABLE);
         symbolTable.defineSymbol(loopSymbol);
 
-        // دخول نطاق الحلقة
-        symbolTable.enterScope("for:" + loopVar, JinjaSymbolType.LOOP_VARIABLE);
-
-        super.visitForStart(ctx);
+        super.visitForBlock(ctx);
 
         symbolTable.exitScope();
         return null;
@@ -85,41 +84,15 @@ public class JinjaSymbolTableBuilder extends FlaskTemplateParserBaseVisitor<Void
         return null;
     }
 
-    // ---------------------------
-    // Macros
-    // ---------------------------
     @Override
-    public Void visitMacroBlock(FlaskTemplateParser.MacroBlockContext ctx) {
-        String macroName = ctx.BLOCK_ID().getText();
-        MacroSymbol macro = new MacroSymbol(
-                macroName,
-                ctx.start.getLine(),
-                ctx.start.getCharPositionInLine()
-        );
+    public Void visitWithBlock(FlaskTemplateParser.WithBlockContext ctx) {
+        if (ctx.BLOCK_ID() == null) return super.visitWithBlock(ctx);
 
-        // إضافة الباراميترز
-        int position = 0;
-        if (ctx.macroParameters() != null) {
-            for (var param : ctx.macroParameters().BLOCK_ID()) {
-                ParameterSymbol p = new ParameterSymbol(
-                        param.getText(),
-                        param.getSymbol().getLine(),
-                        param.getSymbol().getCharPositionInLine(),
-                        "any",
-                        position++
-                );
-                macro.addParameter(p);
-                symbolTable.defineSymbol(p); // تعريف الباراميتر في الـ scope
-            }
-        }
-
-        symbolTable.defineSymbol(macro);
-
-        // دخول نطاق الماكرو
-        symbolTable.enterScope("macro:" + macroName, JinjaSymbolType.MACRO);
-
-        super.visitMacroBlock(ctx);
-
+        String name = ctx.BLOCK_ID().getText();
+        symbolTable.enterScope("with:" + name, JinjaSymbolType.VARIABLE);
+        symbolTable.defineSymbol(new VariableSymbol(
+                name, ctx.start.getLine(), ctx.start.getCharPositionInLine(), "any"));
+        super.visitWithBlock(ctx);
         symbolTable.exitScope();
         return null;
     }
@@ -188,8 +161,8 @@ public class JinjaSymbolTableBuilder extends FlaskTemplateParserBaseVisitor<Void
 
     @Override
     public Void visitCallExpr(FlaskTemplateParser.CallExprContext ctx) {
-        String funcName = ctx.EXPR_ID().getText();
-        symbolTable.recordSymbolUsage(funcName, ctx.start.getLine());
+        // Calls are postfixes now.  Their callee is visited through the atom
+        // that precedes them, which also handles method calls correctly.
         return super.visitCallExpr(ctx);
     }
 

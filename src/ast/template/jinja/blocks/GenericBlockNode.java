@@ -5,6 +5,7 @@ import ast.template.TemplateNode;
 import ast.template.jinja.expressions.ExpressionNode;
 import ast.visitors.TemplateASTVisitor;
 
+import java.util.ArrayList;
 import java.util.List;
 public class GenericBlockNode extends JinjaBlockNode {
     private String blockName;
@@ -22,7 +23,10 @@ public class GenericBlockNode extends JinjaBlockNode {
     public void setExpression(ExpressionNode expression) { this.expression = expression; }
     @Override
     public List<TemplateNode> getChildren() {
-        return List.of();
+        List<TemplateNode> kids = new ArrayList<>();
+        if (getExpression() != null) kids.add(getExpression());
+        kids.addAll(getContent());
+        return kids;
     }
 
     @Override

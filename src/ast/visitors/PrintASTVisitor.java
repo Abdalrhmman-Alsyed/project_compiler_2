@@ -133,7 +133,10 @@ public class PrintASTVisitor {
         else if (node instanceof CallExpressionNode callNode) {
             System.out.println(padding + "  CALL:");
             printExpression(callNode.getCallee(), indent + 2);
-            for (ExpressionNode arg : callNode.getArguments()) {
+            for (int i = 0; i < callNode.getArguments().size(); i++) {
+                String keyword = callNode.getKeywordName(i);
+                if (keyword != null) System.out.println(padding + "    KWARG: " + keyword);
+                ExpressionNode arg = callNode.getArguments().get(i);
                 printExpression(arg, indent + 2);
             }
         }
@@ -146,7 +149,10 @@ public class PrintASTVisitor {
         else if (node instanceof FilterExpressionNode filterNode) {
             System.out.println(padding + "  FILTER: |" + filterNode.getFilterName());
             printExpression(filterNode.getInput(), indent + 2);
-            for (ExpressionNode arg : filterNode.getArguments()) {
+            for (int i = 0; i < filterNode.getArguments().size(); i++) {
+                String keyword = filterNode.getKeywordName(i);
+                if (keyword != null) System.out.println(padding + "    KWARG: " + keyword);
+                ExpressionNode arg = filterNode.getArguments().get(i);
                 printExpression(arg, indent + 2);
             }
         }
@@ -175,7 +181,14 @@ public class PrintASTVisitor {
             printExpression(ifNode.getCondition(), indent + 4);
             System.out.println(padding + "    CONTENT:");
             ifNode.getContent().forEach(child -> printNode(child, indent + 4));
-
+            for (ElifBlockNode elifNode : ifNode.getElifBlocks()) {
+                System.out.println(padding + "    ELIF:");
+                printNode(elifNode, indent + 4);
+            }
+            if (ifNode.hasElseBlock()) {
+                System.out.println(padding + "    ELSE:");
+                printNode(ifNode.getElseBlock(), indent + 4);
+            }
         }
 
         else if (node instanceof ElifBlockNode elifNode) {
@@ -228,7 +241,8 @@ public class PrintASTVisitor {
         }
 
         else if (node instanceof WithBlockNode withNode) {
-            System.out.println(padding + "  WITH BLOCK:");
+            System.out.println(padding + "  WITH BLOCK:" +
+                    (withNode.hasVariable() ? " " + withNode.getVariable() + " =" : ""));
             printExpression(withNode.getExpression(), indent + 2);
             withNode.getContent().forEach(child -> printNode(child, indent + 2));
         }
@@ -322,8 +336,10 @@ public class PrintASTVisitor {
         else if (expr instanceof CallExpressionNode callNode) {
             System.out.println(padding + "  CALL:");
             printExpression(callNode.getCallee(), indent + 1);
-            for (ExpressionNode arg : callNode.getArguments()) {
-                printExpression(arg, indent + 1);
+            for (int i = 0; i < callNode.getArguments().size(); i++) {
+                String keyword = callNode.getKeywordName(i);
+                if (keyword != null) System.out.println(padding + "  KWARG: " + keyword);
+                printExpression(callNode.getArguments().get(i), indent + 1);
             }
         }
         else if (expr instanceof AttributeAccessNode attrAccess) {
@@ -333,8 +349,10 @@ public class PrintASTVisitor {
         else if (expr instanceof FilterExpressionNode filterNode) {
             System.out.println(padding + "  FILTER: |" + filterNode.getFilterName());
             printExpression(filterNode.getInput(), indent + 1);
-            for (ExpressionNode arg : filterNode.getArguments()) {
-                printExpression(arg, indent + 1);
+            for (int i = 0; i < filterNode.getArguments().size(); i++) {
+                String keyword = filterNode.getKeywordName(i);
+                if (keyword != null) System.out.println(padding + "  KWARG: " + keyword);
+                printExpression(filterNode.getArguments().get(i), indent + 1);
             }
         }
         else if (expr instanceof ListExpressionNode listNode) {

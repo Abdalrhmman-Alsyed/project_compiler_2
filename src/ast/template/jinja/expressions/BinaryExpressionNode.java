@@ -29,10 +29,10 @@ public class BinaryExpressionNode extends ExpressionNode {
     public void setRight(ExpressionNode right) { this.right = right; }
     @Override
     public List<TemplateNode> getChildren() {
-        List<TemplateNode> children = new ArrayList<>();
-        if (left != null) children.add(left);
-        if (right != null) children.add(right);
-        return children;
+        List<TemplateNode> kids = new ArrayList<>();
+        if (left != null) kids.add(left);
+        if (right != null) kids.add(right);
+        return kids;
     }
 
     @Override

@@ -43,6 +43,7 @@ public class CSSStyleNode extends CSSNode {
 
     @Override
     public <T> T accept(TemplateASTVisitor<T> visitor) {
+        // not part of TemplateASTVisitor; keep the walk alive
         return null;
     }
 //    @Override

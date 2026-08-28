@@ -5,6 +5,9 @@ import java.util.*;
 public class JinjaSymbolTable {
     // النطاقات المتداخلة
     private final Stack<SymbolScope> scopeStack;
+    // exitScope() pops, so the stack alone cannot describe the finished tree.
+    // Every scope ever created is retained here for reporting and analysis.
+    private final List<SymbolScope> allScopes = new ArrayList<>();
     private SymbolScope currentScope;
 
     // التتبع
@@ -29,6 +32,7 @@ public class JinjaSymbolTable {
         // إنشاء النطاق العالمي
         currentScope = new SymbolScope("global", null);
         scopeStack.push(currentScope);
+        allScopes.add(currentScope);
 
         // إضافة الرموز المدمجة
         addBuiltInSymbols();
@@ -40,6 +44,9 @@ public class JinjaSymbolTable {
         defineSymbol(new FunctionSymbol("dict", -1, -1));
         defineSymbol(new FunctionSymbol("list", -1, -1));
         defineSymbol(new FunctionSymbol("cycler", -1, -1));
+        defineSymbol(new FunctionSymbol("namespace", -1, -1));
+        defineSymbol(new FunctionSymbol("lipsum", -1, -1));
+        defineSymbol(new FunctionSymbol("joiner", -1, -1));
 
         // الدوال المدمجة في Flask
         defineSymbol(new FunctionSymbol("url_for", -1, -1));
@@ -60,6 +67,18 @@ public class JinjaSymbolTable {
         defineSymbol(new FilterSymbol("trim", -1, -1));
         defineSymbol(new FilterSymbol("striptags", -1, -1));
         defineSymbol(new FilterSymbol("wordcount", -1, -1));
+
+        // Keep the table's built-ins aligned with the semantic analyser so a
+        // valid filter such as |map or |tojson is never reported as undefined.
+        for (String name : List.of(
+                "abs", "attr", "batch", "center", "count", "d", "default", "dictsort",
+                "e", "escape", "filesizeformat", "first", "float", "forceescape", "format", "groupby",
+                "indent", "int", "items", "join", "last", "length", "list", "map", "max", "min",
+                "pprint", "random", "reject", "rejectattr", "replace", "reverse", "round",
+                "select", "selectattr", "slice", "sort", "string", "sum", "tojson", "truncate",
+                "unique", "urlencode", "urlize", "wordwrap", "xmlattr", "nl2br", "b64encode", "b64decode")) {
+            defineSymbol(new FilterSymbol(name, -1, -1));
+        }
     }
 
     // === إدارة النطاقات ===
@@ -68,6 +87,7 @@ public class JinjaSymbolTable {
         newScope.setScopeType(scopeType);
         currentScope = newScope;
         scopeStack.push(currentScope);
+        allScopes.add(newScope);
     }
 
     public void exitScope() {
@@ -86,14 +106,17 @@ public class JinjaSymbolTable {
         symbol.addMetadata("defined_at_line", symbol.getLine());
     }
 
+    /** Resolves from the current scope outwards through its parent chain. */
     public JinjaSymbol resolveSymbol(String name) {
-        // البحث في النطاقات من الداخل إلى الخارج
-        for (int i = scopeStack.size() - 1; i >= 0; i--) {
-            SymbolScope scope = scopeStack.get(i);
+        return currentScope == null ? null : currentScope.resolve(name);
+    }
+
+    /** Resolves anywhere in the template — used by post-traversal analysis,
+     *  when every scope has already been exited. */
+    public JinjaSymbol resolveAnywhere(String name) {
+        for (SymbolScope scope : allScopes) {
             JinjaSymbol symbol = scope.resolveLocal(name);
-            if (symbol != null) {
-                return symbol;
-            }
+            if (symbol != null) return symbol;
         }
         return null;
     }
@@ -127,7 +150,7 @@ public class JinjaSymbolTable {
         // التحقق من المتغيرات المستخدمة ولكن غير المعرفة
         for (Map.Entry<String, List<Integer>> entry : symbolUsages.entrySet()) {
             String varName = entry.getKey();
-            JinjaSymbol symbol = resolveSymbol(varName);
+            JinjaSymbol symbol = resolveAnywhere(varName);
 
             if (symbol == null && !isBuiltIn(varName)) {
                 errors.add(String.format("Undefined variable '%s' used at lines: %s",
@@ -184,7 +207,7 @@ public class JinjaSymbolTable {
 
     private List<JinjaSymbol> getAllSymbols() {
         List<JinjaSymbol> allSymbols = new ArrayList<>();
-        for (SymbolScope scope : scopeStack) {
+        for (SymbolScope scope : allScopes) {
             allSymbols.addAll(scope.getSymbols().values());
         }
         return allSymbols;
@@ -196,8 +219,16 @@ public class JinjaSymbolTable {
         System.out.println("📋 JINJA2 SYMBOL TABLE: " + templateName);
         System.out.println("=".repeat(60));
 
-        for (SymbolScope scope : scopeStack) {
-            printScope(scope, 0);
+        printScopeTree(allScopes.get(0), 0);
+    }
+
+    /** Walks the retained scope list as a tree, matching PythonSymbolTable's shape. */
+    private void printScopeTree(SymbolScope scope, int depth) {
+        printScope(scope, depth);
+        for (SymbolScope child : allScopes) {
+            if (child.getParent() == scope) {
+                printScopeTree(child, depth + 1);
+            }
         }
     }
 
@@ -294,6 +325,10 @@ public class JinjaSymbolTable {
 
         public String getName() {
             return name;
+        }
+
+        public SymbolScope getParent() {
+            return parent;
         }
 
         public void define(JinjaSymbol symbol) {

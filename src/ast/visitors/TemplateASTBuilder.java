@@ -28,7 +28,16 @@ public class TemplateASTBuilder extends FlaskTemplateParserBaseVisitor<TemplateN
             root.addDocument(visit(ctx.doctype()));
         }
 
-        root.addDocument(visit(ctx.html()));
+        if (ctx.html() != null) {
+            // Full page: <html> owns the content.
+            root.addDocument(visit(ctx.html()));
+        } else if (ctx.templateContent() != null) {
+            // Child template ({% extends %}...): content sits at the root.
+            // Must go through visitTemplateContentList — a plain visit() would
+            // fall through to the generated base visitor and return only the
+            // LAST child, silently dropping everything before it.
+            root.addAllDocuments(visitTemplateContentList(ctx.templateContent()));
+        }
 
         return root;
     }
@@ -99,10 +108,15 @@ public class TemplateASTBuilder extends FlaskTemplateParserBaseVisitor<TemplateN
     @Override
     public TemplateNode visitHtmlText(FlaskTemplateParser.HtmlTextContext ctx) {
 
+        // htmlText is HTML_TEXT+, so HTML_TEXT() is a LIST; toString() on it
+        // would emit "[a, b]" instead of the text itself.
+        StringBuilder text = new StringBuilder();
+        for (var chunk : ctx.HTML_TEXT()) text.append(chunk.getText());
+
         return new HTMLTextNode(
                 ctx.start.getLine(),
                 ctx.start.getCharPositionInLine(),
-                ctx.HTML_TEXT().toString()
+                text.toString()
         );
     }
 
@@ -216,6 +230,105 @@ public class TemplateASTBuilder extends FlaskTemplateParserBaseVisitor<TemplateN
         return visitAttrJinjaBlock(ctx.attrJinjaBlock());
     }
 
+    // ══════════════════════════════════════════════════════════════════════
+    //  EXPRESSION CHAINS
+    //  Every precedence level is an unlabelled rule, so without an explicit
+    //  builder the generated visitor's visitChildren() returns only the LAST
+    //  child: 'n > 5' would collapse to the literal 5, losing both the left
+    //  operand and the operator. One left-associative fold serves all levels.
+    // ══════════════════════════════════════════════════════════════════════
+
+    /** Folds  operand (OP operand)*  into left-nested BinaryExpressionNodes. */
+    private TemplateNode foldBinary(org.antlr.v4.runtime.ParserRuleContext ctx) {
+        ExpressionNode current = null;
+        String pendingOp = null;
+
+        for (int i = 0; i < ctx.getChildCount(); i++) {
+            org.antlr.v4.runtime.tree.ParseTree child = ctx.getChild(i);
+
+            if (child instanceof org.antlr.v4.runtime.tree.TerminalNode op) {
+                pendingOp = op.getText();
+                continue;
+            }
+
+            ExpressionNode operand = (ExpressionNode) visit(child);
+            if (current == null) {
+                current = operand;
+            } else {
+                current = new BinaryExpressionNode(
+                        ctx.start.getLine(), ctx.start.getCharPositionInLine(),
+                        pendingOp == null ? "?" : pendingOp, current, operand);
+                pendingOp = null;
+            }
+        }
+        return current;
+    }
+
+    // ── {% %} block expressions ──────────────────────────────────────────────
+    @Override public TemplateNode visitBlockLogicalOrExpression(FlaskTemplateParser.BlockLogicalOrExpressionContext c)   { return foldBinary(c); }
+    @Override public TemplateNode visitBlockLogicalAndExpression(FlaskTemplateParser.BlockLogicalAndExpressionContext c) { return foldBinary(c); }
+    @Override public TemplateNode visitBlockEqualityExpression(FlaskTemplateParser.BlockEqualityExpressionContext c)     { return foldBinary(c); }
+    @Override public TemplateNode visitBlockComparisonExpression(FlaskTemplateParser.BlockComparisonExpressionContext c) { return foldBinary(c); }
+    @Override public TemplateNode visitBlockAdditiveExpression(FlaskTemplateParser.BlockAdditiveExpressionContext c)     { return foldBinary(c); }
+    @Override public TemplateNode visitBlockMultiplicativeExpression(FlaskTemplateParser.BlockMultiplicativeExpressionContext c) { return foldBinary(c); }
+
+    @Override
+    public TemplateNode visitBlockUnaryOp(FlaskTemplateParser.BlockUnaryOpContext ctx) {
+        return new UnaryExpressionNode(
+                ctx.start.getLine(), ctx.start.getCharPositionInLine(),
+                ctx.getChild(0).getText(),
+                (ExpressionNode) visit(ctx.blockUnaryExpression()));
+    }
+
+    @Override
+    public TemplateNode visitBlockUnaryBase(FlaskTemplateParser.BlockUnaryBaseContext ctx) {
+        return visit(ctx.blockPrimaryExpression());
+    }
+
+    @Override
+    public TemplateNode visitBlockParenExpr(FlaskTemplateParser.BlockParenExprContext ctx) {
+        return visitBlockExpression(ctx.blockExpression());
+    }
+
+    /** blockAtom followed by any mix of .member, (call) and |filter. */
+    @Override
+    public TemplateNode visitBlockPrimary(FlaskTemplateParser.BlockPrimaryContext ctx) {
+        ExpressionNode current = (ExpressionNode) visit(ctx.blockAtom());
+
+        for (FlaskTemplateParser.BlockPostfixContext post : ctx.blockPostfix()) {
+            int line = post.start.getLine(), col = post.start.getCharPositionInLine();
+
+            if (post instanceof FlaskTemplateParser.BlockMemberOpContext m) {
+                current = new AttributeAccessNode(line, col, current, m.BLOCK_ID().getText());
+
+            } else if (post instanceof FlaskTemplateParser.BlockFilterOpContext f) {
+                FilterExpressionNode filter =
+                        new FilterExpressionNode(line, col, current, f.BLOCK_ID().getText());
+                addBlockArguments(filter, null, f.blockArgumentList());
+                current = filter;
+
+            } else if (post instanceof FlaskTemplateParser.BlockCallOpContext call) {
+                CallExpressionNode node = new CallExpressionNode(line, col, current);
+                addBlockArguments(null, node, call.blockArgumentList());
+                current = node;
+            }
+        }
+        return current;
+    }
+
+    // ── {{ }} expressions ────────────────────────────────────────────────────
+    @Override public TemplateNode visitLogicalOrExpression(FlaskTemplateParser.LogicalOrExpressionContext c)   { return foldBinary(c); }
+    @Override public TemplateNode visitLogicalAndExpression(FlaskTemplateParser.LogicalAndExpressionContext c) { return foldBinary(c); }
+    @Override public TemplateNode visitEqualityExpression(FlaskTemplateParser.EqualityExpressionContext c)     { return foldBinary(c); }
+    @Override public TemplateNode visitComparisonExpression(FlaskTemplateParser.ComparisonExpressionContext c) { return foldBinary(c); }
+    @Override public TemplateNode visitAdditiveExpression(FlaskTemplateParser.AdditiveExpressionContext c)     { return foldBinary(c); }
+    @Override public TemplateNode visitMultiplicativeExpression(FlaskTemplateParser.MultiplicativeExpressionContext c) { return foldBinary(c); }
+
+    @Override
+    public TemplateNode visitParenExpr(FlaskTemplateParser.ParenExprContext ctx) {
+        return visitExpressionRoot((FlaskTemplateParser.ExpressionRootContext) ctx.expression());
+    }
+
     @Override
     public TemplateNode visitBlockExpression(FlaskTemplateParser.BlockExpressionContext ctx) {
         return visit(ctx.blockLogicalOrExpression());
@@ -294,69 +407,81 @@ public class TemplateASTBuilder extends FlaskTemplateParserBaseVisitor<TemplateN
 
     @Override
     public TemplateNode visitAttrJinjaBlock(FlaskTemplateParser.AttrJinjaBlockContext ctx) {
-        return visit(ctx.jinjaBlockStatement());
+        return visit(ctx.jinjaTagStatement());
     }
 
 
+    // ── Paired blocks ──────────────────────────────────────────────────────
+    // Each rule now spans its own body, so the node simply adopts the
+    // templateContent that the grammar handed it.
+
     @Override
-    public TemplateNode visitIfStart(FlaskTemplateParser.IfStartContext ctx) {
+    public TemplateNode visitIfBlock(FlaskTemplateParser.IfBlockContext ctx) {
         ExpressionNode condition = (ExpressionNode) visitBlockExpression(ctx.blockExpression());
-        IfBlockNode ifNode = new IfBlockNode(ctx.start.getLine(), ctx.start.getCharPositionInLine(), condition);
-        if (ctx.templateContent() != null) {
-            ifNode.addAllContent(visitTemplateContentList(ctx.templateContent()));
+        IfBlockNode ifNode = new IfBlockNode(
+                ctx.start.getLine(), ctx.start.getCharPositionInLine(), condition);
+
+        ifNode.addAllContent(visitTemplateContentList(ctx.templateContent()));
+
+        for (FlaskTemplateParser.ElifClauseContext elifCtx : ctx.elifClause()) {
+            ifNode.addElif((ElifBlockNode) visitElifClause(elifCtx));
+        }
+        if (ctx.elseClause() != null) {
+            ifNode.setElseBlock((ElseBlockNode) visitElseClause(ctx.elseClause()));
         }
 
         return ifNode;
     }
 
     @Override
-    public TemplateNode visitElifBlock(FlaskTemplateParser.ElifBlockContext ctx) {
+    public TemplateNode visitElifClause(FlaskTemplateParser.ElifClauseContext ctx) {
         ExpressionNode condition = (ExpressionNode) visitBlockExpression(ctx.blockExpression());
-
-        ElifBlockNode elifNode = new ElifBlockNode(ctx.start.getLine(), ctx.start.getCharPositionInLine(), condition);
-
-        if (ctx.templateContent() != null) {
-            List<TemplateNode> content = visitTemplateContentList(ctx.templateContent());
-            elifNode.addAllContent(content);
-        }
-
+        ElifBlockNode elifNode = new ElifBlockNode(
+                ctx.start.getLine(), ctx.start.getCharPositionInLine(), condition);
+        elifNode.addAllContent(visitTemplateContentList(ctx.templateContent()));
         return elifNode;
     }
 
-
     @Override
-    public TemplateNode visitElseBlock(FlaskTemplateParser.ElseBlockContext ctx) {
-
-        ElseBlockNode elseNode = new ElseBlockNode(ctx.start.getLine(), ctx.start.getCharPositionInLine());
-
-        if (ctx.templateContent() != null) {
-            List<TemplateNode> content = visitTemplateContentList(ctx.templateContent());
-            elseNode.addAllContent(content);
-        }
-
+    public TemplateNode visitElseClause(FlaskTemplateParser.ElseClauseContext ctx) {
+        ElseBlockNode elseNode = new ElseBlockNode(
+                ctx.start.getLine(), ctx.start.getCharPositionInLine());
+        elseNode.addAllContent(visitTemplateContentList(ctx.templateContent()));
         return elseNode;
     }
 
-
     @Override
-    public TemplateNode visitForStart(FlaskTemplateParser.ForStartContext ctx) {
-        ExpressionNode condition = (ExpressionNode) visitBlockExpression(ctx.blockExpression());
+    public TemplateNode visitForBlock(FlaskTemplateParser.ForBlockContext ctx) {
+        ExpressionNode iterable = (ExpressionNode) visitBlockExpression(ctx.blockExpression());
+        ForBlockNode forNode = new ForBlockNode(
+                ctx.start.getLine(), ctx.start.getCharPositionInLine(),
+                ctx.BLOCK_ID().getText(), iterable);
 
-        ForBlockNode forBlockNode = new ForBlockNode(ctx.start.getLine(), ctx.start.getCharPositionInLine(), ctx.BLOCK_ID().getText(), condition);
-
-        if (ctx.templateContent() != null) {
-            List<TemplateNode> content = visitTemplateContentList(ctx.templateContent());
-            forBlockNode.addAllContent(content);
+        forNode.addAllContent(visitTemplateContentList(ctx.templateContent()));
+        if (ctx.elseClause() != null) {
+            forNode.setElseBlock((ElseBlockNode) visitElseClause(ctx.elseClause()));
         }
 
-        return forBlockNode;
+        return forNode;
     }
 
     @Override
-    public TemplateNode visitBlockStart(FlaskTemplateParser.BlockStartContext ctx) {
-        BlockBlockNode blockBlockNode = new BlockBlockNode(ctx.start.getLine(), ctx.start.getCharPositionInLine(),ctx.BLOCK_ID().getText());
-        blockBlockNode.addAllContent(visitTemplateContentList(ctx.templateContent()));
-        return blockBlockNode;
+    public TemplateNode visitBlockBlock(FlaskTemplateParser.BlockBlockContext ctx) {
+        BlockBlockNode node = new BlockBlockNode(
+                ctx.start.getLine(), ctx.start.getCharPositionInLine(),
+                ctx.BLOCK_ID(0).getText());
+        node.addAllContent(visitTemplateContentList(ctx.templateContent()));
+        return node;
+    }
+
+    @Override
+    public TemplateNode visitWithBlock(FlaskTemplateParser.WithBlockContext ctx) {
+        ExpressionNode expr = (ExpressionNode) visitBlockExpression(ctx.blockExpression());
+        WithBlockNode node = new WithBlockNode(
+                ctx.start.getLine(), ctx.start.getCharPositionInLine(), expr);
+        if (ctx.BLOCK_ID() != null) node.setVariable(ctx.BLOCK_ID().getText());
+        node.addAllContent(visitTemplateContentList(ctx.templateContent()));
+        return node;
     }
 
     @Override
@@ -421,18 +546,6 @@ public class TemplateASTBuilder extends FlaskTemplateParserBaseVisitor<TemplateN
 
 
     @Override
-    public TemplateNode visitWithStart(FlaskTemplateParser.WithStartContext ctx) {
-        ExpressionNode condition = (ExpressionNode) visitBlockExpression(ctx.blockExpression());
-
-        WithBlockNode withBlockNode = new WithBlockNode(
-                ctx.start.getLine(),
-                ctx.start.getCharPositionInLine(),
-                condition
-        );
-        return  withBlockNode;
-    }
-
-    @Override
     public TemplateNode visitExtendsBlock(FlaskTemplateParser.ExtendsBlockContext ctx) {
 
         ExtendsBlockNode extendsBlockNode = new ExtendsBlockNode(
@@ -452,8 +565,10 @@ public class TemplateASTBuilder extends FlaskTemplateParserBaseVisitor<TemplateN
                 ctx.BLOCK_ID().getText()
         );
 
-        genericBlockNode.setExpression((ExpressionNode) visitBlockExpression(ctx.blockExpression()));
-        genericBlockNode.addAllContent(visitTemplateContentList(ctx.templateContent()));
+        if (ctx.blockExpression() != null) {
+            genericBlockNode.setExpression(
+                    (ExpressionNode) visitBlockExpression(ctx.blockExpression()));
+        }
         return genericBlockNode;
     }
 
@@ -494,35 +609,26 @@ public class TemplateASTBuilder extends FlaskTemplateParserBaseVisitor<TemplateN
     }
 
     @Override
-    public TemplateNode visitUnaryExpr(FlaskTemplateParser.UnaryExprContext ctx) {
-
-        // إذا لم يوجد عامل ( + - not )
-        if (ctx.getChildCount() == 1) {
-            return visit(ctx.primaryExpression());
-        }
-
-        String operator = ctx.getChild(0).getText();
-        ExpressionNode operand =
-                (ExpressionNode) visit(ctx.primaryExpression());
-
+    public TemplateNode visitUnaryOp(FlaskTemplateParser.UnaryOpContext ctx) {
         return new UnaryExpressionNode(
                 ctx.start.getLine(),
                 ctx.start.getCharPositionInLine(),
-                operator,
-                operand
+                ctx.getChild(0).getText(),
+                (ExpressionNode) visit(ctx.unaryExpression())
         );
     }
 
-
-
+    @Override
+    public TemplateNode visitUnaryBase(FlaskTemplateParser.UnaryBaseContext ctx) {
+        return visit(ctx.primaryExpression());
+    }
 
     @Override
     public TemplateNode visitIdentifierExpr(FlaskTemplateParser.IdentifierExprContext ctx) {
-
         return new VariableNode(
                 ctx.start.getLine(),
                 ctx.start.getCharPositionInLine(),
-                ctx.EXPR_ID().toString()
+                ctx.EXPR_ID().getText()
         );
     }
 
@@ -597,7 +703,9 @@ public class TemplateASTBuilder extends FlaskTemplateParserBaseVisitor<TemplateN
         ListExpressionNode node =
                 new ListExpressionNode(ctx.start.getLine(), ctx.start.getCharPositionInLine());
 
-        node.addAllElement(visitExprListList((FlaskTemplateParser.ExprListContext) ctx.expressionList()));
+        if (ctx.expressionList() != null) {
+            node.addAllElement(visitExprListList((FlaskTemplateParser.ExprListContext) ctx.expressionList()));
+        }
 
         return node;
     }
@@ -613,8 +721,10 @@ public class TemplateASTBuilder extends FlaskTemplateParserBaseVisitor<TemplateN
 
     @Override
     public TemplateNode visitDictExpr(FlaskTemplateParser.DictExprContext ctx) {
-
-        return visitDictPairListNode((FlaskTemplateParser.DictPairListNodeContext) ctx.dictPairList());
+        if (ctx.dictPairList() != null) {
+            return visitDictPairListNode((FlaskTemplateParser.DictPairListNodeContext) ctx.dictPairList());
+        }
+        return new DictExpressionNode(ctx.start.getLine(), ctx.start.getCharPositionInLine());
     }
 
     @Override
@@ -654,69 +764,82 @@ public class TemplateASTBuilder extends FlaskTemplateParserBaseVisitor<TemplateN
         return list;
     }
 
+    /** Builds a left-to-right chain: member access, calls, and filters. */
     @Override
-    public TemplateNode visitFilterExpr(FlaskTemplateParser.FilterExprContext ctx) {
-        ExpressionNode input = (ExpressionNode) visit(ctx.primaryExpression());
-        String filterName = ctx.EXPR_ID().getText();
+    public TemplateNode visitPrimary(FlaskTemplateParser.PrimaryContext ctx) {
+        ExpressionNode current = (ExpressionNode) visit(ctx.atom());
 
-        FilterExpressionNode node = new FilterExpressionNode(
-                ctx.start.getLine(),
-                ctx.start.getCharPositionInLine(),
-                input,
-                filterName
-        );
+        for (FlaskTemplateParser.PostfixContext postfix : ctx.postfix()) {
+            int line = postfix.start.getLine();
+            int col = postfix.start.getCharPositionInLine();
 
-        if (ctx.argumentList() != null) {
-            node.addAllArguments(
-                    visitArgList2((FlaskTemplateParser.ArgListContext) ctx.argumentList())
-            );
+            if (postfix instanceof FlaskTemplateParser.MemberOpContext member) {
+                current = new AttributeAccessNode(line, col, current, member.EXPR_ID().getText());
+            } else if (postfix instanceof FlaskTemplateParser.CallExprContext call) {
+                CallExpressionNode node = new CallExpressionNode(line, col, current);
+                addJinjaArguments(null, node, call.argumentList());
+                current = node;
+            } else if (postfix instanceof FlaskTemplateParser.FilterExprContext filter) {
+                FilterExpressionNode node = new FilterExpressionNode(
+                        line, col, current, filter.EXPR_ID().getText());
+                addJinjaArguments(node, null, filter.argumentList());
+                current = node;
+            }
         }
+        return current;
+    }
 
-        return node;
+    private void addJinjaArguments(FilterExpressionNode filter, CallExpressionNode call,
+                                   FlaskTemplateParser.ArgumentListContext list) {
+        if (list == null) return;
+        FlaskTemplateParser.ArgListContext args = (FlaskTemplateParser.ArgListContext) list;
+        for (FlaskTemplateParser.JinjaArgumentContext argument : args.jinjaArgument()) {
+            if (argument instanceof FlaskTemplateParser.KeywordArgumentContext keyword) {
+                ExpressionNode value = (ExpressionNode) visit(keyword.expression());
+                if (call != null) call.addKeywordArgument(keyword.EXPR_ID().getText(), value);
+                else filter.addKeywordArgument(keyword.EXPR_ID().getText(), value);
+            } else if (argument instanceof FlaskTemplateParser.PositionalArgumentContext positional) {
+                ExpressionNode value = (ExpressionNode) visit(positional.expression());
+                if (call != null) call.addArgument(value);
+                else filter.addArgument(value);
+            }
+        }
+    }
+
+    private void addBlockArguments(FilterExpressionNode filter, CallExpressionNode call,
+                                   FlaskTemplateParser.BlockArgumentListContext list) {
+        if (list == null) return;
+        for (FlaskTemplateParser.BlockArgumentContext argument : list.blockArgument()) {
+            if (argument instanceof FlaskTemplateParser.BlockKeywordArgumentContext keyword) {
+                ExpressionNode value = (ExpressionNode) visitBlockExpression(keyword.blockExpression());
+                if (call != null) call.addKeywordArgument(keyword.BLOCK_ID().getText(), value);
+                else filter.addKeywordArgument(keyword.BLOCK_ID().getText(), value);
+            } else if (argument instanceof FlaskTemplateParser.BlockPositionalArgumentContext positional) {
+                ExpressionNode value = (ExpressionNode) visitBlockExpression(positional.blockExpression());
+                if (call != null) call.addArgument(value);
+                else filter.addArgument(value);
+            }
+        }
+    }
+
+
+    /**
+     * {{ expr }} appearing as page content.
+     *
+     * <p>Without this override the generated visitor's visitChildren() returns
+     * the LAST child — the EXPR_END terminal, i.e. null — and every interpolation
+     * silently vanishes from the tree.
+     */
+    @Override
+    public TemplateNode visitJinjaExprNode(FlaskTemplateParser.JinjaExprNodeContext ctx) {
+        ExpressionNode expr = (ExpressionNode) visitJinjaExpression(ctx.jinjaExpression());
+        return new JinjaExpressionNode(
+                ctx.start.getLine(), ctx.start.getCharPositionInLine(), expr);
     }
 
     @Override
-    public TemplateNode visitCallExpr(FlaskTemplateParser.CallExprContext ctx) {
-        // 1. Callee: دائماً EXPR_ID
-        VariableNode callee = new VariableNode(
-                ctx.start.getLine(),
-                ctx.start.getCharPositionInLine(),
-                ctx.EXPR_ID().getText()
-        );
-
-        // 2. إنشاء العقدة
-        CallExpressionNode node = new CallExpressionNode(
-                ctx.start.getLine(),
-                ctx.start.getCharPositionInLine(),
-                callee
-        );
-
-        node.addAllArguments(visitArgList2((FlaskTemplateParser.ArgListContext) ctx.argumentList()));
-
-        return node;
-    }
-
-
-    public  List<ExpressionNode> visitArgList2(FlaskTemplateParser.ArgListContext ctx) {
-        List<ExpressionNode> list = new ArrayList<>();
-        for (var node : ctx.expression()){
-            list.add((ExpressionNode) visitExpressionRoot((FlaskTemplateParser.ExpressionRootContext) node));
-        }
-        return list;
-    }
-
-
-    public List<TemplateNode> visitJinjaExprNode2(FlaskTemplateParser.JinjaExprNodeContext ctx) {
-        List<TemplateNode> list = new ArrayList<>();
-        for (var node : ctx.jinjaExpression()){
-            list.add(visitJinjaExpression(node));
-        }
-        return list;
-    }
-
-    @Override
-    public TemplateNode visitJinjaBlockNode(FlaskTemplateParser.JinjaBlockNodeContext ctx) {
-        return visit(ctx.jinjaBlockStatement());
+    public TemplateNode visitJinjaTagNode(FlaskTemplateParser.JinjaTagNodeContext ctx) {
+        return visit(ctx.jinjaTagStatement());
     }
 
     @Override

@@ -35,8 +35,16 @@ public class TemplateRootNode extends TemplateNode {
     }
 
     public List<TemplateNode> getDocuments() { return documents; }
+
     public void addDocument(TemplateNode document) {
-        documents.add(document);
+        if (document != null) {   // a visit() with no builder override returns null
+            documents.add(document);
+        }
+    }
+
+    public void addAllDocuments(List<TemplateNode> docs) {
+        if (docs == null) return;
+        for (TemplateNode d : docs) addDocument(d);
     }
 
     @Override

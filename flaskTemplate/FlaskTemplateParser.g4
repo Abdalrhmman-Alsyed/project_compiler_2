@@ -1,13 +1,15 @@
 parser grammar FlaskTemplateParser;
 
 options {
-    tokenVocab = FlaskLexer;
+    tokenVocab = FlaskJinjaLexer;
 }
 
 @header { package gen; }
 
+// A page template wraps everything in <html>; a child template that begins
+// with {% extends %} has no wrapper at all. Both are valid entry points.
 template
-    : doctype? html NEWLINE* EOF #templateRoot
+    : doctype? (html | templateContent) NEWLINE* EOF #templateRoot
     ;
 
 
@@ -25,6 +27,7 @@ templateContent
 contentItem
     : htmlElement   # htmlContent
     | jinjaBlock    # jinjaBlockContent
+    | jinjaTag      # jinjaTagContent
     | jinjaExpr     # jinjaExprContent
     | htmlText      # htmlTextContent
     | cssStyle      # cssContent
@@ -80,40 +83,82 @@ attrJinjaExprContent
     ;
 
 attrJinjaBlock
-    : ATTR_JINJA_BLOCK_START jinjaBlockStatement BLOCK_END
+    : ATTR_JINJA_BLOCK_START jinjaTagStatement BLOCK_END
     ;
 
 htmlText
     : HTML_TEXT+
     ;
 
-// ============ JINJA2 BLOCKS ============
+// ============ JINJA2: PAIRED BLOCKS ============
+// Each block owns its body: the opening tag closes with %}, THEN the body
+// follows as real content, and the matching end tag terminates it. Because
+// {% endif %} / {% endfor %} / {% endblock %} match no contentItem
+// alternative, templateContent stops there on its own.
+
 jinjaBlock
-    : TEMPLATE_JINJA_BLOCK_START jinjaBlockStatement BLOCK_END #jinjaBlockNode
+    : ifBlock
+    | forBlock
+    | blockBlock
+    | withBlock
     ;
 
-jinjaBlockStatement
-    : BLOCK_IF blockExpression templateContent?             # ifStart
-    | BLOCK_ELIF blockExpression templateContent? BLOCK_ENDIF                      # elifBlock
-    | BLOCK_ELSE templateContent?                                      # elseBlock
-    | BLOCK_FOR BLOCK_ID BLOCK_IN blockExpression templateContent?  # forStart
-    | BLOCK_BLOCK BLOCK_ID templateContent?             # blockStart
-    | BLOCK_SET BLOCK_ID BLOCK_EQ blockExpression                     # setBlock
+ifBlock
+    : TEMPLATE_JINJA_BLOCK_START BLOCK_IF blockExpression BLOCK_END
+      templateContent
+      elifClause*
+      elseClause?
+      TEMPLATE_JINJA_BLOCK_START BLOCK_ENDIF BLOCK_END
+    ;
+
+elifClause
+    : TEMPLATE_JINJA_BLOCK_START BLOCK_ELIF blockExpression BLOCK_END
+      templateContent
+    ;
+
+elseClause
+    : TEMPLATE_JINJA_BLOCK_START BLOCK_ELSE BLOCK_END
+      templateContent
+    ;
+
+forBlock
+    : TEMPLATE_JINJA_BLOCK_START BLOCK_FOR BLOCK_ID BLOCK_IN blockExpression BLOCK_END
+      templateContent
+      elseClause?
+      TEMPLATE_JINJA_BLOCK_START BLOCK_ENDFOR BLOCK_END
+    ;
+
+blockBlock
+    : TEMPLATE_JINJA_BLOCK_START BLOCK_BLOCK BLOCK_ID BLOCK_END
+      templateContent
+      TEMPLATE_JINJA_BLOCK_START BLOCK_ENDBLOCK BLOCK_ID? BLOCK_END
+    ;
+
+// {% with messages = get_flashed_messages() %} binds a name; blockExpression
+// has no '=' operator, so the binding must be modelled here explicitly.
+withBlock
+    : TEMPLATE_JINJA_BLOCK_START BLOCK_WITH (BLOCK_ID BLOCK_EQ)? blockExpression BLOCK_END
+      templateContent
+      TEMPLATE_JINJA_BLOCK_START BLOCK_ENDWITH BLOCK_END
+    ;
+
+// ============ JINJA2: STANDALONE TAGS ============
+// Labels deliberately keep their old names so existing analyzers that walk
+// the parse tree keep compiling unchanged.
+
+jinjaTag
+    : TEMPLATE_JINJA_BLOCK_START jinjaTagStatement BLOCK_END #jinjaTagNode
+    ;
+
+jinjaTagStatement
+    : BLOCK_SET BLOCK_ID BLOCK_EQ blockExpression                     # setBlock
     | BLOCK_INCLUDE BLOCK_STRING                                      # includeBlock
     | BLOCK_IMPORT BLOCK_STRING (BLOCK_AS BLOCK_ID)?                  # importBlock
     | BLOCK_FROM BLOCK_STRING BLOCK_IMPORT importList                 # fromImportBlock
-    | BLOCK_WITH blockExpression templateContent? BLOCK_ENDWITH       # withStart
     | BLOCK_EXTENDS BLOCK_STRING                                      # extendsBlock
-    | BLOCK_ID (BLOCK_EQ blockExpression)? templateContent?           # genericBlock
-    | BLOCK_MACRO BLOCK_ID BLOCK_LPAREN macroParameters? BLOCK_RPAREN templateContent? BLOCK_ENDMACRO  # macroBlock
-    | BLOCK_ENDBLOCK  #endblock
-    | BLOCK_ENDIF  #endIf
-    | BLOCK_ENDFOR #endFor
+    | BLOCK_ID (BLOCK_EQ blockExpression)?                            # genericBlock
     ;
 
-    macroParameters
-        : BLOCK_ID (BLOCK_COMMA BLOCK_ID)*
-        ;
 
 // ============ BLOCK EXPRESSIONS ============
 blockExpression
@@ -166,13 +211,21 @@ blockAtom
     ;
 
 blockPostfix
-    : BLOCK_PIPE BLOCK_ID blockArgumentList? #blockFilterOp
+    : BLOCK_PIPE BLOCK_ID (BLOCK_LPAREN blockArgumentList? BLOCK_RPAREN)? #blockFilterOp
     | BLOCK_LPAREN blockArgumentList? BLOCK_RPAREN #blockCallOp
     | BLOCK_DOT BLOCK_ID #blockMemberOp
     ;
 
 blockArgumentList
-    : blockExpression (BLOCK_COMMA blockExpression)*
+    : blockArgument (BLOCK_COMMA blockArgument)*
+    ;
+
+// Keep the name of a keyword argument in the parse tree.  It is semantic
+// information (for example: url_for('detail', product_id=p.id)), not a read
+// of a template variable.
+blockArgument
+    : BLOCK_ID BLOCK_EQ blockExpression #blockKeywordArgument
+    | blockExpression                   #blockPositionalArgument
     ;
 
 blockExpressionList
@@ -191,7 +244,7 @@ importList: BLOCK_ID (BLOCK_COMMA BLOCK_ID)*;
 
 // ============ JINJA2 EXPRESSIONS ============
 jinjaExpr
-    : TEMPLATE_JINJA_EXPR_START jinjaExpression* EXPR_END #jinjaExprNode
+    : TEMPLATE_JINJA_EXPR_START jinjaExpression EXPR_END #jinjaExprNode
     ;
 
 jinjaExpression
@@ -227,13 +280,20 @@ multiplicativeExpression
     ;
 
 unaryExpression
-    : (EXPR_PLUS | EXPR_MINUS | EXPR_NOT)? primaryExpression #unaryExpr
+    : (EXPR_PLUS | EXPR_MINUS | EXPR_NOT) unaryExpression #unaryOp
+    | primaryExpression                                   #unaryBase
     ;
 
 primaryExpression
+    : atom postfix* #primary
+    ;
+
+// A single atom may be followed by any number of property accesses, calls,
+// and filters.  This models real Jinja expressions such as
+// user.get_name().to_upper() | reverse without losing the intermediate nodes.
+atom
     : EXPR_LPAREN expression EXPR_RPAREN                     # parenExpr
-    | EXPR_ID (EXPR_DOT EXPR_ID)*                            # identifierExpr
-    | EXPR_ID EXPR_LPAREN argumentList? EXPR_RPAREN          # callExpr
+    | EXPR_ID                                                # identifierExpr
     | EXPR_STRING                                            # stringExpr
     | EXPR_NUMBER                                            # numberExpr
     | EXPR_TRUE                                              # trueExpr
@@ -241,11 +301,23 @@ primaryExpression
     | EXPR_NONE                                              # noneExpr
     | EXPR_LBRACK expressionList? EXPR_RBRACK                # listExpr
     | EXPR_LBRACE dictPairList? EXPR_RBRACE                  # dictExpr
-    | primaryExpression EXPR_PIPE EXPR_ID argumentList?      # filterExpr
     ;
 
+postfix
+    : EXPR_PIPE EXPR_ID (EXPR_LPAREN argumentList? EXPR_RPAREN)? #filterExpr
+    | EXPR_LPAREN argumentList? EXPR_RPAREN #callExpr
+    | EXPR_DOT EXPR_ID                      #memberOp
+    ;
+
+// url_for('detail', product_id=p.id): 'product_id' is a parameter NAME, not a
+// variable read. Modelling it separately stops name checks from flagging it.
 argumentList
-    : expression (EXPR_COMMA expression)* (EXPR_EQ expression)* #argList
+    : jinjaArgument (EXPR_COMMA jinjaArgument)* #argList
+    ;
+
+jinjaArgument
+    : EXPR_ID EXPR_EQ expression   # keywordArgument
+    | expression                   # positionalArgument
     ;
 
 expressionList

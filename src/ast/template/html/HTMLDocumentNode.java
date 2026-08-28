@@ -102,11 +102,14 @@ public class HTMLDocumentNode extends HTMLNode {
 
     @Override
     public List<TemplateNode> getChildren() {
-        return List.of();
+        List<TemplateNode> kids = new ArrayList<>();
+        kids.addAll(getAttributes());
+        kids.addAll(getContent());
+        return kids;
     }
 
     @Override
     public <T> T accept(TemplateASTVisitor<T> visitor) {
-        return null;
+        return visitor.visit(this);
     }
 }

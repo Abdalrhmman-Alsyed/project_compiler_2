@@ -24,6 +24,7 @@ public class HTMLClosingTagNode extends HTMLNode {
 
     @Override
     public <T> T accept(TemplateASTVisitor<T> visitor) {
+        // not part of TemplateASTVisitor; keep the walk alive
         return null;
     }
 }

@@ -6,6 +6,7 @@ import ast.template.jinja.JinjaNode;
 import ast.visitors.TemplateASTVisitor;
 
 import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 public class JinjaExpressionNode extends JinjaNode {
     private ExpressionNode expression;
@@ -21,7 +22,9 @@ public class JinjaExpressionNode extends JinjaNode {
     }
     @Override
     public List<TemplateNode> getChildren() {
-        return expression != null ? Collections.singletonList(expression) : Collections.emptyList();
+        List<TemplateNode> kids = new ArrayList<>();
+        if (getExpression() != null) kids.add(getExpression());
+        return kids;
     }
     @Override
     public <T> T accept(TemplateASTVisitor<T> visitor) {
