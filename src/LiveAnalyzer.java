@@ -73,7 +73,7 @@ public class LiveAnalyzer {
                         ? Path.of(filePath).getParent().toString() : ".";
 
                 JinjaAstSemanticAnalyzer analyzer =
-                        new JinjaAstSemanticAnalyzer(templateName, templateDir, Set.of());
+                        new JinjaAstSemanticAnalyzer(templateName, templateDir, Set.of(), null);
                 ast.accept(analyzer);
                 errors.addAll(analyzer.getErrors());
                 warnings.addAll(analyzer.getWarnings());

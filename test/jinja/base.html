@@ -1,179 +1,125 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" id="html-root">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}تطبيق المنتجات{% endblock %}</title>
-
-    <style class="h" media="all">
-body {
-    font-family: 'Arial';
-    background-color: #f4f4f4;
-    color: #333;
-    margin: 0;
-    padding: 0;
-    text-align: right; /* دعم اللغة العربية */
-    direction: rtl;
-}
-
-header {
-    background-color: #007bff;
-    color: white;
-    padding: 20px;
-    text-align: center;
-}
-
-header h1 {
-    margin: 0 0 10px 0;
-}
-
-nav a {
-    color: white;
-    margin: 0 15px;
-    text-decoration: none;
-    font-weight: bold;
-}
-
-main {
-    max-width: 1200px;
-    margin: 20px auto;
-    padding: 20px;
-    background-color: white;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-/* تصميم قائمة المنتجات (index.html) */
-.product-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    justify-content: center;
-    padding: 20px 0;
-}
-
-.product-card {
-    border: 1px solid #ddd;
-    padding: 15px;
-    width: 300px;
-    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.05);
-    text-align: center;
-    background-color: #fff;
-}
-
-.product-image {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
-    margin-bottom: 10px;
-}
-
-.product-price {
-    color: #28a745;
-    font-size: 1.2em;
-    font-weight: bold;
-}
-
-.details-button, .delete-button {
-    display: block;
-    width: 100%;
-    padding: 10px;
-    margin-top: 10px;
-    text-decoration: none;
-    border: none;
-    cursor: pointer;
-    font-weight: bold;
-    text-align: center;
-}
-
-.details-button {
-    background-color: #007bff;
-    color: white;
-}
-
-.delete-button {
-    background-color: #dc3545;
-    color: white;
-}
-
-/* تصميم تفاصيل المنتج (product_detail.html) */
-.detail-container {
-    max-width: 800px;
-    margin: 0 auto;
-}
-
-.detail-image {
-    width: 100%;
-    max-height: 400px;
-    object-fit: contain;
-    margin-bottom: 20px;
-    border: 1px solid #ddd;
-}
-
-.description-text {
-    border-right: 3px solid #007bff;
-    padding-right: 10px;
-    margin-top: 10px;
-}
-
-.back-link {
-    display: inline-block;
-    margin-top: 20px;
-    color: #007bff;
-    text-decoration: none;
-    font-weight: bold;
-}
-
-/* تصميم نموذج الإضافة (add_product.html) */
-.product-form label {
-    display: block;
-    margin-top: 15px;
-    margin-bottom: 5px;
-    font-weight: bold;
-}
-
-.product-form textarea {
-    width: 98%;
-    padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    box-sizing: border-box; /* للتأكد من أن padding لا يزيد العرض الكلي */
-}
-
-.submit-button {
-    background-color: #28a745;
-    color: white;
-    padding: 12px 20px;
-    border: none;
-    cursor: pointer;
-    font-size: 1.1em;
-    margin-top: 20px;
-    width: 100%;
-}
-
-.no-products {
-    text-align: center;
-    padding: 50px;
-    color: #6c757d;
-    font-style: italic;
-}
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Flask Store{% endblock %} — مشروع المترجمات</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
-<header>
-    <h1 style="">متجر التجارة الإلكترونية المصغر</h1>
-    <nav>
-        <a href="{{ url_for('product_list') }}">عرض المنتجات</a>
-        <a href="{{ url_for('add_product') }}">إضافة منتج</a>
-    </nav>
-</header>
+
+<!-- Toast Container -->
+<div id="toast-container"></div>
+
+<!-- Top Banner -->
+<div class="top-banner">
+    <span>مشروع <span class="tb-project">Compilers 2025/2026</span> — تحليل دلالي لتطبيق Flask + Jinja2 باستخدام Java + ANTLR4</span>
+    <div class="tb-badges">
+        <span class="tb-badge java">Java 17</span>
+        <span class="tb-badge antlr">ANTLR4</span>
+        <span class="tb-badge flask">Flask</span>
+    </div>
+</div>
+
+<!-- Navbar -->
+<nav class="navbar">
+    <div class="navbar-inner">
+        <a href="{{ url_for('product_list') }}" class="brand">
+            <div class="brand-icon">🛍</div>
+            <div class="brand-text">
+                <div class="b-name">Flask Store</div>
+                <div class="b-sub">متجر إلكتروني عربي</div>
+            </div>
+        </a>
+
+        <ul class="nav-menu">
+            <li>
+                <a href="{{ url_for('product_list') }}"
+                   class="nav-link {% if request.endpoint == 'product_list' %}active{% endif %}">
+                    🛒 المنتجات
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('add_product') }}"
+                   class="nav-link {% if request.endpoint == 'add_product' %}active{% endif %}">
+                    ➕ إضافة منتج
+                </a>
+            </li>
+            <div class="nav-sep"></div>
+            <li>
+                <a href="{{ url_for('compiler_page') }}"
+                   class="nav-link nav-compiler {% if request.endpoint == 'compiler_page' %}active{% endif %}">
+                    ⚙ المحلل الدلالي
+                    <span class="nav-count">28</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="nav-right">
+            <button class="dm-toggle" onclick="toggleDarkMode()" title="تبديل الوضع الليلي" id="dm-btn">🌙</button>
+            <div class="project-badge">
+                🎓 <span>Compilers</span> 2025/2026
+            </div>
+        </div>
+    </div>
+</nav>
+
+{% block page_header %}{% endblock %}
 
 <main>
-    {% block content %}
-    <p>محتوى افتراضي.</p>
-    {% endblock %}
+    {% block content %}{% endblock %}
 </main>
 
+<!-- Footer -->
 <footer>
-    <p>&copy; 2025 Flask & Jinja2 App - محمد وسيم البزرة</p>
+    <div class="footer-inner">
+        <div class="footer-brand">
+            <div class="fb-name">🛍 Flask Store</div>
+            <div class="fb-sub">
+                تطبيق متجر إلكتروني عربي مبني بـ Flask وJinja2،
+                يُستخدم كنموذج تحليل في مشروع المترجمات.
+            </div>
+        </div>
+        <div class="footer-col">
+            <h4>صفحات الموقع</h4>
+            <ul>
+                <li><a href="{{ url_for('product_list') }}" style="color:#60a5fa;text-decoration:none;">🛒 قائمة المنتجات</a></li>
+                <li><a href="{{ url_for('add_product') }}"  style="color:#60a5fa;text-decoration:none;">➕ إضافة منتج</a></li>
+                <li><a href="{{ url_for('compiler_page') }}" style="color:#a78bfa;text-decoration:none;">⚙ المحلل الدلالي</a></li>
+            </ul>
+        </div>
+        <div class="footer-col">
+            <h4>تفاصيل المشروع</h4>
+            <ul>
+                <li><strong>اللغة:</strong> Java 17 + ANTLR4 v4.13.2</li>
+                <li><strong>الواجهة:</strong> Python Flask 3 + Jinja2</li>
+                <li><strong>الفحوصات:</strong> 18 Python + 10 Jinja2 = 28</li>
+                <li><strong>المادة:</strong> Compilers 2025/2026</li>
+            </ul>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <span>© 2026 عبدالرحمن السيد أحمد — مشروع مترجمات</span>
+        <span>© 2026 مهاب الشهاب — مشروع مترجمات</span>
+        <span>© 2026 سيف الدين كناني — مشروع مترجمات</span>
+        <span>© 2026 عمر كحيل — مشروع مترجمات</span>
+    </div>
 </footer>
+
+<!-- ═══════════════════════════════════════════════════════
+     Global JavaScript
+═══════════════════════════════════════════════════════ -->
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+
+<!-- Flask flash messages → toasts -->
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+{% endif %}
+{% endwith %}
+
+{% block extra_scripts %}{% endblock %}
 </body>
 </html>

@@ -1,0 +1,8 @@
+<h1>قائمة المستخدمين</h1>
+<ul>
+{% for user in users %}
+    <li>الاسم: {{ user.username }}</li>
+    <li>الإيميل: {{ user.email }}</li>
+    <li>كلمة المرور: {{ user.id }}</li> <!-- This should trigger a semantic error! -->
+{% endfor %}
+</ul>

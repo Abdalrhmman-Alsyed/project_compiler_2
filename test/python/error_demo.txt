@@ -1,82 +1,27 @@
-from flask import Flask, render_template
-import os
-import os
+def calculate_total(price, discount, price): # ERROR: duplicate parameter 'price'
+    total = price - discount
+    return total
+    print("This will never print") # ERROR: unreachable code
 
-list = [1, 2, 3]
+def calculate_total(amount): # ERROR: duplicate function
+    break # ERROR: break outside loop
+    return amount
 
-def helper():
-    return 1
+def main():
+    x = 10
+    if x > 5:
+        y = 20
+    
+    # y is only defined in the if-block. In some languages this is an error.
+    # But in Python it's allowed unless the analyzer is strict.
+    # Let's test a variable that is definitely not defined.
+    print(z) # ERROR: variable 'z' is not defined
 
-def helper():
-    return 2
+    # Let's test calling a variable from another scope
+    print(total) # ERROR: variable 'total' is out of scope (defined in calculate_total)
 
-def empty_helper():
-    pass
+    global_test = 50
+    global global_test # ERROR: assigned locally before global declaration
 
-def bad_parameters(x, y, x):
-    return x + y
-
-helper = "not a function"
-
-def has_unreachable():
-    x = 1
-    return x
-    y = 2
-
-def compute():
-    value = 100 / 0
-    return value
-
-return 0
-
-def bad_global():
-    count = 0
-    global count
-
-def use_before_assign():
-    print(z)
-    z = 5
-
-def defines_unused():
-    unused_value = 42
-    return "done"
-
-def calls_mystery():
-    ghost_function()
-
-def loop_control_errors():
-    break
-    continue
-
-def too_many_params(a, b, c, d, e, f, g, h):
-    return a + b
-
-def compare_none(x):
-    if x == None:
-        return True
-    if x != None:
-        return False
-
-def compare_bool(flag):
-    if flag == True:
-        return 1
-    if flag == False:
-        return 0
-
-# ── الأخطاء الدلالية المطلوبة في التوصيف ─────────────────────────────
-
-# Type Mismatch: str + int
-age = '25'
-next_age = age + 1
-
-# Type Error: iterating an int
-count = 10
-for item in count:
-    print(item)
-
-# Scope Error: 'users' is local to load_users
-def load_users():
-    users = ['Ali', 'Sara']
-    return users
-
-print(users)
+main()
+return # ERROR: return outside function
