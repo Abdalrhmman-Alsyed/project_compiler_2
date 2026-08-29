@@ -84,15 +84,15 @@ def _parse_issues(text, start_marker, end_marker=None):
 
 def _parse_bridge(text):
     """Extract Generator bridge rows from printReport() output.
-    Format:  '  index.html                → products'
+    Format:  '  index.jinja                → products'
     """
     bridge = []
     start = text.find('Variables extracted from render_template()')
     if start == -1:
         return bridge
     section = text[start:start + 800]
-    # Each line: optional spaces, template name (.html), whitespace, arrow-char, whitespace, vars
-    row_re = re.compile(r'(\S+\.html)\s+\S+\s+(.+)', re.UNICODE)
+    # Each line: optional spaces, template name (.jinja), whitespace, arrow-char, whitespace, vars
+    row_re = re.compile(r'(\S+\.jinja)\s+\S+\s+(.+)', re.UNICODE)
     for line in section.splitlines():
         m = row_re.search(line)
         if m:
@@ -151,7 +151,7 @@ def product_list():
         ep = p.copy()
         ep['image_url'] = get_image_url(p['image_filename'])
         enriched.append(ep)
-    return render_template('index.html', products=enriched)
+    return render_template('index.jinja', products=enriched)
 
 
 @app.route('/products/<int:product_id>')
@@ -161,7 +161,7 @@ def product_detail(product_id):
         return "Product Not Found", 404
     ep = product.copy()
     ep['image_url'] = get_image_url(product['image_filename'])
-    return render_template('product_detail.html', product=ep)
+    return render_template('product_detail.jinja', product=ep)
 
 
 @app.route('/add', methods=['GET', 'POST'])
@@ -188,7 +188,7 @@ def add_product():
         flash(f'success:تمت إضافة «{name}» بنجاح!')
         return redirect(url_for('product_list'))
 
-    return render_template('add_product.html')
+    return render_template('add_product.jinja')
 
 
 @app.route('/delete/<int:product_id>', methods=['POST'])
@@ -211,7 +211,7 @@ def delete_product(product_id):
 @app.route('/compiler', methods=['GET', 'POST'])
 def compiler_page():
     if request.method == 'GET':
-        return render_template('compiler.html', ran=False, ast_text='', symbol_table_text='')
+        return render_template('compiler.jinja', ran=False, ast_text='', symbol_table_text='')
 
     # Run the Java compiler
     sep = ';' if sys.platform == 'win32' else ':'
@@ -269,7 +269,7 @@ def compiler_page():
         error_msg = str(e)
 
     return render_template(
-        'compiler.html',
+        'compiler.jinja',
         ran               = True,
         error_msg         = error_msg,
         python_errors     = python_errors,
@@ -291,7 +291,7 @@ def api_analyze():
     if not code:
         return jsonify({'errors': [], 'warnings': []})
 
-    suffix = '.txt' if lang == 'python' else '.html'
+    suffix = '.txt' if lang == 'python' else '.jinja'
     fd, temp_path = tempfile.mkstemp(suffix=suffix)
 
     # The Jinja2 grammar requires real HTML content before the first {% %} tag.

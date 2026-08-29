@@ -31,9 +31,10 @@ HTML_TAG_OPEN: '<' -> pushMode(TAG_MODE);
 TEMPLATE_WS: [ \t\r\n]+ -> skip;
 
 HTML_TEXT
-    : (~[<{\r\n] | '{' ~[%#{])+
+    : ( ~[<{\r\n] | '{' ~[%#{] | [\u0080-\uFFFF] )+
     ;
 TEMPLATE_END: '</html>' ;
+ERROR_CHAR : . ;
 mode TAG_MODE;
 TAG_CLOSE: '>' -> popMode;
 SELF_CLOSE_TAG: '/>' -> popMode;
@@ -311,4 +312,4 @@ CSS_VALUE: [^};{]+;
 
 
 
-ERROR_CHAR : . ;
+
