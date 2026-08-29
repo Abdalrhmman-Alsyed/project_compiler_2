@@ -68,6 +68,8 @@ public abstract class TemplateBaseASTVisitor<T> implements TemplateASTVisitor<T>
     @Override public T visit(FilterExpressionNode node) { return visitChildren(node); }
     @Override public T visit(ListExpressionNode node) { return visitChildren(node); }
     @Override public T visit(DictExpressionNode node) { return visitChildren(node); }
+    @Override public T visit(IndexAccessNode node) { return visitChildren(node); }
+    @Override public T visit(SliceNode node) { return visitChildren(node); }
     @Override public T visit(IfBlockNode node) { return visitChildren(node); }
     @Override public T visit(ElifBlockNode node) { return visitChildren(node); }
     @Override public T visit(ElseBlockNode node) { return visitChildren(node); }

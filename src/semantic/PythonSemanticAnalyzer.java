@@ -719,6 +719,22 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
 
             // Checks 1 / 3: the callee must resolve somewhere
             checkNameResolution(name, n.getLine(), n.getColumn());
+
+            // Check: Template file existence for render_template
+            if (name.equals("render_template") && n.getArguments().size() > 0) {
+                ast.python.PythonNode firstArg = n.getArguments().get(0);
+                if (firstArg instanceof StringLiteralNode strNode) {
+                    String templateName = strNode.getValue();
+                    // Remove quotes from the string literal value if they exist
+                    if (templateName.startsWith("\"") || templateName.startsWith("'")) {
+                        templateName = templateName.substring(1, templateName.length() - 1);
+                    }
+                    java.io.File templateFile = new java.io.File("flask-app/templates/" + templateName);
+                    if (!templateFile.exists()) {
+                        error("Template file '" + templateName + "' does not exist in flask-app/templates/", n.getLine(), n.getColumn());
+                    }
+                }
+            }
         } else {
             n.getFunction().accept(this);
         }

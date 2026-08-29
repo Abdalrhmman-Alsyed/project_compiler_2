@@ -46,6 +46,8 @@ public interface TemplateASTVisitor<T> {
     T visit(FilterExpressionNode node);
     T visit(ListExpressionNode node);
     T visit(DictExpressionNode node);
+    T visit(IndexAccessNode node);
+    T visit(SliceNode node);
 
     // Jinja Block Nodes
     T visit(IfBlockNode node);

@@ -3,6 +3,7 @@ package semantic;
 import ast.template.TemplateNode;
 import ast.template.jinja.blocks.*;
 import ast.template.jinja.expressions.*;
+import ast.template.jinja.expressions.literals.StringLiteralNode;
 import ast.visitors.TemplateBaseASTVisitor;
 
 import java.io.File;
@@ -32,6 +33,8 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
     private final String templateName;
     private final String templateDir;
     private final Set<String> pythonContextVars;
+    private final Map<String, Object> mockData;
+    private final Set<String> allMockDataKeys = new LinkedHashSet<>();
 
     private final List<SemanticError> errors = new ArrayList<>();
     private final List<SemanticError> warnings = new ArrayList<>();
@@ -63,10 +66,34 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
     );
 
     public JinjaAstSemanticAnalyzer(String templateName, String templateDir,
-                                    Set<String> pythonContextVars) {
+                                    Set<String> pythonContextVars, Map<String, Object> mockData) {
         this.templateName = templateName;
         this.templateDir = templateDir;
         this.pythonContextVars = pythonContextVars != null ? pythonContextVars : Set.of();
+        this.mockData = mockData != null ? mockData : Map.of();
+        collectKeys(this.mockData);
+    }
+
+    public JinjaAstSemanticAnalyzer(String templateName, String templateDir, Set<String> pythonContextVars) {
+        this(templateName, templateDir, pythonContextVars, null);
+    }
+
+    private void collectKeys(Object obj) {
+        if (obj instanceof Map) {
+            Map<?, ?> map = (Map<?, ?>) obj;
+            for (Object key : map.keySet()) {
+                if (key instanceof String) {
+                    allMockDataKeys.add((String) key);
+                }
+            }
+            for (Object val : map.values()) {
+                collectKeys(val);
+            }
+        } else if (obj instanceof List) {
+            for (Object item : (List<?>) obj) {
+                collectKeys(item);
+            }
+        }
     }
 
     private void error(String m, int l, int c) {
@@ -137,6 +164,12 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
             warning("{% extends \"" + target + "\" %} should be the first Jinja2 "
                     + "statement but other Jinja2 content precedes it", line, col);
         }
+        
+        File targetFile = new File(templateDir, target);
+        if (!targetFile.exists()) {
+            error("{% extends \"" + target + "\" %} references a file that does not exist: " + targetFile.getPath(), line, col);
+        }
+
         return super.visit(node);
     }
 
@@ -208,12 +241,22 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
 
     @Override
     public Void visit(ImportBlockNode node) {
+        String target = stripQuotes(node.getTemplateName());
+        File targetFile = new File(templateDir, target);
+        if (!targetFile.exists()) {
+            error("{% import \"" + target + "\" ... %} references a file that does not exist: " + targetFile.getPath(), node.getLine(), node.getColumn());
+        }
         sawJinjaBeforeExtends = true;
         return super.visit(node);
     }
 
     @Override
     public Void visit(FromImportBlockNode node) {
+        String target = stripQuotes(node.getTemplateName());
+        File targetFile = new File(templateDir, target);
+        if (!targetFile.exists()) {
+            error("{% from \"" + target + "\" ... %} references a file that does not exist: " + targetFile.getPath(), node.getLine(), node.getColumn());
+        }
         sawJinjaBeforeExtends = true;
         return super.visit(node);
     }
@@ -237,7 +280,16 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
 
     @Override
     public Void visit(AttributeAccessNode node) {
-        // Only the root of a.b.c is a context lookup; 'b' and 'c' are members.
+        // Skip checking attributes of builtin Jinja variables like 'loop'
+        if (node.getObject() instanceof VariableNode varNode && "loop".equals(varNode.getName())) {
+            return super.visit(node);
+        }
+
+        if (!allMockDataKeys.isEmpty()) {
+            if (!allMockDataKeys.contains(node.getAttribute())) {
+                error("attribute '" + node.getAttribute() + "' was not found in any extracted Python mock data dictionary", node.getLine(), node.getColumn());
+            }
+        }
         return super.visit(node);
     }
 
@@ -246,6 +298,36 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
      * {% set %}, an enclosing {% for %} or {% with %}, or is a Jinja/Flask
      * builtin — anything else was never supplied to this template.
      */
+    
+    @Override
+    public Void visit(CallExpressionNode node) {
+        
+        if (node.getCallee() instanceof VariableNode varNode) {
+            if ("url_for".equals(varNode.getName())) {
+                boolean isStatic = false;
+                if (node.getArgumentCount() > 0 && node.getArgument(0) instanceof StringLiteralNode) {
+                    StringLiteralNode str = (StringLiteralNode) node.getArgument(0);
+                    if ("static".equals(stripQuotes(str.getValue()))) {
+                        isStatic = true;
+                    }
+                }
+                if (isStatic) {
+                    for (int i = 0; i < node.getArgumentCount(); i++) {
+                        if ("filename".equals(node.getKeywordName(i)) && node.getArgument(i) instanceof StringLiteralNode) {
+                            StringLiteralNode str = (StringLiteralNode) node.getArgument(i);
+                            String filename = stripQuotes(str.getValue());
+                            File targetFile = new File(new File(templateDir).getParentFile(), "static/" + filename);
+                            if (!targetFile.exists()) {
+                                error("url_for('static', filename='" + filename + "') references a file that does not exist: " + targetFile.getPath(), node.getLine(), node.getColumn());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return super.visit(node);
+    }
+
     private void checkName(String name, int line, int col) {
         if (name == null || name.isEmpty()) return;
 

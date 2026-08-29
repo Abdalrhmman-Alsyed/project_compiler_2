@@ -311,6 +311,18 @@ public class TemplateASTBuilder extends FlaskTemplateParserBaseVisitor<TemplateN
                 CallExpressionNode node = new CallExpressionNode(line, col, current);
                 addBlockArguments(null, node, call.blockArgumentList());
                 current = node;
+            } else if (post instanceof FlaskTemplateParser.BlockIndexOpContext index) {
+                FlaskTemplateParser.BlockSliceItemContext item = index.blockSliceItem();
+                if (item instanceof FlaskTemplateParser.BlockIndexContext) {
+                    ExpressionNode idx = (ExpressionNode) visit(((FlaskTemplateParser.BlockIndexContext) item).blockExpression());
+                    current = new IndexAccessNode(line, col, current, idx);
+                } else {
+                    FlaskTemplateParser.BlockSliceContext slice = (FlaskTemplateParser.BlockSliceContext) item;
+                    ExpressionNode start = slice.blockExpression(0) != null ? (ExpressionNode) visit(slice.blockExpression(0)) : null;
+                    ExpressionNode stop = slice.blockExpression(1) != null ? (ExpressionNode) visit(slice.blockExpression(1)) : null;
+                    ExpressionNode step = slice.blockExpression(2) != null ? (ExpressionNode) visit(slice.blockExpression(2)) : null;
+                    current = new SliceNode(line, col, start, stop, step);
+                }
             }
         }
         return current;
@@ -784,6 +796,18 @@ public class TemplateASTBuilder extends FlaskTemplateParserBaseVisitor<TemplateN
                         line, col, current, filter.EXPR_ID().getText());
                 addJinjaArguments(node, null, filter.argumentList());
                 current = node;
+            } else if (postfix instanceof FlaskTemplateParser.IndexOpContext index) {
+                FlaskTemplateParser.SliceItemContext item = index.sliceItem();
+                if (item instanceof FlaskTemplateParser.IndexContext) {
+                    ExpressionNode idx = (ExpressionNode) visit(((FlaskTemplateParser.IndexContext) item).expression());
+                    current = new IndexAccessNode(line, col, current, idx);
+                } else {
+                    FlaskTemplateParser.SliceContext slice = (FlaskTemplateParser.SliceContext) item;
+                    ExpressionNode start = slice.expression(0) != null ? (ExpressionNode) visit(slice.expression(0)) : null;
+                    ExpressionNode stop = slice.expression(1) != null ? (ExpressionNode) visit(slice.expression(1)) : null;
+                    ExpressionNode step = slice.expression(2) != null ? (ExpressionNode) visit(slice.expression(2)) : null;
+                    current = new SliceNode(line, col, start, stop, step);
+                }
             }
         }
         return current;
