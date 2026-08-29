@@ -4,7 +4,7 @@ options {
     tokenVocab = FlaskJinjaLexer;
 }
 
-@header { package gen; }
+
 
 // A page template wraps everything in <html>; a child template that begins
 // with {% extends %} has no wrapper at all. Both are valid entry points.

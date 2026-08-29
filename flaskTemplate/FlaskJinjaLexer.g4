@@ -1,8 +1,6 @@
 lexer grammar FlaskJinjaLexer;
 
-@header{
-package gen;
-}
+
 
 // NEWLINE is referenced by FlaskTemplateParser but never produced here
 // (TEMPLATE_WS skips all whitespace). Declared so the vocabulary matches.

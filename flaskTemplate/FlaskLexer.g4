@@ -1,8 +1,6 @@
 lexer grammar FlaskLexer;
 
-@header{
-package gen;
-}
+
 
 @lexer::members {
     private java.util.Stack<Integer> indentations = new java.util.Stack<>();

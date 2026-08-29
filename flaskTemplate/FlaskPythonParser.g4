@@ -2,7 +2,7 @@ parser grammar FlaskPythonParser;
 
 options { tokenVocab = FlaskPythonLexer; }
 
-@header { package gen; }
+
 
 
 //       Program (Root)
