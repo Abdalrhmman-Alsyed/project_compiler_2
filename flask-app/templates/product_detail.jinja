@@ -5,7 +5,7 @@
 <div class="detail-container">
     <h2>تفاصيل المنتج</h2>
 
-    <img src="{{ product.image_url }}" alt="صورة {{ product.name }}" class="detail-image">
+    <img src="{{ url_for('static', filename=product.image_filename) }}" alt="صورة {{ product.name }}" class="detail-image">
 
     <div class="info-block">
         <p><strong>اسم المنتج:</strong> {{ product.name }}</p>
