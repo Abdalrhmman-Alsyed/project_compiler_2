@@ -21,18 +21,29 @@ import symbolTable.visitores.PythonSymbolTableBuilder;
 import symbolTableJinja.JinjaSymbolTable;
 import symbolTableJinja.JinjaAstSymbolTableBuilder;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
+import ast.util.ASTJsonSerializer;
 
 public class Main {
 
     public static void main(String[] args) throws Exception {
         printBanner("Flask App Compiler — Full Pipeline");
 
-        CompilerArtifacts artifacts = new CompilerArtifacts(Path.of("output"));
+        // Create compiler_output directory and clear semantic report
+        Path compilerOutput = Paths.get("compiler_output");
+        Files.createDirectories(compilerOutput);
+        Path semanticReport = compilerOutput.resolve("semantic_report.txt");
+        Files.deleteIfExists(semanticReport);
 
         // ── 1. Python pipeline (valid Flask app) ─────────────────────────────
-        PythonNode pythonAst = runPythonPipeline("flask-app/app.py", artifacts);
+        PythonNode pythonAst = runPythonPipeline("flask-app/app.py");
+
+        // Write Python AST to JSON
+        String pythonJson = ASTJsonSerializer.toJson(pythonAst);
+        Files.writeString(compilerOutput.resolve("ast_python.json"), pythonJson);
 
         // ── 2. Generator: extract render_template() context variables ─────────
         Generator generator = new Generator();
@@ -58,6 +69,7 @@ public class Main {
         Map<String, Object> mockData = generator.bind(dataExtractor.getExtractedData());
 
         // ── 3. Template pipeline (valid Flask templates) ──────────────────────
+        Map<String, TemplateNode> jinjaAstMap = new LinkedHashMap<>();
         for (String template : List.of(
                 "flask-app/templates/base.jinja",
                 "flask-app/templates/index.jinja",
@@ -66,11 +78,13 @@ public class Main {
         )) {
             String tmplName = Path.of(template).getFileName().toString();
             Set<String> ctxVars = contextFor(tmplName, templateContextVars);
-            runTemplatePipeline(template, ctxVars, mockData, artifacts);
+            TemplateNode tAst = runTemplatePipeline(template, ctxVars, mockData);
+            jinjaAstMap.put(tmplName, tAst);
         }
 
-        printBanner("COMPILER ARTIFACTS -> output/");
-        artifacts.write();
+        // Write Jinja ASTs to JSON
+        String jinjaJson = ASTJsonSerializer.toJson(jinjaAstMap);
+        Files.writeString(compilerOutput.resolve("ast_jinja.json"), jinjaJson);
 
         // ── 3.5 HTML code generation ─────────────────────────────────────────
         printBanner("HTML CODE GENERATION -> output/");
@@ -89,14 +103,6 @@ public class Main {
         OutputHttpServer store = new OutputHttpServer(port);
         store.startServing(generator, htmlGen, mockData);
 
-        // ── 5. Semantic error demo: Python ────────────────────────────────────
-        printBanner("SEMANTIC ERROR DEMO — Python (15 checks)");
-        runPythonErrorDemo("test/python/error_demo.txt");
-
-        // ── 6. Semantic error demo: Jinja2 ───────────────────────────────────
-        printBanner("SEMANTIC ERROR DEMO — Jinja2 (11 checks, AST)");
-        Set<String> demoCtxVars = new LinkedHashSet<>(List.of("products", "title"));
-        runJinjaErrorDemo("test/jinja/error_demo.jinja", demoCtxVars, mockData);
 
         System.out.println("\nStore is running at http://localhost:" + port + "/");
         System.out.println("Stop with Ctrl+C");
@@ -169,17 +175,13 @@ public class Main {
         PythonSemanticAnalyzer semanticAnalyzer = new PythonSemanticAnalyzer();
         ast.accept(semanticAnalyzer);
         semanticAnalyzer.printReport();
-        if (artifacts != null) {
-            artifacts.setPython(filePath, ast, semanticAnalyzer);
-        }
+        semanticAnalyzer.saveReportToFile("compiler_output/semantic_report.txt");
 
         return ast;
     }
 
     // ─── Template Pipeline (full) ──────────────────────────────────────────
-    private static void runTemplatePipeline(String filePath, Set<String> pythonCtxVars,
-                                            Map<String, Object> mockData,
-                                            CompilerArtifacts artifacts)
+    private static TemplateNode runTemplatePipeline(String filePath, Set<String> pythonCtxVars, Map<String, Object> mockData)
             throws Exception {
         printSection("TEMPLATE: " + filePath);
 
@@ -225,70 +227,11 @@ public class Main {
                 new JinjaAstSemanticAnalyzer(templateName, templateDir, pythonCtxVars, mockData);
         rootNode.accept(jinjaAnalyzer);
         jinjaAnalyzer.printReport();
-        if (artifacts != null) {
-            artifacts.addJinja(templateName, rootNode, jinjaAnalyzer);
-        }
+        jinjaAnalyzer.saveReportToFile("compiler_output/semantic_report.txt");
+
+        return rootNode;
     }
 
-    // ─── Python Error Demo ─────────────────────────────────────────────────
-    private static void runPythonErrorDemo(String filePath) throws Exception {
-        printSection("PYTHON ERROR DEMO: " + filePath);
-
-        CharStream input = CharStreams.fromFileName(filePath);
-        FlaskPythonLexer lexer = new FlaskPythonLexer(input);
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-
-        FlaskPythonParser parser = new FlaskPythonParser(tokens);
-        parser.removeErrorListeners();
-        parser.addErrorListener(new BaseErrorListener() {
-            @Override
-            public void syntaxError(Recognizer<?, ?> rec, Object sym,
-                                    int line, int col, String msg, RecognitionException e) {
-                System.err.println("[Parse Error] " + line + ":" + col + " " + msg);
-            }
-        });
-
-        ParseTree parseTree = parser.program();
-
-        PythonASTBuilderVisitor astBuilder = new PythonASTBuilderVisitor();
-        PythonNode ast = astBuilder.visit(parseTree);
-
-        PythonSemanticAnalyzer analyzer = new PythonSemanticAnalyzer();
-        ast.accept(analyzer);
-        analyzer.printReport();
-    }
-
-    // ─── Jinja2 Error Demo ─────────────────────────────────────────────────
-    private static void runJinjaErrorDemo(String filePath, Set<String> pythonCtxVars, Map<String, Object> mockData)
-            throws Exception {
-        printSection("JINJA2 ERROR DEMO: " + filePath);
-
-        CharStream charStream = CharStreams.fromPath(Path.of(filePath));
-        FlaskJinjaLexer lexer = new FlaskJinjaLexer(charStream);
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-
-        FlaskTemplateParser parser = new FlaskTemplateParser(tokens);
-        parser.removeErrorListeners();
-        parser.addErrorListener(new BaseErrorListener() {
-            @Override
-            public void syntaxError(Recognizer<?, ?> rec, Object sym,
-                                    int line, int col, String msg, RecognitionException e) {
-                System.err.println("[Parse Error] " + line + ":" + col + " " + msg);
-            }
-        });
-
-        FlaskTemplateParser.TemplateRootContext tree =
-                (FlaskTemplateParser.TemplateRootContext) parser.template();
-
-        String templateName = Path.of(filePath).getFileName().toString();
-        String templateDir  = Path.of(filePath).getParent().toString();
-
-        TemplateNode rootNode = new TemplateASTBuilder().visitTemplateRoot(tree);
-        JinjaAstSemanticAnalyzer analyzer =
-                new JinjaAstSemanticAnalyzer(templateName, templateDir, pythonCtxVars, mockData);
-        rootNode.accept(analyzer);
-        analyzer.printReport();
-    }
 
     // ─── Formatting Helpers ────────────────────────────────────────────────
     private static void printBanner(String title) {

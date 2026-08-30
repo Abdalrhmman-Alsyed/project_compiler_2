@@ -26,6 +26,18 @@ bin/
 .vscode/
 
 ### Mac OS ###
-.DS_Store.idea/
+.DS_Store
+.idea/
 *.iml
 src/gen/
+
+### Python ###
+venv/
+flask-app/venv/
+__pycache__/
+*.pyc
+
+### Project Specific ###
+output/
+compiler_output/
+*.zip

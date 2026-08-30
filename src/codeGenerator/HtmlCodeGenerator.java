@@ -213,8 +213,9 @@ public class HtmlCodeGenerator {
     }
 
     public void writeGenerationLog(boolean reset) throws IOException {
-        Files.createDirectories(outputDir);
-        Path logFile = outputDir.resolve("generation_log.txt");
+        Path compilerOutput = Paths.get("compiler_output");
+        Files.createDirectories(compilerOutput);
+        Path logFile = compilerOutput.resolve("generation_log.txt");
         String header = "HTML code generation log\n" + "=".repeat(60) + "\n";
         StringBuilder body = new StringBuilder();
         if (log.isEmpty()) {

@@ -1,0 +1,15 @@
+<div>
+    <h1>Oops</h1>
+</span> <!-- Error: Mismatched tag -->
+
+<!-- Error: Block defined twice -->
+{% block same %}{% endblock %}
+{% block same %}{% endblock %}
+
+<!-- Error: Accessing undefined mock variable -->
+<p>{{ user.age }}</p>
+
+<!-- Warning: loopVar used outside loop -->
+{% for i in items %}
+{% endfor %}
+<p>{{ i }}</p>

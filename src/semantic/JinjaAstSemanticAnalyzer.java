@@ -110,6 +110,31 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
         warnings.add(new SemanticError(SemanticError.Severity.WARNING, m, l, c));
     }
 
+    public void saveReportToFile(String filePath) {
+        try (java.io.PrintWriter writer = new java.io.PrintWriter(new java.io.FileWriter(filePath, true))) {
+            writer.println("\n" + "=".repeat(60));
+            writer.println("  تحليل الدلالات لقوالب جينجا2: " + templateName + "  (13 فحص)");
+            writer.println("=".repeat(60));
+
+            if (errors.isEmpty() && warnings.isEmpty()) {
+                writer.println("  لم يتم العثور على أي مشاكل دلالية.");
+            } else {
+                if (!errors.isEmpty()) {
+                    writer.println("\n  الأخطاء (" + errors.size() + "):");
+                    errors.forEach(e -> writer.println("  " + e));
+                }
+                if (!warnings.isEmpty()) {
+                    writer.println("\n  التحذيرات (" + warnings.size() + "):");
+                    warnings.forEach(w -> writer.println("  " + w));
+                }
+            }
+            writer.printf("%n  الملخص: %d خطأ، %d تحذير = %d إجمالي المشاكل%n",
+                    errors.size(), warnings.size(), errors.size() + warnings.size());
+        } catch (java.io.IOException e) {
+            System.err.println("Failed to write semantic report: " + e.getMessage());
+        }
+    }
+
     public List<SemanticError> getErrors() {
         return Collections.unmodifiableList(errors);
     }
@@ -145,7 +170,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
         String opening = node.getTagName();
         String closing = node.getClosingTagName();
         if (closing != null && !opening.equals(closing)) {
-            error("HTML tag mismatch: opening tag <" + opening + "> does not match closing tag </" + closing + ">", node.getClosingLine(), node.getClosingColumn());
+            error("عدم تطابق في التاغ (HTML): التاغ المفتوح <" + opening + "> لا يطابق التاغ المغلق </" + closing + ">", node.getClosingLine(), node.getClosingColumn());
         }
         return super.visit(node);
     }
@@ -154,7 +179,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
     public Void visit(BlockBlockNode node) {
         String name = node.getBlockName();
         if (seenBlocks.containsKey(name)) {
-            error("Block '" + name + "' is defined more than once (first at line "
+            error("الكتلة (Block) '" + name + "' تم تعريفها أكثر من مرة (أول مرة في السطر "
                     + seenBlocks.get(name) + ")", node.getLine(), node.getColumn());
         } else {
             seenBlocks.put(name, node.getLine());
@@ -169,21 +194,21 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
         int line = node.getLine(), col = node.getColumn();
 
         if (++extendsCount > 1) {
-            error("{% extends %} used more than once in template '" + templateName + "'",
+            error("تم استخدام {% extends %} أكثر من مرة في القالب '" + templateName + "'",
                     line, col);
         }
         if (templateName.equals(target)) {
-            error("Template '" + templateName + "' extends itself — circular dependency",
+            error("القالب '" + templateName + "' يمتد (extends) من نفسه — هذا استدعاء دائري (Circular dependency)",
                     line, col);
         }
         if (sawJinjaBeforeExtends) {
-            warning("{% extends \"" + target + "\" %} should be the first Jinja2 "
-                    + "statement but other Jinja2 content precedes it", line, col);
+            warning("{% extends \"" + target + "\" %} يجب أن يكون أول تعليمة لجينجا2 في القالب "
+                    + "ولكن توجد محتويات أخرى لجينجا2 تسبقه", line, col);
         }
         
         File targetFile = new File(templateDir, target);
         if (!targetFile.exists()) {
-            error("{% extends \"" + target + "\" %} references a file that does not exist: " + targetFile.getPath(), line, col);
+            error("{% extends \"" + target + "\" %} يشير إلى ملف غير موجود: " + targetFile.getPath(), line, col);
         }
 
         return super.visit(node);
@@ -196,8 +221,8 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
 
         if (node.getIterable() instanceof ListExpressionNode list
                 && list.getElements().isEmpty()) {
-            warning("{% for " + loopVar + " in [] %} iterates over a literal empty list"
-                    + " — loop body never executes", node.getLine(), node.getColumn());
+            warning("{% for " + loopVar + " in [] %} يقوم بالدوران على قائمة فارغة تماماً"
+                    + " — لن يتم تنفيذ محتوى الحلقة أبداً", node.getLine(), node.getColumn());
         }
 
         // The block owns its body, so the variable's scope is exactly this subtree.
@@ -229,12 +254,12 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
         int line = node.getLine(), col = node.getColumn();
 
         if (pythonContextVars.contains(name)) {
-            warning("{% set " + name + " = ... %} redefines the variable '" + name
-                    + "' that was passed from Python via render_template()", line, col);
+            warning("{% set " + name + " = ... %} يعيد تعريف المتغير '" + name
+                    + "' الذي تم تمريره من بايثون باستخدام الدالة render_template()", line, col);
         }
         if (setVarLines.containsKey(name)) {
-            warning("{% set " + name + " = ... %} redefines a template variable '" + name
-                             + "' already defined via {% set %} at line " + setVarLines.get(name),
+            warning("{% set " + name + " = ... %} يعيد تعريف متغير القالب '" + name
+                             + "' الذي تم تحديده مسبقاً عبر {% set %} في السطر " + setVarLines.get(name),
                     line, col);
         } else {
             setVarLines.put(name, line);
@@ -248,8 +273,8 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
         String included = stripQuotes(node.getTemplateName());
         File target = new File(templateDir, included);
         if (!target.exists()) {
-            warning("{% include \"" + included + "\" %} references a file that does not "
-                    + "exist: " + target.getPath(), node.getLine(), node.getColumn());
+            warning("{% include \"" + included + "\" %} يشير إلى ملف غير موجود: "
+                    + target.getPath(), node.getLine(), node.getColumn());
         }
         sawJinjaBeforeExtends = true;
         return super.visit(node);
@@ -260,7 +285,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
         String target = stripQuotes(node.getTemplateName());
         File targetFile = new File(templateDir, target);
         if (!targetFile.exists()) {
-            error("{% import \"" + target + "\" ... %} references a file that does not exist: " + targetFile.getPath(), node.getLine(), node.getColumn());
+            error("{% import \"" + target + "\" ... %} يشير إلى ملف غير موجود: " + targetFile.getPath(), node.getLine(), node.getColumn());
         }
         sawJinjaBeforeExtends = true;
         return super.visit(node);
@@ -271,7 +296,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
         String target = stripQuotes(node.getTemplateName());
         File targetFile = new File(templateDir, target);
         if (!targetFile.exists()) {
-            error("{% from \"" + target + "\" ... %} references a file that does not exist: " + targetFile.getPath(), node.getLine(), node.getColumn());
+            error("{% from \"" + target + "\" ... %} يشير إلى ملف غير موجود: " + targetFile.getPath(), node.getLine(), node.getColumn());
         }
         sawJinjaBeforeExtends = true;
         return super.visit(node);
@@ -282,8 +307,8 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
     @Override
     public Void visit(FilterExpressionNode node) {
         if (!KNOWN_FILTERS.contains(node.getFilterName())) {
-            warning("Unknown Jinja2 filter '" + node.getFilterName()
-                    + "' — not in known filter list", node.getLine(), node.getColumn());
+            warning("مرشح جينجا2 (Filter) غير معروف '" + node.getFilterName()
+                    + "' — غير موجود في قائمة المرشحات المعروفة", node.getLine(), node.getColumn());
         }
         return super.visit(node);
     }
@@ -303,7 +328,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
 
         if (!allMockDataKeys.isEmpty()) {
             if (!allMockDataKeys.contains(node.getAttribute())) {
-                error("attribute '" + node.getAttribute() + "' was not found in any extracted Python mock data dictionary", node.getLine(), node.getColumn());
+                error("السمة (Attribute) '" + node.getAttribute() + "' لم يتم العثور عليها في أي قاموس بيانات وهمية من بايثون", node.getLine(), node.getColumn());
             }
         }
         return super.visit(node);
@@ -314,7 +339,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
         if (node.getIndex() instanceof ast.template.jinja.expressions.literals.NumberLiteralNode numNode) {
             int index = (int) numNode.getValue();
             if (maxListSize > 0 && (index < 0 || index >= maxListSize)) {
-                error("Index out of bounds: maximum list size in mock data is " + maxListSize + ", but index " + index + " was requested", node.getLine(), node.getColumn());
+                error("الفهرس خارج النطاق: الحد الأقصى لحجم القائمة هو " + maxListSize + "، ولكن تم طلب الفهرس " + index, node.getLine(), node.getColumn());
             }
         }
         return super.visit(node);
@@ -345,7 +370,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
                             String filename = stripQuotes(str.getValue());
                             File targetFile = new File(new File(templateDir).getParentFile(), "static/" + filename);
                             if (!targetFile.exists()) {
-                                error("url_for('static', filename='" + filename + "') references a file that does not exist: " + targetFile.getPath(), node.getLine(), node.getColumn());
+                                error("استدعاء url_for('static', filename='" + filename + "') يشير إلى ملف غير موجود: " + targetFile.getPath(), node.getLine(), node.getColumn());
                             }
                         }
                     }
@@ -359,8 +384,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
         if (name == null || name.isEmpty()) return;
 
         if (expiredLoopVars.contains(name) && !activeLoopVars.contains(name)) {
-            warning("Variable '" + name + "' is a for-loop variable used outside "
-                    + "its for-loop scope", line, col);
+            warning("المتغير '" + name + "' هو متغير حلقة 'for' يتم استخدامه خارج النطاق الخاص بتلك الحلقة", line, col);
             expiredLoopVars.remove(name);
             return;
         }
@@ -371,7 +395,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
         if (activeLoopVars.contains(name)) return;
         if (activeWithVars.contains(name)) return;
 
-        error("template variable '" + name + "' is not passed from render_template",
+        error("متغير القالب '" + name + "' لم يتم تمريره من دالة render_template",
                 line, col);
     }
 

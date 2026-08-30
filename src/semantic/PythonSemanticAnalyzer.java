@@ -114,6 +114,31 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
         warnings.add(new SemanticError(SemanticError.Severity.WARNING, msg, line, col));
     }
 
+    public void saveReportToFile(String filePath) {
+        try (java.io.PrintWriter writer = new java.io.PrintWriter(new java.io.FileWriter(filePath, true))) {
+            writer.println("\n" + "=".repeat(60));
+            writer.println("  تحليل الدلالات للغة بايثون  (18 فحص)");
+            writer.println("=".repeat(60));
+
+            if (errors.isEmpty() && warnings.isEmpty()) {
+                writer.println("  لم يتم العثور على أي مشاكل دلالية.");
+            } else {
+                if (!errors.isEmpty()) {
+                    writer.println("\n  الأخطاء (" + errors.size() + "):");
+                    errors.forEach(e -> writer.println("  " + e));
+                }
+                if (!warnings.isEmpty()) {
+                    writer.println("\n  التحذيرات (" + warnings.size() + "):");
+                    warnings.forEach(w -> writer.println("  " + w));
+                }
+            }
+            writer.printf("%n  الملخص: %d خطأ، %d تحذير = %d إجمالي المشاكل%n",
+                    errors.size(), warnings.size(), errors.size() + warnings.size());
+        } catch (java.io.IOException e) {
+            System.err.println("Failed to write semantic report: " + e.getMessage());
+        }
+    }
+
     private void pushScope() { scopeStack.push(new LinkedHashMap<>()); }
 
     private void popScope() {
@@ -279,12 +304,12 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
         if (isKnown(name)) return;
 
         if (!assignedAhead.isEmpty() && assignedAhead.peek().contains(name)) {
-            warning("Name '" + name + "' used before being assigned in local scope",
+            warning("تم استخدام الاسم '" + name + "' قبل إسناد قيمة له في النطاق المحلي",
                     line, col);
         } else if (functionLocalNames.containsKey(name)) {
-            error("variable '" + name + "' is out of scope", line, col);
+            error("المتغير '" + name + "' خارج النطاق (Out of scope)", line, col);
         } else {
-            error("variable '" + name + "' is not defined", line, col);
+            error("المتغير '" + name + "' غير معرّف", line, col);
         }
     }
 
@@ -361,7 +386,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
         for (var stmt : n.getStatements()) {
             // Check 8: unreachable code after return
             if (seenReturn && !(stmt instanceof PassNode)) {
-                error("Unreachable code after 'return' statement", stmt.getLine(), stmt.getColumn());
+                error("كود غير قابل للوصول بعد تعليمة 'return'", stmt.getLine(), stmt.getColumn());
                 seenReturn = false;
             }
             stmt.accept(this);
@@ -378,7 +403,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
     public Void visit(FunctionNode n) {
         // Check 4: duplicate function name
         if (visitedFunctions.contains(n.getName())) {
-            error("Function '" + n.getName() + "' is defined more than once",
+            error("الدالة '" + n.getName() + "' تم تعريفها أكثر من مرة",
                     n.getLine(), n.getColumn());
         }
         visitedFunctions.add(n.getName());
@@ -389,14 +414,14 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
         if (n.getBody() instanceof BlockNode blk
                 && blk.getStatements().size() == 1
                 && blk.getStatements().get(0) instanceof PassNode) {
-            warning("Function '" + n.getName() + "' has an empty body (only 'pass')",
+            warning("الدالة '" + n.getName() + "' تحتوي على جسم فارغ (فقط 'pass')",
                     n.getLine(), n.getColumn());
         }
 
         // Check 16: too many parameters (> 7)
         if (n.getParameters().size() > 7) {
-            warning("Function '" + n.getName() + "' has too many parameters ("
-                    + n.getParameters().size() + ") — consider using a dict or dataclass",
+            warning("الدالة '" + n.getName() + "' تحتوي على عدد كبير جداً من المعاملات ("
+                    + n.getParameters().size() + ") — فكر في استخدام قاموس أو صنف بيانات",
                     n.getLine(), n.getColumn());
         }
 
@@ -412,8 +437,8 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
         Set<String> paramNames = new LinkedHashSet<>();
         for (var param : n.getParameters()) {
             if (!paramNames.add(param.getName())) {
-                error("Duplicate parameter '" + param.getName()
-                        + "' in function '" + n.getName() + "'",
+                error("المعامل '" + param.getName()
+                        + "' مكرر في الدالة '" + n.getName() + "'",
                         param.getLine(), param.getColumn());
             }
             if (param.hasDefaultValue()) param.getDefaultValue().accept(this);
@@ -432,7 +457,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
         List<DefInfo> fnDefs = functionDefLists.pop();
         for (DefInfo def : fnDefs) {
             if (!def.used && !def.name.startsWith("_") && !currentGlobals.contains(def.name)) {
-                warning("Variable '" + def.name + "' defined but never used",
+                warning("المتغير '" + def.name + "' معرّف ولكنه لم يُستخدم أبداً",
                         def.line, def.col);
             }
         }
@@ -450,7 +475,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
         if (mod != null && !mod.isEmpty()) {
             // Check 9: duplicate import
             if (importedModules.containsKey(mod)) {
-                warning("Module '" + mod + "' imported more than once (first at line "
+                warning("الوحدة '" + mod + "' تم استيرادها أكثر من مرة (أول مرة في السطر "
                         + importedModules.get(mod) + ")",
                         n.getLine(), n.getColumn());
             } else {
@@ -491,13 +516,13 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
 
             // Check 11: shadowing built-in
             if (BUILTINS.contains(name) && !name.equals("__name__") && !name.equals("app")) {
-                warning("Assignment to built-in name '" + name + "' shadows the built-in",
+                warning("إسناد قيمة للاسم المبني مسبقاً '" + name + "' يخفي الدالة الأصلية",
                         n.getLine(), n.getColumn());
             }
 
             // Check 10: overwriting function name
             if ("function".equals(globalKind.get(name)) && functionDepth == 0) {
-                warning("Assignment overwrites function name '" + name + "'",
+                warning("هذا الإسناد يقوم بالكتابة فوق الدالة التي تحمل الاسم '" + name + "'",
                         n.getLine(), n.getColumn());
             }
 
@@ -524,7 +549,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
     public Void visit(ReturnNode n) {
         // Check 1: return outside function
         if (functionDepth == 0) {
-            error("'return' statement outside function", n.getLine(), n.getColumn());
+            error("استخدام تعليمة 'return' خارج الدالة", n.getLine(), n.getColumn());
         }
         if (n.hasValue()) n.getValue().accept(this);
         return null;
@@ -534,7 +559,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
     public Void visit(BreakNode n) {
         // Check 2: break outside loop
         if (loopDepth == 0) {
-            error("'break' statement outside loop", n.getLine(), n.getColumn());
+            error("استخدام تعليمة 'break' خارج حلقة التكرار", n.getLine(), n.getColumn());
         }
         return null;
     }
@@ -543,7 +568,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
     public Void visit(ContinueNode n) {
         // Check 3: continue outside loop
         if (loopDepth == 0) {
-            error("'continue' statement outside loop", n.getLine(), n.getColumn());
+            error("استخدام تعليمة 'continue' خارج حلقة التكرار", n.getLine(), n.getColumn());
         }
         return null;
     }
@@ -553,7 +578,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
         for (String varName : n.getVariables()) {
             // Check 6: 'global' after local assignment
             if (!scopeStack.isEmpty() && scopeStack.peek().containsKey(varName)) {
-                error("Name '" + varName + "' assigned locally before 'global' declaration",
+                error("الاسم '" + varName + "' تم إسناده محلياً قبل الإعلان عنه كـ 'global'",
                         n.getLine(), n.getColumn());
             }
             currentGlobals.add(varName);
@@ -582,7 +607,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
         // Check 20: iterating something that is provably not iterable
         SymbolType iterType = typeOf(n.getIterable());
         if (!isIterable(iterType) && iterType != SymbolType.FUNCTION_TYPE) {
-            error("'" + iterType + "' object is not iterable",
+            error("النوع '" + iterType + "' غير قابل للتكرار (Not iterable)",
                     n.getIterable().getLine(), n.getIterable().getColumn());
         }
 
@@ -671,7 +696,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
         String op = n.getOperator();
         if ((op.equals("/") || op.equals("//"))
                 && n.getRight() instanceof IntLiteralNode rhs && rhs.getValue() == 0) {
-            error("Division by zero detected (constant divisor is 0)",
+            error("تم اكتشاف قسمة على الصفر (القاسم الثابت هو 0)",
                     n.getLine(), n.getColumn());
         }
 
@@ -679,7 +704,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
         if ((op.equals("==") || op.equals("!="))
                 && (n.getRight() instanceof NoneLiteralNode
                  || n.getLeft()  instanceof NoneLiteralNode)) {
-            warning("Use 'is None' or 'is not None' instead of '" + op + " None'",
+            warning("استخدم 'is None' أو 'is not None' بدلاً من '" + op + " None'",
                     n.getLine(), n.getColumn());
         }
 
@@ -688,8 +713,8 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
             SymbolType lt = typeOf(n.getLeft());
             SymbolType rt = typeOf(n.getRight());
             if (isInvalidOperandPair(op, lt, rt)) {
-                error("unsupported operand types for '" + op + "': '"
-                        + lt + "' and '" + rt + "'", n.getLine(), n.getColumn());
+                error("أنواع المعاملات غير مدعومة للعملية '" + op + "': '"
+                        + lt + "' و '" + rt + "'", n.getLine(), n.getColumn());
             }
         }
 
@@ -697,8 +722,8 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
         if ((op.equals("==") || op.equals("!="))
                 && (n.getRight() instanceof BoolLiteralNode
                  || n.getLeft()  instanceof BoolLiteralNode)) {
-            warning("Comparing with True/False using '" + op
-                    + "' is not Pythonic — use the value directly (e.g. 'if flag:')",
+            warning("المقارنة مع True/False باستخدام '" + op
+                    + "' ليست طريقة بايثونية — استخدم القيمة مباشرة (مثلاً 'if flag:')",
                     n.getLine(), n.getColumn());
         }
 
@@ -731,7 +756,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
                     }
                     java.io.File templateFile = new java.io.File("flask-app/templates/" + templateName);
                     if (!templateFile.exists()) {
-                        error("Template file '" + templateName + "' does not exist in flask-app/templates/", n.getLine(), n.getColumn());
+                        error("ملف القالب '" + templateName + "' غير موجود في المسار flask-app/templates/", n.getLine(), n.getColumn());
                     }
                 }
             }

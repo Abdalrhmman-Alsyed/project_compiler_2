@@ -1,0 +1,19 @@
+{% extends "base.jinja" %}
+
+{% block title %}Grades List{% endblock %}
+
+{% block content %}
+<h2>Students Grades</h2>
+<ul>
+    {% for s in students %}
+    <li>
+        <strong>{{ s.name }}</strong> - Grade: {{ s.grade }}
+        {% if s.grade >= 60 %}
+            <span style="color: green;">(Passed)</span>
+        {% else %}
+            <span style="color: red;">(Failed)</span>
+        {% endif %}
+    </li>
+    {% endfor %}
+</ul>
+{% endblock %}
