@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}Advanced Test{% endblock %}</title>
+</head>
+<body>
+    <div class="header">
+        <h1>Course: {{ course_name }}</h1>
+    </div>
+    
+    <div class="content">
+        {% block content %}
+        {% endblock %}
+    </div>
+</body>
+</html>

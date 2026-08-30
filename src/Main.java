@@ -102,14 +102,6 @@ public class Main {
         OutputHttpServer store = new OutputHttpServer(port);
         store.startServing(generator, htmlGen, mockData);
 
-        // ── 5. Semantic error demo: Python ────────────────────────────────────
-        printBanner("SEMANTIC ERROR DEMO — Python (15 checks)");
-        runPythonErrorDemo("test/python/error_demo.txt");
-
-        // ── 6. Semantic error demo: Jinja2 ───────────────────────────────────
-        printBanner("SEMANTIC ERROR DEMO — Jinja2 (11 checks, AST)");
-        Set<String> demoCtxVars = new LinkedHashSet<>(List.of("products", "title"));
-        runJinjaErrorDemo("test/jinja/error_demo.jinja", demoCtxVars, mockData);
 
         System.out.println("\nStore is running at http://localhost:" + port + "/");
         System.out.println("Stop with Ctrl+C");
@@ -239,65 +231,6 @@ public class Main {
         return rootNode;
     }
 
-    // ─── Python Error Demo ─────────────────────────────────────────────────
-    private static void runPythonErrorDemo(String filePath) throws Exception {
-        printSection("PYTHON ERROR DEMO: " + filePath);
-
-        CharStream input = CharStreams.fromFileName(filePath);
-        FlaskPythonLexer lexer = new FlaskPythonLexer(input);
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-
-        FlaskPythonParser parser = new FlaskPythonParser(tokens);
-        parser.removeErrorListeners();
-        parser.addErrorListener(new BaseErrorListener() {
-            @Override
-            public void syntaxError(Recognizer<?, ?> rec, Object sym,
-                                    int line, int col, String msg, RecognitionException e) {
-                System.err.println("[Parse Error] " + line + ":" + col + " " + msg);
-            }
-        });
-
-        ParseTree parseTree = parser.program();
-
-        PythonASTBuilderVisitor astBuilder = new PythonASTBuilderVisitor();
-        PythonNode ast = astBuilder.visit(parseTree);
-
-        PythonSemanticAnalyzer analyzer = new PythonSemanticAnalyzer();
-        ast.accept(analyzer);
-        analyzer.printReport();
-    }
-
-    // ─── Jinja2 Error Demo ─────────────────────────────────────────────────
-    private static void runJinjaErrorDemo(String filePath, Set<String> pythonCtxVars, Map<String, Object> mockData)
-            throws Exception {
-        printSection("JINJA2 ERROR DEMO: " + filePath);
-
-        CharStream charStream = CharStreams.fromPath(Path.of(filePath));
-        FlaskJinjaLexer lexer = new FlaskJinjaLexer(charStream);
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-
-        FlaskTemplateParser parser = new FlaskTemplateParser(tokens);
-        parser.removeErrorListeners();
-        parser.addErrorListener(new BaseErrorListener() {
-            @Override
-            public void syntaxError(Recognizer<?, ?> rec, Object sym,
-                                    int line, int col, String msg, RecognitionException e) {
-                System.err.println("[Parse Error] " + line + ":" + col + " " + msg);
-            }
-        });
-
-        FlaskTemplateParser.TemplateRootContext tree =
-                (FlaskTemplateParser.TemplateRootContext) parser.template();
-
-        String templateName = Path.of(filePath).getFileName().toString();
-        String templateDir  = Path.of(filePath).getParent().toString();
-
-        TemplateNode rootNode = new TemplateASTBuilder().visitTemplateRoot(tree);
-        JinjaAstSemanticAnalyzer analyzer =
-                new JinjaAstSemanticAnalyzer(templateName, templateDir, pythonCtxVars, mockData);
-        rootNode.accept(analyzer);
-        analyzer.printReport();
-    }
 
     // ─── Formatting Helpers ────────────────────────────────────────────────
     private static void printBanner(String title) {
