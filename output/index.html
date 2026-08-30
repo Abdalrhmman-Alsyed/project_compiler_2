@@ -1,2 +1,40 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr"><head><meta charset="UTF-8"><title>Product list</title><link rel="stylesheet" href="/style.css"></head><body><header><h1>Mini E-commerce Store</h1><nav><a href="/">Products</a><a href="/add">Add product</a></nav></header><main><h2>Product list</h2><div class="product-grid"><div class="product-card"><img src="/static/Laptop.jpg" alt="Photo of Hp Laptop" class="product-image"><h3>Hp Laptop</h3><p class="product-price">499.99 $</p><a href="/products/4" class="details-button">View details</a><form action="/delete/4" method="post"><button type="submit" class="delete-button">Delete product</button></form></div></div></main></body></html>
+<html lang="en" dir="ltr">
+    <head>
+        <meta charset="UTF-8">
+        <title>Product list</title>
+        <link rel="stylesheet" href="/style.css">
+    </head>
+    <body>
+        <header>
+            <h1>Mini E-commerce Store</h1>
+            <nav>
+                <a href="/">Products</a>
+                <a href="/add">Add product</a>
+            </nav>
+        </header>
+        <main>
+            <h2>Product list</h2>
+            <div class="product-grid">
+                <div class="product-card">
+                    <img src="/static/default.png" alt="Photo of Smartphone X (Limited Edition)" class="product-image">
+                    <h3>Smartphone X (Limited Edition)</h3>
+                    <p class="product-price">799.99$</p>
+                    <a href="/products/1" class="details-button">View details</a>
+                    <form action="/delete/1" method="post">
+                        <button type="submit" class="delete-button">Delete product</button>
+                    </form>
+                </div>
+                <div class="product-card">
+                    <img src="/static/default.png" alt="Photo of Bluetooth Headphones Pro" class="product-image">
+                    <h3>Bluetooth Headphones Pro</h3>
+                    <p class="product-price">149$</p>
+                    <a href="/products/2" class="details-button">View details</a>
+                    <form action="/delete/2" method="post">
+                        <button type="submit" class="delete-button">Delete product</button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </body>
+</html>

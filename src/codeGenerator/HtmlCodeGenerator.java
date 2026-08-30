@@ -36,6 +36,15 @@ public class HtmlCodeGenerator {
             "link", "meta", "param", "source", "track", "wbr"
     );
 
+    /** Tags that stay on one line with their text (no nested indent). */
+    private static final Set<String> INLINE_TAGS = Set.of(
+            "a", "span", "strong", "em", "b", "i", "u", "small", "label",
+            "button", "img", "input", "br", "meta", "link", "title",
+            "code", "abbr", "time", "sub", "sup"
+    );
+
+    private static final String INDENT = "    ";
+
     private final Path templateDir;
     private final Path outputDir;
     private final Map<String, TemplateNode> templates = new LinkedHashMap<>();
@@ -43,6 +52,7 @@ public class HtmlCodeGenerator {
 
     private final Deque<Map<String, Object>> scopes = new ArrayDeque<>();
     private Map<String, BlockBlockNode> blockOverrides = Map.of();
+    private int indentLevel = 0;
 
     public HtmlCodeGenerator(Path templateDir, Path outputDir) {
         this.templateDir = templateDir;
@@ -177,6 +187,7 @@ public class HtmlCodeGenerator {
         } finally {
             scopes.clear();
             blockOverrides = Map.of();
+            indentLevel = 0;
         }
     }
 
@@ -296,7 +307,7 @@ public class HtmlCodeGenerator {
         if (node instanceof HTMLNormalElementNode n) return renderNormal(n);
         if (node instanceof HTMLVoidElementNode n) return renderVoid(n);
         if (node instanceof HTMLSelfClosingElementNode n) return renderSelfClosing(n);
-        if (node instanceof HTMLTextNode n) return n.getText() != null ? n.getText() : "";
+        if (node instanceof HTMLTextNode n) return prettyText(n.getText());
         if (node instanceof HTMLAttributeTextNode n) return n.getText() != null ? n.getText() : "";
         if (node instanceof HTMLClosingTagNode) return "";
         if (node instanceof JinjaExpressionNode n) return escape(stringify(eval(n.getExpression())));
@@ -334,28 +345,53 @@ public class HtmlCodeGenerator {
         return sb.toString();
     }
 
+    private String prettyText(String text) {
+        if (text == null || text.isBlank()) return "";
+        return text.strip();
+    }
+
+    private String indentLine(String content) {
+        return INDENT.repeat(indentLevel) + content + "\n";
+    }
+
+    private boolean isInline(String tag) {
+        return tag != null && INLINE_TAGS.contains(tag.toLowerCase(Locale.ROOT));
+    }
+
     private String renderHtmlDocument(HTMLDocumentNode node) {
-        return "<html" + renderAttributes(node.getAttributes()) + ">"
-                + renderChildren(node.getContent())
-                + "</html>";
+        StringBuilder sb = new StringBuilder();
+        sb.append(indentLine("<html" + renderAttributes(node.getAttributes()) + ">"));
+        indentLevel++;
+        sb.append(renderChildren(node.getContent()));
+        indentLevel--;
+        sb.append(indentLine("</html>"));
+        return sb.toString();
     }
 
     private String renderNormal(HTMLNormalElementNode node) {
         String tag = node.getTagName();
         String open = "<" + tag + renderAttributes(node.getAttributes()) + ">";
-        String inner = renderChildren(node.getContent());
         if (VOID_TAGS.contains(tag.toLowerCase(Locale.ROOT))) {
-            return open;
+            return indentLine(open);
         }
-        return open + inner + "</" + tag + ">";
+        if (isInline(tag)) {
+            return indentLine(open + renderChildren(node.getContent()) + "</" + tag + ">");
+        }
+        indentLevel++;
+        String inner = renderChildren(node.getContent());
+        indentLevel--;
+        if (!inner.contains("\n")) {
+            return indentLine(open + inner + "</" + tag + ">");
+        }
+        return indentLine(open) + inner + indentLine("</" + tag + ">");
     }
 
     private String renderVoid(HTMLVoidElementNode node) {
-        return "<" + node.getTagName() + renderAttributes(node.getAttributes()) + ">";
+        return indentLine("<" + node.getTagName() + renderAttributes(node.getAttributes()) + ">");
     }
 
     private String renderSelfClosing(HTMLSelfClosingElementNode node) {
-        return "<" + node.getTagName() + renderAttributes(node.getAttributes()) + " />";
+        return indentLine("<" + node.getTagName() + renderAttributes(node.getAttributes()) + " />");
     }
 
     private String renderAttributes(List<HTMLAttributeNode> attrs) {
@@ -442,11 +478,13 @@ public class HtmlCodeGenerator {
 
     private String renderCssRule(CSSRuleNode node) {
         StringBuilder sb = new StringBuilder();
-        sb.append(node.getSelectorText()).append(" { ");
+        sb.append(indentLine(node.getSelectorText() + " {"));
+        indentLevel++;
         for (CSSDeclarationNode decl : node.getDeclarations()) {
-            sb.append(decl.getProperty()).append(": ").append(decl.getValueText()).append("; ");
+            sb.append(indentLine(decl.getProperty() + ": " + decl.getValueText() + ";"));
         }
-        sb.append('}');
+        indentLevel--;
+        sb.append(indentLine("}"));
         return sb.toString();
     }
 
