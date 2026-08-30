@@ -9,16 +9,21 @@ import java.util.*;
  * Generator: walks the Python parse tree and extracts the variables that each
  * render_template() call passes to a Jinja2 template.
  *
- * Output: Map<templateName, Set<varName>>
- *   e.g. {"index.html" -> {"products"}, "product_detail.html" -> {"product"}}
+ * For each keyword argument {@code products=PRODUCTS_BASE_DATA}:
+ *   - {@code products} is the Jinja context name
+ *   - {@code PRODUCTS_BASE_DATA} is the Python identifier holding the literal
  *
- * This "bridge" allows the JinjaSemanticAnalyzer to verify that variables used
- * inside a template were actually supplied by the Python route function.
+ * {@link #bind(Map)} copies those Python literals under the Jinja names so
+ * MockDataExtractor and this class share the same values with no data-flow
+ * tracker: one lookup of the identifier on the right-hand side.
  */
 public class Generator extends FlaskPythonParserBaseVisitor<Void> {
 
-    // Result: template name → set of context variable names
+    // template name → set of Jinja context variable names
     private final Map<String, Set<String>> templateContextVars = new LinkedHashMap<>();
+
+    // template name → (Jinja name → Python identifier on the RHS)
+    private final Map<String, Map<String, String>> templateContextSources = new LinkedHashMap<>();
 
     // State while we are inside a render_template(...) call
     private boolean inRenderTemplateCall = false;
@@ -74,13 +79,20 @@ public class Generator extends FlaskPythonParserBaseVisitor<Void> {
         return super.visitPositionalArgument(ctx);
     }
 
-    // ── Keyword argument: name=value → extract 'name' as context variable ─
+    // ── Keyword argument: name=value → Jinja name + optional Python identifier ─
     @Override
     public Void visitKeywordArgument(FlaskPythonParser.KeywordArgumentContext ctx) {
         if (inRenderTemplateCall && currentTemplateName != null) {
             String varName = ctx.ID().getText();
             templateContextVars.computeIfAbsent(currentTemplateName,
                     k -> new LinkedHashSet<>()).add(varName);
+
+            String rhs = ctx.expression().getText();
+            if (rhs.matches("[A-Za-z_][A-Za-z0-9_]*")) {
+                templateContextSources
+                        .computeIfAbsent(currentTemplateName, k -> new LinkedHashMap<>())
+                        .put(varName, rhs);
+            }
         }
         argPosition++;
         return super.visitKeywordArgument(ctx);
@@ -89,6 +101,34 @@ public class Generator extends FlaskPythonParserBaseVisitor<Void> {
     // ── Public results ────────────────────────────────────────────────────
     public Map<String, Set<String>> getTemplateContextVars() {
         return Collections.unmodifiableMap(templateContextVars);
+    }
+
+    public Map<String, Map<String, String>> getTemplateContextSources() {
+        return Collections.unmodifiableMap(templateContextSources);
+    }
+
+    /**
+     * Aliases each Jinja context name to the MockDataExtractor value of the
+     * Python identifier used in {@code render_template(..., name=IDENTIFIER)}.
+     * Example: {@code products} → same list as {@code PRODUCTS_BASE_DATA}.
+     */
+    public Map<String, Object> bind(Map<String, Object> extracted) {
+        Map<String, Object> bound = new LinkedHashMap<>();
+        if (extracted != null) {
+            bound.putAll(extracted);
+        }
+        if (extracted == null || extracted.isEmpty()) {
+            return bound;
+        }
+        for (Map<String, String> sources : templateContextSources.values()) {
+            for (Map.Entry<String, String> e : sources.entrySet()) {
+                Object value = extracted.get(e.getValue());
+                if (value != null) {
+                    bound.put(e.getKey(), value);
+                }
+            }
+        }
+        return bound;
     }
 
     public void printReport() {
@@ -103,11 +143,16 @@ public class Generator extends FlaskPythonParserBaseVisitor<Void> {
 
         System.out.println("\n  Variables extracted from render_template() calls:\n");
         for (var entry : templateContextVars.entrySet()) {
-            String     tmpl = entry.getKey();
-            Set<String> vars = entry.getValue();
+            String tmpl = entry.getKey();
+            Map<String, String> sources = templateContextSources.getOrDefault(tmpl, Map.of());
+            List<String> parts = new ArrayList<>();
+            for (String var : entry.getValue()) {
+                String src = sources.get(var);
+                parts.add(src != null ? var + "=" + src : var);
+            }
             System.out.printf("  %-35s → %s%n",
                     tmpl,
-                    vars.isEmpty() ? "(no variables)" : String.join(", ", vars));
+                    parts.isEmpty() ? "(no variables)" : String.join(", ", parts));
         }
     }
 }

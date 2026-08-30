@@ -36,33 +36,7 @@ PRODUCTS_BASE_DATA = [
     }
 ]
 
-products_data = []
 next_id = 3
-
-# ----------------------------------------------------------------------
-# تهيئة البيانات
-# ----------------------------------------------------------------------
-
-def initialize_products_data():
-    global products_data, next_id
-
-    products_data.clear()
-
-    for p in PRODUCTS_BASE_DATA:
-        products_data.append(p.copy())
-
-    if PRODUCTS_BASE_DATA:
-        max_id = 0
-        for p in PRODUCTS_BASE_DATA:
-            if p['id'] > max_id:
-                max_id = p['id']
-        next_id = max_id + 1
-    else:
-        next_id = 1
-
-
-with app.app_context():
-    initialize_products_data()
 
 # ----------------------------------------------------------------------
 # المسارات
@@ -73,7 +47,7 @@ with app.app_context():
 def product_list():
     return render_template(
         'index.jinja',
-        products=products_data
+        products=PRODUCTS_BASE_DATA
     )
 
 
@@ -81,7 +55,7 @@ def product_list():
 def product_detail(product_id):
     product = None
 
-    for p in products_data:
+    for p in PRODUCTS_BASE_DATA:
         if p['id'] == product_id:
             product = p
             break
@@ -117,7 +91,7 @@ def add_product():
             'image_filename': image_filename
         }
 
-        products_data.append(new_product)
+        PRODUCTS_BASE_DATA.append(new_product)
         next_id += 1
 
         return redirect(url_for('product_list'))
@@ -127,11 +101,11 @@ def add_product():
 
 @app.route('/delete/<int:product_id>', methods=['POST'])
 def delete_product(product_id):
-    global products_data
+    global PRODUCTS_BASE_DATA
 
     product_to_delete = None
 
-    for p in products_data:
+    for p in PRODUCTS_BASE_DATA:
         if p['id'] == product_id:
             product_to_delete = p
             break
@@ -148,12 +122,12 @@ def delete_product(product_id):
             if os.path.exists(file_path):
                 os.remove(file_path)
 
-        new_products_data = []
-        for p in products_data:
+        new_products = []
+        for p in PRODUCTS_BASE_DATA:
             if p['id'] != product_id:
-                new_products_data.append(p)
+                new_products.append(p)
 
-        products_data = new_products_data
+        PRODUCTS_BASE_DATA = new_products
 
     return redirect(url_for('product_list'))
 

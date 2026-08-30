@@ -44,13 +44,13 @@ public class Main {
         generator.printReport();
         Map<String, Set<String>> templateContextVars = generator.getTemplateContextVars();
 
-        // ── 2.5 Mock Data Extractor ─────────────────────────────────────────
+        // ── 2.5 Mock Data Extractor, then bind Jinja names to those literals ─
         semantic.MockDataExtractor dataExtractor = new semantic.MockDataExtractor();
         if (pythonAst != null) {
             pythonAst.accept(dataExtractor);
         }
         dataExtractor.printReport();
-        Map<String, Object> mockData = dataExtractor.getExtractedData();
+        Map<String, Object> mockData = generator.bind(dataExtractor.getExtractedData());
 
         // ── 3. Template pipeline (valid Flask templates) ──────────────────────
         for (String template : List.of(
@@ -86,7 +86,7 @@ public class Main {
         Set<String> vars = new LinkedHashSet<>(
                 contextVars.getOrDefault(templateName, Set.of()));
 
-        java.io.File dir = new java.io.File("test/jinja");
+        java.io.File dir = new java.io.File("flask-app/templates");
         java.io.File[] siblings = dir.listFiles((d, n) -> n.endsWith(".jinja"));
         if (siblings == null) return vars;
 

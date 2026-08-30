@@ -11,9 +11,10 @@ import ast.python.visitors.PythonBaseASTVisitor;
 import java.util.*;
 
 /**
- * Extracts top-level dictionary and list literal assignments from the Python AST
- * into Java collections (List, Map).
- * Used for both Semantic Validation in Jinja and future HTML Code Generation.
+ * Extracts module-level dictionary and list literal assignments from the Python AST
+ * into Java collections (List, Map). Function bodies are skipped so runtime
+ * assignments (append, request.form, …) cannot overwrite the source literals.
+ * Used for Jinja semantic validation and later HTML code generation.
  */
 public class MockDataExtractor extends PythonBaseASTVisitor<Object> {
 
@@ -99,7 +100,9 @@ public class MockDataExtractor extends PythonBaseASTVisitor<Object> {
 
     @Override public Object visit(ProgramNode node) { return visitChildren(node); }
     @Override public Object visit(BlockNode node) { return visitChildren(node); }
-    @Override public Object visit(FunctionNode node) { return visitChildren(node); }
+
+    /** Module-level literals only — do not walk route / helper function bodies. */
+    @Override public Object visit(FunctionNode node) { return null; }
     @Override public Object visit(ParameterNode node) { return visitChildren(node); }
     @Override public Object visit(ImportNode node) { return visitChildren(node); }
     @Override public Object visit(DecoratorNode node) { return visitChildren(node); }
