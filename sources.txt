@@ -127,6 +127,10 @@ E:\project_compiler_2\src\gen\FlaskTemplateParserBaseListener.java
 E:\project_compiler_2\src\gen\FlaskTemplateParserBaseVisitor.java
 E:\project_compiler_2\src\gen\FlaskTemplateParserListener.java
 E:\project_compiler_2\src\gen\FlaskTemplateParserVisitor.java
+E:\project_compiler_2\src\output\CompilerArtifacts.java
+E:\project_compiler_2\src\output\Json.java
+E:\project_compiler_2\src\output\PythonASTJson.java
+E:\project_compiler_2\src\output\TemplateASTJson.java
 E:\project_compiler_2\src\semantic\Generator.java
 E:\project_compiler_2\src\semantic\JinjaAstSemanticAnalyzer.java
 E:\project_compiler_2\src\semantic\JinjaSemanticAnalyzer.java

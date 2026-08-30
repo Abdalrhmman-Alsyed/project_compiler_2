@@ -1,3 +1,4 @@
+import output.CompilerArtifacts;
 import server.OutputHttpServer;
 import ast.python.PythonNode;
 import ast.python.visitors.PythonASTPrinter;
@@ -28,8 +29,10 @@ public class Main {
     public static void main(String[] args) throws Exception {
         printBanner("Flask App Compiler — Full Pipeline");
 
+        CompilerArtifacts artifacts = new CompilerArtifacts(Path.of("output"));
+
         // ── 1. Python pipeline (valid Flask app) ─────────────────────────────
-        PythonNode pythonAst = runPythonPipeline("flask-app/app.py");
+        PythonNode pythonAst = runPythonPipeline("flask-app/app.py", artifacts);
 
         // ── 2. Generator: extract render_template() context variables ─────────
         Generator generator = new Generator();
@@ -63,8 +66,11 @@ public class Main {
         )) {
             String tmplName = Path.of(template).getFileName().toString();
             Set<String> ctxVars = contextFor(tmplName, templateContextVars);
-            runTemplatePipeline(template, ctxVars, mockData);
+            runTemplatePipeline(template, ctxVars, mockData, artifacts);
         }
+
+        printBanner("COMPILER ARTIFACTS -> output/");
+        artifacts.write();
 
         // ── 3.5 HTML code generation ─────────────────────────────────────────
         printBanner("HTML CODE GENERATION -> output/");
@@ -126,7 +132,7 @@ public class Main {
     }
 
     // ─── Python Pipeline (full) ────────────────────────────────────────────
-    private static PythonNode runPythonPipeline(String filePath)
+    private static PythonNode runPythonPipeline(String filePath, CompilerArtifacts artifacts)
             throws Exception {
         printSection("PYTHON: " + filePath);
 
@@ -163,12 +169,17 @@ public class Main {
         PythonSemanticAnalyzer semanticAnalyzer = new PythonSemanticAnalyzer();
         ast.accept(semanticAnalyzer);
         semanticAnalyzer.printReport();
+        if (artifacts != null) {
+            artifacts.setPython(filePath, ast, semanticAnalyzer);
+        }
 
         return ast;
     }
 
     // ─── Template Pipeline (full) ──────────────────────────────────────────
-    private static void runTemplatePipeline(String filePath, Set<String> pythonCtxVars, Map<String, Object> mockData)
+    private static void runTemplatePipeline(String filePath, Set<String> pythonCtxVars,
+                                            Map<String, Object> mockData,
+                                            CompilerArtifacts artifacts)
             throws Exception {
         printSection("TEMPLATE: " + filePath);
 
@@ -214,6 +225,9 @@ public class Main {
                 new JinjaAstSemanticAnalyzer(templateName, templateDir, pythonCtxVars, mockData);
         rootNode.accept(jinjaAnalyzer);
         jinjaAnalyzer.printReport();
+        if (artifacts != null) {
+            artifacts.addJinja(templateName, rootNode, jinjaAnalyzer);
+        }
     }
 
     // ─── Python Error Demo ─────────────────────────────────────────────────
