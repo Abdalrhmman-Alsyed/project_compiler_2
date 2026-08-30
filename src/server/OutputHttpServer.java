@@ -8,7 +8,7 @@ import gen.FlaskPythonParser;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import semantic.Generator;
-import semantic.HtmlCodeGenerator;
+import codeGenerator.HtmlCodeGenerator;
 import semantic.MockDataExtractor;
 
 import java.io.IOException;
@@ -25,8 +25,9 @@ import java.util.*;
  * list, then re-running {@link HtmlCodeGenerator}.
  *
  * <pre>
- * java OutputHttpServer
- * java OutputHttpServer 8080
+ * java Main                 # compiler pipeline, then this server on 8080
+ * java Main 8080
+ * java OutputHttpServer     # server only (also writes Generated and wipes the log)
  * </pre>
  */
 public class OutputHttpServer {
@@ -51,20 +52,52 @@ public class OutputHttpServer {
         new OutputHttpServer(port).start();
     }
 
+    private HttpServer http;
+
     public void start() throws Exception {
         loadContextFromPython();
         htmlGen = new HtmlCodeGenerator(Path.of("flask-app", "templates"), outputDir);
         htmlGen.loadTemplates();
         regenerate("HTTP server startup -- first create of HTML pages", true);
+        listen();
+        awaitStop();
+    }
 
-        HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
-        server.createContext("/", this::handle);
-        server.setExecutor(null);
-        server.start();
+    /**
+     * Starts HTTP using the compiler's already-built generator, templates, and
+     * bound data. Does not regenerate or wipe the log — {@code Main} already
+     * wrote the {@code Generated} entry. Returns after the port is bound;
+     * call {@link #awaitStop()} so the process does not exit.
+     */
+    public void startServing(Generator generator, HtmlCodeGenerator htmlGen,
+                             Map<String, Object> bound) throws Exception {
+        this.generator = generator;
+        this.htmlGen = htmlGen;
+        this.bound.clear();
+        if (bound != null) this.bound.putAll(bound);
+        adoptProductsFromBound();
+        listen();
+    }
+
+    public void awaitStop() throws InterruptedException {
+        Thread.currentThread().join();
+    }
+
+    private void listen() throws IOException {
+        try {
+            http = HttpServer.create(new InetSocketAddress("0.0.0.0", port), 0);
+        } catch (java.net.BindException e) {
+            throw new IOException(
+                    "Port " + port + " is already in use. Stop the other Java process, then run Main again.",
+                    e);
+        }
+        http.createContext("/", this::handle);
+        http.setExecutor(null);
+        http.start();
         System.out.println("Java store server: http://localhost:" + port + "/");
         System.out.println("Serving regenerated HTML from " + outputDir.toAbsolutePath());
         System.out.println("Add:  GET/POST /add     Delete: POST /delete/{id}");
-        System.out.println("Stop with Ctrl+C");
+        System.out.println("Leave this window open. Stop with Ctrl+C");
     }
 
     private void handle(HttpExchange ex) throws IOException {
@@ -142,7 +175,7 @@ public class OutputHttpServer {
         product.put("image_filename", imageName);
         products.add(product);
 
-        regenerate("add product id=" + product.get("id") + " name=" + name);
+        regenerate("ADD product (id=" + product.get("id") + ", name=" + name + ")", false);
         redirect(ex, "/");
     }
 
@@ -200,7 +233,6 @@ public class OutputHttpServer {
         bound.put("next_id", nextId);
     }
 
-    @SuppressWarnings("unchecked")
     private void loadContextFromPython() throws IOException {
         FlaskPythonParser parser = new FlaskPythonParser(new CommonTokenStream(
                 new FlaskPythonLexer(CharStreams.fromFileName("flask-app/app.py"))));
@@ -214,7 +246,11 @@ public class OutputHttpServer {
         ast.accept(extractor);
         bound.clear();
         bound.putAll(generator.bind(extractor.getExtractedData()));
+        adoptProductsFromBound();
+    }
 
+    @SuppressWarnings("unchecked")
+    private void adoptProductsFromBound() {
         Object raw = bound.get("products");
         if (raw == null) raw = bound.get("PRODUCTS_BASE_DATA");
         products = new ArrayList<>();

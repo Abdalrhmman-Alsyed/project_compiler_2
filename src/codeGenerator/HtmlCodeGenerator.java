@@ -1,4 +1,4 @@
-package semantic;
+package codeGenerator;
 
 import ast.template.TemplateNode;
 import ast.template.TemplateRootNode;
@@ -15,6 +15,7 @@ import gen.FlaskJinjaLexer;
 import gen.FlaskTemplateParser;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import semantic.Generator;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -127,14 +128,16 @@ public class HtmlCodeGenerator {
     }
 
     /**
-     * First create uses {@code INITIAL GENERATION}; later UI-driven writes use
-     * {@code REGENERATION} plus the operation that triggered it.
+     * First run of {@code Main} (or a standalone server start) writes
+     * {@code Generated} and wipes the log. Later UI-driven writes while the
+     * server is up append {@code REGENERATION} plus the operation that
+     * triggered it.
      */
     public void logGenerationEvent(String reason, boolean initial) {
         String why = (reason == null || reason.isBlank()) ? "unspecified" : reason.trim();
         String time = LocalDateTime.now().format(LOG_TIME);
         if (initial) {
-            log.add("INITIAL GENERATION at " + time);
+            log.add("Generated at " + time);
             log.add("Operation: " + why);
         } else {
             log.add("REGENERATION at " + time);

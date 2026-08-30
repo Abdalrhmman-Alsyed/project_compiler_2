@@ -2,35 +2,46 @@ HTML code generation log
 ============================================================
 
 ------------------------------------------------------------
-REGENERATION at 2026-08-30 20:16:25 — startup
+Generated at 2026-08-30 20:56:35
+Operation: compiler pipeline (Main) -- first create of HTML pages
 Wrote E:\project_compiler_2\output\index.html  (context keys: [products])
 Wrote E:\project_compiler_2\output\product_detail.html  (context keys: [product])
 Wrote E:\project_compiler_2\output\add_product.html  (context keys: [])
 Copied style.css
 
 ------------------------------------------------------------
-REGENERATION at 2026-08-30 20:16:29 — product detail id=1
-Wrote E:\project_compiler_2\output\product_detail.html  (context keys: [product])
-
-------------------------------------------------------------
-REGENERATION at 2026-08-30 20:16:36 — product detail id=2
-Wrote E:\project_compiler_2\output\product_detail.html  (context keys: [product])
-
-------------------------------------------------------------
-REGENERATION at 2026-08-30 20:17:06 — product detail id=1
-Wrote E:\project_compiler_2\output\product_detail.html  (context keys: [product])
-
-------------------------------------------------------------
-REGENERATION at 2026-08-30 20:17:21 — product detail id=2
-Wrote E:\project_compiler_2\output\product_detail.html  (context keys: [product])
-
-------------------------------------------------------------
-REGENERATION at 2026-08-30 20:27:45 — add product id=3 name=Hp Laptop
+REGENERATION at 2026-08-30 20:56:59
+Caused by: DELETE product (id=2, name=?)
 Wrote E:\project_compiler_2\output\index.html  (context keys: [products])
 Wrote E:\project_compiler_2\output\product_detail.html  (context keys: [product])
 Wrote E:\project_compiler_2\output\add_product.html  (context keys: [])
 Copied style.css
 
 ------------------------------------------------------------
-REGENERATION at 2026-08-30 20:28:02 — product detail id=3
+REGENERATION at 2026-08-30 20:57:13
+Caused by: DELETE product (id=1, name=Smartphone X (Limited Edition))
+Wrote E:\project_compiler_2\output\index.html  (context keys: [products])
+Wrote E:\project_compiler_2\output\product_detail.html  (context keys: [product])
+Wrote E:\project_compiler_2\output\add_product.html  (context keys: [])
+Copied style.css
+
+------------------------------------------------------------
+REGENERATION at 2026-08-30 20:57:14
+Caused by: DELETE product (id=3, name=Hp Laptop)
+Wrote E:\project_compiler_2\output\index.html  (context keys: [products])
+Wrote E:\project_compiler_2\output\product_detail.html  (context keys: [])
+Wrote E:\project_compiler_2\output\add_product.html  (context keys: [])
+Copied style.css
+
+------------------------------------------------------------
+REGENERATION at 2026-08-30 20:57:28
+Caused by: ADD product (id=4, name=Hp Laptop)
+Wrote E:\project_compiler_2\output\index.html  (context keys: [products])
+Wrote E:\project_compiler_2\output\product_detail.html  (context keys: [product])
+Wrote E:\project_compiler_2\output\add_product.html  (context keys: [])
+Copied style.css
+
+------------------------------------------------------------
+REGENERATION at 2026-08-30 20:57:33
+Caused by: VIEW product detail (id=4, name=Hp Laptop)
 Wrote E:\project_compiler_2\output\product_detail.html  (context keys: [product])
