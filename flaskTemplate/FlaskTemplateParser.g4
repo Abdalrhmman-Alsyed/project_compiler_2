@@ -214,6 +214,12 @@ blockPostfix
     : BLOCK_PIPE BLOCK_ID (BLOCK_LPAREN blockArgumentList? BLOCK_RPAREN)? #blockFilterOp
     | BLOCK_LPAREN blockArgumentList? BLOCK_RPAREN #blockCallOp
     | BLOCK_DOT BLOCK_ID #blockMemberOp
+    | BLOCK_LBRACK blockSliceItem BLOCK_RBRACK #blockIndexOp
+    ;
+
+blockSliceItem
+    : blockExpression #blockIndex
+    | blockExpression? BLOCK_COLON blockExpression? (BLOCK_COLON blockExpression?)? #blockSlice
     ;
 
 blockArgumentList
@@ -307,6 +313,12 @@ postfix
     : EXPR_PIPE EXPR_ID (EXPR_LPAREN argumentList? EXPR_RPAREN)? #filterExpr
     | EXPR_LPAREN argumentList? EXPR_RPAREN #callExpr
     | EXPR_DOT EXPR_ID                      #memberOp
+    | EXPR_LBRACK sliceItem EXPR_RBRACK     #indexOp
+    ;
+
+sliceItem
+    : expression #index
+    | expression? EXPR_COLON expression? (EXPR_COLON expression?)? #slice
     ;
 
 // url_for('detail', product_id=p.id): 'product_id' is a parameter NAME, not a

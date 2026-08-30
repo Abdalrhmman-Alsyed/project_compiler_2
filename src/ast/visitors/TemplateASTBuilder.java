@@ -320,7 +320,8 @@ public class TemplateASTBuilder extends FlaskTemplateParserBaseVisitor<TemplateN
                     FlaskTemplateParser.BlockSliceContext slice = (FlaskTemplateParser.BlockSliceContext) item;
                     ExpressionNode start = slice.blockExpression(0) != null ? (ExpressionNode) visit(slice.blockExpression(0)) : null;
                     ExpressionNode stop = slice.blockExpression(1) != null ? (ExpressionNode) visit(slice.blockExpression(1)) : null;
-                    ExpressionNode step = slice.blockExpression(2) != null ? (ExpressionNode) visit(slice.blockExpression(2)) : null;
+                    ExpressionNode step = slice.blockExpression().size() > 2 && slice.blockExpression(2) != null
+                            ? (ExpressionNode) visit(slice.blockExpression(2)) : null;
                     current = new SliceNode(line, col, start, stop, step);
                 }
             }
@@ -805,7 +806,8 @@ public class TemplateASTBuilder extends FlaskTemplateParserBaseVisitor<TemplateN
                     FlaskTemplateParser.SliceContext slice = (FlaskTemplateParser.SliceContext) item;
                     ExpressionNode start = slice.expression(0) != null ? (ExpressionNode) visit(slice.expression(0)) : null;
                     ExpressionNode stop = slice.expression(1) != null ? (ExpressionNode) visit(slice.expression(1)) : null;
-                    ExpressionNode step = slice.expression(2) != null ? (ExpressionNode) visit(slice.expression(2)) : null;
+                    ExpressionNode step = slice.expression().size() > 2 && slice.expression(2) != null
+                            ? (ExpressionNode) visit(slice.expression(2)) : null;
                     current = new SliceNode(line, col, start, stop, step);
                 }
             }

@@ -11,6 +11,7 @@ import gen.FlaskTemplateParser;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.ParseTree;
 import semantic.Generator;
+import codeGenerator.HtmlCodeGenerator;
 import semantic.JinjaAstSemanticAnalyzer;
 import semantic.PythonSemanticAnalyzer;
 import symbolTable.PythonSymbolTable;
@@ -44,13 +45,13 @@ public class Main {
         generator.printReport();
         Map<String, Set<String>> templateContextVars = generator.getTemplateContextVars();
 
-        // ── 2.5 Mock Data Extractor ─────────────────────────────────────────
+        // ── 2.5 Mock Data Extractor, then bind Jinja names to those literals ─
         semantic.MockDataExtractor dataExtractor = new semantic.MockDataExtractor();
         if (pythonAst != null) {
             pythonAst.accept(dataExtractor);
         }
         dataExtractor.printReport();
-        Map<String, Object> mockData = dataExtractor.getExtractedData();
+        Map<String, Object> mockData = generator.bind(dataExtractor.getExtractedData());
 
         // ── 3. Template pipeline (valid Flask templates) ──────────────────────
         for (String template : List.of(
@@ -64,14 +65,35 @@ public class Main {
             runTemplatePipeline(template, ctxVars, mockData);
         }
 
-        // ── 4. Semantic error demo: Python ────────────────────────────────────
+        // ── 3.5 HTML code generation ─────────────────────────────────────────
+        printBanner("HTML CODE GENERATION -> output/");
+        HtmlCodeGenerator htmlGen = new HtmlCodeGenerator(
+                Path.of("flask-app/templates"),
+                Path.of("output"));
+        htmlGen.loadTemplates();
+        htmlGen.generateRenderedPages(generator, mockData,
+                "compiler pipeline (Main) -- first create of HTML pages", true);
+        htmlGen.printReport();
+
+        // ── 4. Serve output/ immediately so the browser can connect ──────────
+        int port = 8080;
+        if (args.length > 0) port = Integer.parseInt(args[0]);
+        printBanner("STORE SERVER -> http://localhost:" + port + "/");
+        OutputHttpServer store = new OutputHttpServer(port);
+        store.startServing(generator, htmlGen, mockData);
+
+        // ── 5. Semantic error demo: Python ────────────────────────────────────
         printBanner("SEMANTIC ERROR DEMO — Python (15 checks)");
         runPythonErrorDemo("test/python/error_demo.txt");
 
-        // ── 5. Semantic error demo: Jinja2 ───────────────────────────────────
+        // ── 6. Semantic error demo: Jinja2 ───────────────────────────────────
         printBanner("SEMANTIC ERROR DEMO — Jinja2 (11 checks, AST)");
         Set<String> demoCtxVars = new LinkedHashSet<>(List.of("products", "title"));
         runJinjaErrorDemo("test/jinja/error_demo.jinja", demoCtxVars, mockData);
+
+        System.out.println("\nStore is running at http://localhost:" + port + "/");
+        System.out.println("Stop with Ctrl+C");
+        store.awaitStop();
     }
 
     /**
@@ -86,7 +108,7 @@ public class Main {
         Set<String> vars = new LinkedHashSet<>(
                 contextVars.getOrDefault(templateName, Set.of()));
 
-        java.io.File dir = new java.io.File("test/jinja");
+        java.io.File dir = new java.io.File("flask-app/templates");
         java.io.File[] siblings = dir.listFiles((d, n) -> n.endsWith(".jinja"));
         if (siblings == null) return vars;
 
@@ -261,9 +283,9 @@ public class Main {
     }
 
     private static void printSection(String title) {
-        System.out.println("\n" + "─".repeat(70));
+        System.out.println("\n" + "-".repeat(70));
         System.out.println("  " + title);
-        System.out.println("─".repeat(70));
+        System.out.println("-".repeat(70));
     }
 
     private static void printSub(String label) {
