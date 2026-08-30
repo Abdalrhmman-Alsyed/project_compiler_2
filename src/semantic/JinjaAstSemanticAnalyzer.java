@@ -120,7 +120,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
 
     public void printReport() {
         System.out.println("\n" + "=".repeat(60));
-        System.out.println("  JINJA2 SEMANTIC ANALYSIS: " + templateName + "  (12 checks)");
+        System.out.println("  JINJA2 SEMANTIC ANALYSIS: " + templateName + "  (13 checks)");
         System.out.println("=".repeat(60));
         if (errors.isEmpty() && warnings.isEmpty()) {
             System.out.println("  No semantic issues found.");
@@ -139,6 +139,16 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
     }
 
     // ── Blocks ───────────────────────────────────────────────────────────────
+
+    @Override
+    public Void visit(ast.template.html.HTMLNormalElementNode node) {
+        String opening = node.getTagName();
+        String closing = node.getClosingTagName();
+        if (closing != null && !opening.equals(closing)) {
+            error("HTML tag mismatch: opening tag <" + opening + "> does not match closing tag </" + closing + ">", node.getClosingLine(), node.getClosingColumn());
+        }
+        return super.visit(node);
+    }
 
     @Override
     public Void visit(BlockBlockNode node) {

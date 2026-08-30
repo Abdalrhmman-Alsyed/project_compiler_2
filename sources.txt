@@ -2,9 +2,12 @@ E:\project_compiler_2\src\CompilerPythonTest.java
 E:\project_compiler_2\src\LiveAnalyzer.java
 E:\project_compiler_2\src\Main.java
 E:\project_compiler_2\src\ParserTest.java
+E:\project_compiler_2\src\PrintTokens.java
+E:\project_compiler_2\src\PrintTree.java
 E:\project_compiler_2\src\TemplateASTTest.java
 E:\project_compiler_2\src\TestAll.java
 E:\project_compiler_2\src\TestMock.java
+E:\project_compiler_2\src\TestPython.java
 E:\project_compiler_2\src\TestSingle.java
 E:\project_compiler_2\src\ast\ASTNode.java
 E:\project_compiler_2\src\ast\IndentedAction.java

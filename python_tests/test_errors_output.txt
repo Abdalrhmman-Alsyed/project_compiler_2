@@ -1,0 +1,913 @@
+
+======================================================================
+  Flask App Compiler — Full Pipeline
+======================================================================
+
+──────────────────────────────────────────────────────────────────────
+  PYTHON: test/python/python_test.txt
+──────────────────────────────────────────────────────────────────────
+
+--- AST ---
+Program [Line: 1]
+  Function calculate_total [Line: 1]
+    Parameter price [Line: 1]
+    Parameter discount [Line: 1]
+    Parameter price [Line: 1]
+    Block [Line: 2]
+      Assignment (=) [Line: 2]
+        Target: [Line: 2]
+          Identifier total [Line: 2]
+        Value: [Line: 2]
+          BinaryOp - [Line: 2]
+            Identifier price [Line: 2]
+            Identifier discount [Line: 2]
+      Return [Line: 3]
+        Identifier total [Line: 3]
+      ExpressionStatement [Line: 4]
+        Call [Line: 4]
+          Identifier print [Line: 4]
+          String "This will never print" [Line: 4]
+  Function calculate_total [Line: 5]
+    Parameter amount [Line: 5]
+    Block [Line: 6]
+      Break [Line: 6]
+      Return [Line: 7]
+        Identifier amount [Line: 7]
+  Function main [Line: 8]
+    Block [Line: 9]
+      Assignment (=) [Line: 9]
+        Target: [Line: 9]
+          Identifier x [Line: 9]
+        Value: [Line: 9]
+          Int 10 [Line: 9]
+      If [Line: 10]
+        Condition: [Line: 10]
+          BinaryOp > [Line: 10]
+            Identifier x [Line: 10]
+            Int 5 [Line: 10]
+        Then: [Line: 10]
+          Block [Line: 11]
+            Assignment (=) [Line: 11]
+              Target: [Line: 11]
+                Identifier y [Line: 11]
+              Value: [Line: 11]
+                Int 20 [Line: 11]
+      ExpressionStatement [Line: 12]
+        Call [Line: 12]
+          Identifier print [Line: 12]
+          Identifier z [Line: 12]
+      ExpressionStatement [Line: 13]
+        Call [Line: 13]
+          Identifier print [Line: 13]
+          Identifier total [Line: 13]
+      Assignment (=) [Line: 14]
+        Target: [Line: 14]
+          Identifier global_test [Line: 14]
+        Value: [Line: 14]
+          Int 50 [Line: 14]
+      Global [Line: 15]
+        Var global_test [Line: 15]
+  ExpressionStatement [Line: 16]
+    Call [Line: 16]
+      Identifier main [Line: 16]
+  Return [Line: 17]
+
+--- Symbol Table ---
+
+==================================================
+DETAILED SCOPE TREE
+==================================================
+GLOBAL #0
+  • 𝑣 global_test          : variable     [unknown]
+  • ƒ calculate_total      : function     [function]
+  • ƒ main                 : function     [function]
+  ├── FUNCTION #1 "function#1"
+    • 𝑣 total                : variable     [unknown]
+    • 𝑝 discount             : parameter    [unknown]
+    • 𝑝 price                : parameter    [unknown]
+  ├── FUNCTION #2 "function#2"
+    • 𝑝 amount               : parameter    [unknown]
+  └── FUNCTION #3 "function#3"
+    • 𝑣 global_test          : variable     [int] = 50
+    • 𝑣 x                    : variable     [int] = 10
+    └── IF_BLOCK #4 "if_block#4"
+      • 𝑣 y                    : variable     [int] = 20
+
+============================================================
+  PYTHON SEMANTIC ANALYSIS  (18 checks)
+============================================================
+
+  ERRORS (6):
+  [ERROR  ] Line 1:37 — Duplicate parameter 'price' in function 'calculate_total'
+  [ERROR  ] Line 4:0 — Unreachable code after 'return' statement
+  [ERROR  ] Line 5:0 — Function 'calculate_total' is defined more than once
+  [ERROR  ] Line 6:0 — 'break' statement outside loop
+  [ERROR  ] Line 15:0 — Name 'global_test' assigned locally before 'global' declaration
+  [ERROR  ] Line 17:0 — 'return' statement outside function
+
+  WARNINGS (3):
+  [WARNING] Line 12:6 — Name 'z' used before being assigned in local scope
+  [WARNING] Line 13:6 — Name 'total' used before being assigned in local scope
+  [WARNING] Line 11:0 — Variable 'y' defined but never used
+
+  Summary: 6 error(s), 3 warning(s) = 9 total issue(s)
+
+============================================================
+  GENERATOR: Python → Jinja2 Context Bridge
+============================================================
+  No render_template() calls found.
+
+──────────────────────────────────────────────────────────────────────
+  TEMPLATE: test/jinja/base.html
+──────────────────────────────────────────────────────────────────────
+
+--- Jinja2 Symbol Table + Analysis ---
+
+============================================================
+📋 JINJA2 SYMBOL TABLE: base.html
+============================================================
+┌─ Scope: global
+│  • request (VARIABLE) at [-1:-1]
+│  • wordcount (FILTER) at [-1:-1]
+│  • session (VARIABLE) at [-1:-1]
+│  • g (VARIABLE) at [-1:-1]
+│  • lower (FILTER) at [-1:-1]
+│  • upper (FILTER) at [-1:-1]
+│  • striptags (FILTER) at [-1:-1]
+│  • range (FUNCTION) at [-1:-1]
+│  • cycler (FUNCTION) at [-1:-1]
+│  • list (FUNCTION) at [-1:-1]
+│  • title (BLOCK) at [5:14]
+│  • capitalize (FILTER) at [-1:-1]
+│  • content (BLOCK) at [170:7]
+│  • trim (FILTER) at [-1:-1]
+│  • safe (FILTER) at [-1:-1]
+│  • dict (FUNCTION) at [-1:-1]
+│  • url_for (FUNCTION) at [-1:-1]
+│  • get_flashed_messages (FUNCTION) at [-1:-1]
+│  • config (VARIABLE) at [-1:-1]
+└─
+
+============================================================
+📊 JINJA2 TEMPLATE ANALYSIS
+============================================================
+
+📄 Template: base.html
+
+📈 Statistics:
+  FILTER      : 7
+  VARIABLE    : 4
+  FUNCTION    : 6
+  BLOCK       : 2
+  Total       : 19
+
+⚠️  Warnings:
+  • Block 'title' defined but never used (line 5)
+  • Block 'content' defined but never used (line 170)
+  • Variable 'request' defined but never used (line -1)
+  • Variable 'session' defined but never used (line -1)
+  • Variable 'g' defined but never used (line -1)
+  • Variable 'config' defined but never used (line -1)
+
+--- Template AST ---
+TemplateRootNode [line=1, col=0]
+  DoctypeNode [line=1, col=0]
+    DOCTYPE: <!DOCTYPE html>
+  HTMLDocumentNode [line=2, col=0]
+    HTMLAttributeNode [line=2, col=6]
+      ATTR: lang = "ar"
+    HTMLAttributeNode [line=2, col=16]
+      ATTR: dir = "rtl"
+    HTMLNormalElementNode [line=3, col=0]
+      TAG: <head>
+      HTMLVoidElementNode [line=4, col=4]
+        TAG: <meta> (void)
+        HTMLAttributeNode [line=4, col=10]
+          ATTR: charset = "UTF-8"
+      HTMLNormalElementNode [line=5, col=4]
+        TAG: <title>
+        BlockBlockNode [line=5, col=14]
+          BLOCK: title
+        HTMLTextNode [line=5, col=28]
+          TEXT: "تطبيق المنتجات"
+      CSSStyleNode [line=7, col=4]
+      CSS STYLE NODE
+        Style Attributes:
+          class=""h""
+          media=""all""
+        CSS Rules (20):
+          Selectors: [body]
+            font-family: 'Arial';
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            text-align: right;
+            direction: rtl;
+          Selectors: [header]
+            background-color: #007bff;
+            color: white;
+            padding: 20px;
+            text-align: center;
+          Selectors: [header]
+            margin: 0 0 10px 0;
+          Selectors: [nav]
+            color: white;
+            margin: 0 15px;
+            text-decoration: none;
+            font-weight: bold;
+          Selectors: [main]
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+          Selectors: [.product-grid]
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            padding: 20px 0;
+          Selectors: [.product-card]
+            border: 1px solid #ddd;
+            padding: 15px;
+            width: 300px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            background-color: #fff;
+          Selectors: [.product-image]
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            margin-bottom: 10px;
+          Selectors: [.product-price]
+            color: #28a745;
+            font-size: 1.2em;
+            font-weight: bold;
+          Selectors: [.details-button,]
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            text-align: center;
+          Selectors: [.details-button]
+            background-color: #007bff;
+            color: white;
+          Selectors: [.delete-button]
+            background-color: #dc3545;
+            color: white;
+          Selectors: [.detail-container]
+            max-width: 800px;
+            margin: 0 auto;
+          Selectors: [.detail-image]
+            width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+          Selectors: [.description-text]
+            border-right: 3px solid #007bff;
+            padding-right: 10px;
+            margin-top: 10px;
+          Selectors: [.back-link]
+            display: inline-block;
+            margin-top: 20px;
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+          Selectors: [.product-form]
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            font-weight: bold;
+          Selectors: [.product-form]
+            width: 98%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+          Selectors: [.submit-button]
+            background-color: #28a745;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1em;
+            margin-top: 20px;
+            width: 100%;
+          Selectors: [.no-products]
+            text-align: center;
+            padding: 50px;
+            color: #6c757d;
+            font-style: italic;
+    HTMLNormalElementNode [line=160, col=0]
+      TAG: <body>
+      HTMLNormalElementNode [line=161, col=0]
+        TAG: <header>
+        HTMLNormalElementNode [line=162, col=4]
+          TAG: <h1>
+          HTMLAttributeNode [line=162, col=8]
+            ATTR: style
+          HTMLTextNode [line=162, col=17]
+            TEXT: "متجر التجارة الإلكترونية المصغر"
+        HTMLNormalElementNode [line=163, col=4]
+          TAG: <nav>
+          HTMLNormalElementNode [line=164, col=8]
+            TAG: <a>
+            HTMLAttributeNode [line=164, col=11]
+              ATTR: href = "{{                  CallExpressionNode [line=164, col=20]
+                    CALL:
+                    VariableNode [line=164, col=20]
+                      VAR: url_for
+                    StringLiteralNode [line=164, col=28]
+                      STR: "product_list"
+}}"
+            HTMLTextNode [line=164, col=48]
+              TEXT: "عرض المنتجات"
+          HTMLNormalElementNode [line=165, col=8]
+            TAG: <a>
+            HTMLAttributeNode [line=165, col=11]
+              ATTR: href = "{{                  CallExpressionNode [line=165, col=20]
+                    CALL:
+                    VariableNode [line=165, col=20]
+                      VAR: url_for
+                    StringLiteralNode [line=165, col=28]
+                      STR: "add_product"
+}}"
+            HTMLTextNode [line=165, col=47]
+              TEXT: "إضافة منتج"
+      HTMLNormalElementNode [line=169, col=0]
+        TAG: <main>
+        BlockBlockNode [line=170, col=7]
+          BLOCK: content
+        HTMLNormalElementNode [line=171, col=4]
+          TAG: <p>
+          HTMLTextNode [line=171, col=7]
+            TEXT: "محتوى افتراضي."
+      HTMLNormalElementNode [line=175, col=0]
+        TAG: <footer>
+        HTMLNormalElementNode [line=176, col=4]
+          TAG: <p>
+          HTMLTextNode [line=176, col=7]
+            TEXT: "&copy; 2025 Flask & Jinja2 App - محمد وسيم البزرة"
+
+============================================================
+  JINJA2 SEMANTIC ANALYSIS: base.html  (10 checks)
+============================================================
+  No semantic issues found.
+
+──────────────────────────────────────────────────────────────────────
+  TEMPLATE: test/jinja/index.html
+──────────────────────────────────────────────────────────────────────
+
+--- Jinja2 Symbol Table + Analysis ---
+
+============================================================
+📋 JINJA2 SYMBOL TABLE: index.html
+============================================================
+┌─ Scope: global
+│  • request (VARIABLE) at [-1:-1]
+│  • wordcount (FILTER) at [-1:-1]
+│  • product (VARIABLE) at [15:7]
+│    ↳ Loop variable
+│  • session (VARIABLE) at [-1:-1]
+│  • g (VARIABLE) at [-1:-1]
+│  • lower (FILTER) at [-1:-1]
+│  • upper (FILTER) at [-1:-1]
+│  • striptags (FILTER) at [-1:-1]
+│  • range (FUNCTION) at [-1:-1]
+│  • cycler (FUNCTION) at [-1:-1]
+│  • list (FUNCTION) at [-1:-1]
+│  • title (BLOCK) at [5:3]
+│  • capitalize (FILTER) at [-1:-1]
+│  • content (BLOCK) at [9:3]
+│  • trim (FILTER) at [-1:-1]
+│  • safe (FILTER) at [-1:-1]
+│  • dict (FUNCTION) at [-1:-1]
+│  • url_for (FUNCTION) at [-1:-1]
+│  • get_flashed_messages (FUNCTION) at [-1:-1]
+│  • config (VARIABLE) at [-1:-1]
+└─
+
+============================================================
+📊 JINJA2 TEMPLATE ANALYSIS
+============================================================
+
+📄 Template: index.html
+↗️  Extends: base.html
+
+📈 Statistics:
+  FILTER      : 7
+  VARIABLE    : 5
+  FUNCTION    : 6
+  BLOCK       : 2
+  Total       : 20
+
+❌ Errors:
+  • Undefined variable 'product.id' used at lines: [31, 38]
+  • Undefined variable 'product_id' used at lines: [31, 38]
+  • Undefined variable 'product.name' used at lines: [20, 24]
+  • Undefined variable 'product.image_url' used at lines: [19]
+  • Undefined variable 'product.price' used at lines: [27]
+  • Undefined variable 'products' used at lines: [13, 15]
+
+⚠️  Warnings:
+  • Variable 'request' defined but never used (line -1)
+  • Variable 'session' defined but never used (line -1)
+  • Variable 'g' defined but never used (line -1)
+  • Variable 'config' defined but never used (line -1)
+
+--- Template AST ---
+TemplateRootNode [line=1, col=0]
+  DoctypeNode [line=1, col=0]
+    DOCTYPE: <!DOCTYPE html>
+  HTMLDocumentNode [line=2, col=0]
+    HTMLAttributeNode [line=2, col=6]
+      ATTR: lang = "ar"
+    HTMLAttributeNode [line=2, col=16]
+      ATTR: dir = "rtl"
+    ExtendsBlockNode [line=3, col=3]
+      EXTENDS: "base.html"
+    BlockBlockNode [line=5, col=3]
+      BLOCK: title
+    HTMLTextNode [line=6, col=0]
+      TEXT: "قائمة المنتجات"
+    BlockBlockNode [line=9, col=3]
+      BLOCK: content
+    HTMLNormalElementNode [line=11, col=0]
+      TAG: <h2>
+      HTMLAttributeNode [line=11, col=4]
+        ATTR: style = "text-align:center;"
+      HTMLTextNode [line=11, col=31]
+        TEXT: "قائمة المنتجات"
+    IfBlockNode [line=13, col=3]
+      IF BLOCK:
+        CONDITION:
+            VariableNode [line=13, col=6]
+              VAR: products
+        CONTENT:
+    HTMLNormalElementNode [line=14, col=0]
+      TAG: <div>
+      HTMLAttributeNode [line=14, col=5]
+        ATTR: class = "product-grid"
+      ForBlockNode [line=15, col=7]
+        FOR BLOCK: product in
+          ITERABLE:
+              VariableNode [line=15, col=22]
+                VAR: products
+          CONTENT:
+      HTMLNormalElementNode [line=16, col=4]
+        TAG: <div>
+        HTMLAttributeNode [line=16, col=9]
+          ATTR: class = "product-card"
+        HTMLVoidElementNode [line=18, col=8]
+          TAG: <img> (void)
+          HTMLAttributeNode [line=19, col=16]
+            ATTR: src = "{{                VariableNode [line=19, col=24]
+                  VAR: [product, image_url]
+}}"
+          HTMLAttributeNode [line=20, col=16]
+            ATTR: alt = "صورة {{                VariableNode [line=20, col=29]
+                  VAR: [product, name]
+}}"
+          HTMLAttributeNode [line=21, col=16]
+            ATTR: class = "product-image"
+        HTMLNormalElementNode [line=24, col=8]
+          TAG: <h3>
+        HTMLNormalElementNode [line=26, col=8]
+          TAG: <p>
+          HTMLAttributeNode [line=26, col=11]
+            ATTR: class = "product-price"
+          HTMLTextNode [line=27, col=31]
+            TEXT: " $"
+        HTMLNormalElementNode [line=30, col=8]
+          TAG: <a>
+          HTMLAttributeNode [line=31, col=16]
+            ATTR: href = "{{                CallExpressionNode [line=31, col=25]
+                  CALL:
+                  VariableNode [line=31, col=25]
+                    VAR: url_for
+                  StringLiteralNode [line=31, col=33]
+                    STR: "product_detail"
+                  VariableNode [line=31, col=51]
+                    VAR: [product_id]
+                  VariableNode [line=31, col=62]
+                    VAR: [product, id]
+}}"
+          HTMLAttributeNode [line=32, col=16]
+            ATTR: class = "details-button"
+          HTMLTextNode [line=34, col=12]
+            TEXT: "عرض التفاصيل"
+        HTMLNormalElementNode [line=37, col=8]
+          TAG: <form>
+          HTMLAttributeNode [line=38, col=16]
+            ATTR: action = "{{                CallExpressionNode [line=38, col=27]
+                  CALL:
+                  VariableNode [line=38, col=27]
+                    VAR: url_for
+                  StringLiteralNode [line=38, col=35]
+                    STR: "delete_product"
+                  VariableNode [line=38, col=53]
+                    VAR: [product_id]
+                  VariableNode [line=38, col=64]
+                    VAR: [product, id]
+}}"
+          HTMLAttributeNode [line=39, col=16]
+            ATTR: method = "post"
+          HTMLNormalElementNode [line=41, col=12]
+            TAG: <button>
+            HTMLAttributeNode [line=41, col=20]
+              ATTR: type = "submit"
+            HTMLAttributeNode [line=41, col=34]
+              ATTR: class = "delete-button"
+            HTMLTextNode [line=42, col=16]
+              TEXT: "حذف المنتج"
+    ElseBlockNode [line=50, col=3]
+      ELSE BLOCK:
+    HTMLNormalElementNode [line=51, col=0]
+      TAG: <p>
+      HTMLAttributeNode [line=51, col=3]
+        ATTR: class = "no-products"
+      HTMLTextNode [line=52, col=4]
+        TEXT: "لا توجد منتجات حالياً."
+
+============================================================
+  JINJA2 SEMANTIC ANALYSIS: index.html  (10 checks)
+============================================================
+  No semantic issues found.
+
+──────────────────────────────────────────────────────────────────────
+  TEMPLATE: test/jinja/product_detail.html
+──────────────────────────────────────────────────────────────────────
+
+--- Jinja2 Symbol Table + Analysis ---
+
+============================================================
+📋 JINJA2 SYMBOL TABLE: product_detail.html
+============================================================
+┌─ Scope: global
+│  • request (VARIABLE) at [-1:-1]
+│  • wordcount (FILTER) at [-1:-1]
+│  • session (VARIABLE) at [-1:-1]
+│  • g (VARIABLE) at [-1:-1]
+│  • lower (FILTER) at [-1:-1]
+│  • upper (FILTER) at [-1:-1]
+│  • striptags (FILTER) at [-1:-1]
+│  • range (FUNCTION) at [-1:-1]
+│  • cycler (FUNCTION) at [-1:-1]
+│  • list (FUNCTION) at [-1:-1]
+│  • title (BLOCK) at [4:3]
+│  • capitalize (FILTER) at [-1:-1]
+│  • content (BLOCK) at [6:3]
+│  • trim (FILTER) at [-1:-1]
+│  • safe (FILTER) at [-1:-1]
+│  • dict (FUNCTION) at [-1:-1]
+│  • url_for (FUNCTION) at [-1:-1]
+│  • get_flashed_messages (FUNCTION) at [-1:-1]
+│  • config (VARIABLE) at [-1:-1]
+└─
+
+============================================================
+📊 JINJA2 TEMPLATE ANALYSIS
+============================================================
+
+📄 Template: product_detail.html
+↗️  Extends: base.html
+
+📈 Statistics:
+  FILTER      : 7
+  VARIABLE    : 4
+  FUNCTION    : 6
+  BLOCK       : 2
+  Total       : 19
+
+❌ Errors:
+  • Undefined variable 'product.details' used at lines: [16]
+  • Undefined variable 'product.name' used at lines: [4, 10, 13]
+  • Undefined variable 'product.image_url' used at lines: [10]
+  • Undefined variable 'product.price' used at lines: [14]
+
+⚠️  Warnings:
+  • Variable 'request' defined but never used (line -1)
+  • Variable 'session' defined but never used (line -1)
+  • Variable 'g' defined but never used (line -1)
+  • Variable 'config' defined but never used (line -1)
+
+--- Template AST ---
+TemplateRootNode [line=1, col=0]
+  DoctypeNode [line=1, col=0]
+    DOCTYPE: <!DOCTYPE html>
+  HTMLDocumentNode [line=2, col=0]
+    HTMLAttributeNode [line=2, col=6]
+      ATTR: lang = "ar"
+    HTMLAttributeNode [line=2, col=16]
+      ATTR: dir = "rtl"
+    ExtendsBlockNode [line=3, col=3]
+      EXTENDS: "base.html"
+    BlockBlockNode [line=4, col=3]
+      BLOCK: title
+    HTMLTextNode [line=4, col=17]
+      TEXT: "تفاصيل: "
+    BlockBlockNode [line=6, col=3]
+      BLOCK: content
+    HTMLNormalElementNode [line=7, col=0]
+      TAG: <div>
+      HTMLAttributeNode [line=7, col=5]
+        ATTR: class = "detail-container"
+      HTMLNormalElementNode [line=8, col=4]
+        TAG: <h2>
+        HTMLTextNode [line=8, col=8]
+          TEXT: "تفاصيل المنتج"
+      HTMLVoidElementNode [line=10, col=4]
+        TAG: <img> (void)
+        HTMLAttributeNode [line=10, col=9]
+          ATTR: src = "{{              VariableNode [line=10, col=17]
+                VAR: [product, image_url]
+}}"
+        HTMLAttributeNode [line=10, col=39]
+          ATTR: alt = "صورة {{              VariableNode [line=10, col=52]
+                VAR: [product, name]
+}}"
+        HTMLAttributeNode [line=10, col=69]
+          ATTR: class = "detail-image"
+      HTMLNormalElementNode [line=12, col=4]
+        TAG: <div>
+        HTMLAttributeNode [line=12, col=9]
+          ATTR: class = "info-block"
+        HTMLNormalElementNode [line=13, col=8]
+          TAG: <p>
+          HTMLNormalElementNode [line=13, col=11]
+            TAG: <strong>
+            HTMLTextNode [line=13, col=19]
+              TEXT: "اسم المنتج:"
+        HTMLNormalElementNode [line=14, col=8]
+          TAG: <p>
+          HTMLNormalElementNode [line=14, col=11]
+            TAG: <strong>
+            HTMLTextNode [line=14, col=19]
+              TEXT: "السعر:"
+          HTMLTextNode [line=14, col=54]
+            TEXT: " $"
+        HTMLNormalElementNode [line=15, col=8]
+          TAG: <p>
+          HTMLNormalElementNode [line=15, col=11]
+            TAG: <strong>
+            HTMLTextNode [line=15, col=19]
+              TEXT: "الوصف:"
+        HTMLNormalElementNode [line=16, col=8]
+          TAG: <p>
+          HTMLAttributeNode [line=16, col=11]
+            ATTR: class = "description-text"
+      HTMLNormalElementNode [line=19, col=4]
+        TAG: <a>
+        HTMLAttributeNode [line=19, col=7]
+          ATTR: href = "{{              CallExpressionNode [line=19, col=16]
+                CALL:
+                VariableNode [line=19, col=16]
+                  VAR: url_for
+                StringLiteralNode [line=19, col=24]
+                  STR: "product_list"
+}}"
+        HTMLAttributeNode [line=19, col=44]
+          ATTR: class = "back-link"
+        HTMLTextNode [line=19, col=62]
+          TEXT: "العودة إلى القائمة الرئيسية"
+
+============================================================
+  JINJA2 SEMANTIC ANALYSIS: product_detail.html  (10 checks)
+============================================================
+  No semantic issues found.
+
+──────────────────────────────────────────────────────────────────────
+  TEMPLATE: test/jinja/add_product.html
+──────────────────────────────────────────────────────────────────────
+
+--- Jinja2 Symbol Table + Analysis ---
+
+============================================================
+📋 JINJA2 SYMBOL TABLE: add_product.html
+============================================================
+┌─ Scope: global
+│  • request (VARIABLE) at [-1:-1]
+│  • wordcount (FILTER) at [-1:-1]
+│  • session (VARIABLE) at [-1:-1]
+│  • g (VARIABLE) at [-1:-1]
+│  • lower (FILTER) at [-1:-1]
+│  • upper (FILTER) at [-1:-1]
+│  • striptags (FILTER) at [-1:-1]
+│  • range (FUNCTION) at [-1:-1]
+│  • cycler (FUNCTION) at [-1:-1]
+│  • list (FUNCTION) at [-1:-1]
+│  • title (BLOCK) at [4:3]
+│  • capitalize (FILTER) at [-1:-1]
+│  • content (BLOCK) at [6:3]
+│  • trim (FILTER) at [-1:-1]
+│  • safe (FILTER) at [-1:-1]
+│  • dict (FUNCTION) at [-1:-1]
+│  • url_for (FUNCTION) at [-1:-1]
+│  • get_flashed_messages (FUNCTION) at [-1:-1]
+│  • config (VARIABLE) at [-1:-1]
+└─
+
+============================================================
+📊 JINJA2 TEMPLATE ANALYSIS
+============================================================
+
+📄 Template: add_product.html
+↗️  Extends: base.html
+
+📈 Statistics:
+  FILTER      : 7
+  VARIABLE    : 4
+  FUNCTION    : 6
+  BLOCK       : 2
+  Total       : 19
+
+⚠️  Warnings:
+  • Variable 'request' defined but never used (line -1)
+  • Variable 'session' defined but never used (line -1)
+  • Variable 'g' defined but never used (line -1)
+  • Variable 'config' defined but never used (line -1)
+
+--- Template AST ---
+TemplateRootNode [line=1, col=0]
+  DoctypeNode [line=1, col=0]
+    DOCTYPE: <!DOCTYPE html>
+  HTMLDocumentNode [line=2, col=0]
+    HTMLAttributeNode [line=2, col=6]
+      ATTR: lang = "ar"
+    HTMLAttributeNode [line=2, col=16]
+      ATTR: dir = "rtl"
+    ExtendsBlockNode [line=3, col=3]
+      EXTENDS: "base.html"
+    BlockBlockNode [line=4, col=3]
+      BLOCK: title
+    HTMLTextNode [line=4, col=17]
+      TEXT: "إضافة منتج جديد"
+    BlockBlockNode [line=6, col=3]
+      BLOCK: content
+    HTMLNormalElementNode [line=7, col=0]
+      TAG: <h2>
+      HTMLTextNode [line=7, col=4]
+        TEXT: "إضافة منتج جديد"
+    HTMLNormalElementNode [line=9, col=0]
+      TAG: <form>
+      HTMLAttributeNode [line=9, col=6]
+        ATTR: method = "POST"
+      HTMLAttributeNode [line=9, col=20]
+        ATTR: action = "{{            CallExpressionNode [line=9, col=31]
+              CALL:
+              VariableNode [line=9, col=31]
+                VAR: url_for
+              StringLiteralNode [line=9, col=39]
+                STR: "add_product"
+}}"
+      HTMLAttributeNode [line=9, col=58]
+        ATTR: class = "product-form"
+      HTMLAttributeNode [line=9, col=79]
+        ATTR: enctype = "multipart/form-data"
+      HTMLNormalElementNode [line=11, col=4]
+        TAG: <label>
+        HTMLAttributeNode [line=11, col=11]
+          ATTR: for = "name"
+        HTMLTextNode [line=11, col=22]
+          TEXT: "اسم المنتج:"
+      HTMLVoidElementNode [line=12, col=4]
+        TAG: <input> (void)
+        HTMLAttributeNode [line=12, col=11]
+          ATTR: type = "text"
+        HTMLAttributeNode [line=12, col=23]
+          ATTR: id = "name"
+        HTMLAttributeNode [line=12, col=33]
+          ATTR: name = "name"
+        HTMLAttributeNode [line=12, col=45]
+          ATTR: required (boolean)
+      HTMLNormalElementNode [line=14, col=4]
+        TAG: <label>
+        HTMLAttributeNode [line=14, col=11]
+          ATTR: for = "price"
+        HTMLTextNode [line=14, col=23]
+          TEXT: "سعر المنتج ($):"
+      HTMLVoidElementNode [line=15, col=4]
+        TAG: <input> (void)
+        HTMLAttributeNode [line=15, col=11]
+          ATTR: type = "number"
+        HTMLAttributeNode [line=15, col=25]
+          ATTR: id = "price"
+        HTMLAttributeNode [line=15, col=36]
+          ATTR: name = "price"
+        HTMLAttributeNode [line=15, col=49]
+          ATTR: step = "0.01"
+        HTMLAttributeNode [line=15, col=61]
+          ATTR: min = "0.01"
+        HTMLAttributeNode [line=15, col=72]
+          ATTR: required (boolean)
+      HTMLNormalElementNode [line=17, col=4]
+        TAG: <label>
+        HTMLAttributeNode [line=17, col=11]
+          ATTR: for = "details"
+        HTMLTextNode [line=17, col=25]
+          TEXT: "التفاصيل / الوصف:"
+      HTMLNormalElementNode [line=18, col=4]
+        TAG: <textarea>
+        HTMLAttributeNode [line=18, col=14]
+          ATTR: id = "details"
+        HTMLAttributeNode [line=18, col=27]
+          ATTR: name = "details"
+        HTMLAttributeNode [line=18, col=42]
+          ATTR: rows = "5"
+        HTMLAttributeNode [line=18, col=51]
+          ATTR: required (boolean)
+      HTMLNormalElementNode [line=20, col=4]
+        TAG: <label>
+        HTMLAttributeNode [line=20, col=11]
+          ATTR: for = "image"
+        HTMLTextNode [line=20, col=23]
+          TEXT: "صورة المنتج:"
+      HTMLVoidElementNode [line=21, col=4]
+        TAG: <input> (void)
+        HTMLAttributeNode [line=21, col=11]
+          ATTR: type = "file"
+        HTMLAttributeNode [line=21, col=23]
+          ATTR: id = "image"
+        HTMLAttributeNode [line=21, col=34]
+          ATTR: name = "image_file"
+        HTMLAttributeNode [line=21, col=52]
+          ATTR: accept = ".jpg, .jpeg, .png, .gif"
+        HTMLAttributeNode [line=21, col=85]
+          ATTR: required (boolean)
+      HTMLNormalElementNode [line=23, col=4]
+        TAG: <button>
+        HTMLAttributeNode [line=23, col=12]
+          ATTR: type = "submit"
+        HTMLAttributeNode [line=23, col=26]
+          ATTR: class = "submit-button"
+        HTMLTextNode [line=23, col=48]
+          TEXT: "حفظ وإضافة المنتج"
+
+============================================================
+  JINJA2 SEMANTIC ANALYSIS: add_product.html  (10 checks)
+============================================================
+  No semantic issues found.
+
+======================================================================
+  SEMANTIC ERROR DEMO — Python (15 checks)
+======================================================================
+
+──────────────────────────────────────────────────────────────────────
+  PYTHON ERROR DEMO: test/python/error_demo.txt
+──────────────────────────────────────────────────────────────────────
+
+============================================================
+  PYTHON SEMANTIC ANALYSIS  (18 checks)
+============================================================
+
+  ERRORS (6):
+  [ERROR  ] Line 1:37 — Duplicate parameter 'price' in function 'calculate_total'
+  [ERROR  ] Line 4:0 — Unreachable code after 'return' statement
+  [ERROR  ] Line 5:0 — Function 'calculate_total' is defined more than once
+  [ERROR  ] Line 6:0 — 'break' statement outside loop
+  [ERROR  ] Line 15:0 — Name 'global_test' assigned locally before 'global' declaration
+  [ERROR  ] Line 17:0 — 'return' statement outside function
+
+  WARNINGS (3):
+  [WARNING] Line 12:6 — Name 'z' used before being assigned in local scope
+  [WARNING] Line 13:6 — Name 'total' used before being assigned in local scope
+  [WARNING] Line 11:0 — Variable 'y' defined but never used
+
+  Summary: 6 error(s), 3 warning(s) = 9 total issue(s)
+
+======================================================================
+  SEMANTIC ERROR DEMO — Jinja2 (10 checks)
+======================================================================
+
+──────────────────────────────────────────────────────────────────────
+  JINJA2 ERROR DEMO: test/jinja/error_demo.html
+──────────────────────────────────────────────────────────────────────
+
+============================================================
+  JINJA2 SEMANTIC ANALYSIS: error_demo.html  (10 checks)
+============================================================
+
+  ERRORS (4):
+  [ERROR  ] Line 4:3 — Template 'error_demo.html' extends itself — circular dependency
+  [ERROR  ] Line 5:3 — {% extends %} used more than once in template 'error_demo.html'
+  [ERROR  ] Line 5:3 — Template 'error_demo.html' extends itself — circular dependency
+  [ERROR  ] Line 18:5 — Block 'content' is defined more than once (first at line 6)
+
+  WARNINGS (9):
+  [WARNING] Line 4:3 — {% extends "error_demo.html" %} should be the first Jinja2 statement but other Jinja2 content precedes it
+  [WARNING] Line 5:3 — {% extends "error_demo.html" %} should be the first Jinja2 statement but other Jinja2 content precedes it
+  [WARNING] Line 8:8 — Unknown Jinja2 filter 'unknownFilter' — not in known filter list
+  [WARNING] Line 9:5 — {% set products = ... %} redefines the variable 'products' that was passed from Python via render_template()
+  [WARNING] Line 10:5 — {% set products = ... %} redefines the variable 'products' that was passed from Python via render_template()
+  [WARNING] Line 10:5 — {% set products = ... %} redefines a template variable 'products' already defined via {% set %} at line 9
+  [WARNING] Line 14:8 — Variable 'item' is a for-loop variable used outside its for-loop scope
+  [WARNING] Line 15:5 — {% for empty_item in [] %} iterates over a literal empty list — loop body never executes
+  [WARNING] Line 19:5 — {% include "ghost_template.html" %} references a file that does not exist: test/jinja/ghost_template.html
+
+  Summary: 4 error(s), 9 warning(s) = 13 total issue(s)

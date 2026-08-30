@@ -11,6 +11,9 @@ import java.util.stream.Collectors;
 
 public final class HTMLNormalElementNode extends HTMLElementNode {
     private List<TemplateNode> content;
+    private String closingTagName;
+    private int closingLine;
+    private int closingColumn;
 
     public HTMLNormalElementNode(int line, int column, String tagName) {
         super(NodeKind.HTML_ELEMENT, line, column, tagName);
@@ -20,6 +23,25 @@ public final class HTMLNormalElementNode extends HTMLElementNode {
     // Getters
     public List<TemplateNode> getContent() {
         return Collections.unmodifiableList(content);
+    }
+
+    public String getClosingTagName() {
+        return closingTagName;
+    }
+
+    public int getClosingLine() {
+        return closingLine;
+    }
+
+    public int getClosingColumn() {
+        return closingColumn;
+    }
+
+    // Setters
+    public void setClosingTagInfo(String closingTagName, int closingLine, int closingColumn) {
+        this.closingTagName = closingTagName;
+        this.closingLine = closingLine;
+        this.closingColumn = closingColumn;
     }
 
     // Add methods

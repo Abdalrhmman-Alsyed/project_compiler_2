@@ -2,9 +2,14 @@ HTML code generation log
 ============================================================
 
 ------------------------------------------------------------
-Generated at 2026-08-30 21:21:54
+Generated at 2026-08-30 23:20:55
 Operation: compiler pipeline (Main) -- first create of HTML pages
 Wrote E:\project_compiler_2\output\index.html  (context keys: [products])
 Wrote E:\project_compiler_2\output\product_detail.html  (context keys: [product])
 Wrote E:\project_compiler_2\output\add_product.html  (context keys: [])
 Copied style.css
+
+------------------------------------------------------------
+REGENERATION at 2026-08-30 23:21:24
+Caused by: VIEW product detail (id=2, name=Bluetooth Headphones Pro)
+Wrote E:\project_compiler_2\output\product_detail.html  (context keys: [product])
