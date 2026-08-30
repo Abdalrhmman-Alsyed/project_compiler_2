@@ -1,0 +1,1943 @@
+{
+  "source": "flask-app/app.py",
+  "ast": {
+    "type": "Program",
+    "line": 1,
+    "column": 0,
+    "statements": [
+      {
+        "type": "Import",
+        "line": 1,
+        "column": 0,
+        "fromImport": true,
+        "importAll": false,
+        "module": "flask",
+        "names": [
+          {
+            "type": "Identifier",
+            "line": 1,
+            "column": 18,
+            "name": "Flask"
+          },
+          {
+            "type": "Identifier",
+            "line": 1,
+            "column": 25,
+            "name": "render_template"
+          },
+          {
+            "type": "Identifier",
+            "line": 1,
+            "column": 42,
+            "name": "request"
+          },
+          {
+            "type": "Identifier",
+            "line": 1,
+            "column": 51,
+            "name": "redirect"
+          },
+          {
+            "type": "Identifier",
+            "line": 1,
+            "column": 61,
+            "name": "url_for"
+          }
+        ]
+      },
+      {
+        "type": "Import",
+        "line": 2,
+        "column": 0,
+        "fromImport": true,
+        "importAll": false,
+        "module": "werkzeug.utils",
+        "names": [
+          {
+            "type": "Identifier",
+            "line": 2,
+            "column": 27,
+            "name": "secure_filename"
+          }
+        ]
+      },
+      {
+        "type": "Import",
+        "line": 3,
+        "column": 0,
+        "fromImport": false,
+        "importAll": false,
+        "module": "os",
+        "names": []
+      },
+      {
+        "type": "Assignment",
+        "line": 5,
+        "column": 0,
+        "operator": "=",
+        "target": {
+          "type": "Identifier",
+          "line": 5,
+          "column": 0,
+          "name": "app"
+        },
+        "value": {
+          "type": "Call",
+          "line": 5,
+          "column": 11,
+          "function": {
+            "type": "Identifier",
+            "line": 5,
+            "column": 6,
+            "name": "Flask"
+          },
+          "arguments": [
+            {
+              "type": "Identifier",
+              "line": 5,
+              "column": 12,
+              "name": "__name__"
+            }
+          ]
+        }
+      },
+      {
+        "type": "Assignment",
+        "line": 11,
+        "column": 0,
+        "operator": "=",
+        "target": {
+          "type": "Identifier",
+          "line": 11,
+          "column": 0,
+          "name": "UPLOAD_FOLDER"
+        },
+        "value": {
+          "type": "StringLiteral",
+          "line": 11,
+          "column": 16,
+          "value": "static"
+        }
+      },
+      {
+        "type": "Assignment",
+        "line": 12,
+        "column": 0,
+        "operator": "=",
+        "target": {
+          "type": "Index",
+          "line": 12,
+          "column": 10,
+          "collection": {
+            "type": "Attribute",
+            "line": 12,
+            "column": 3,
+            "object": {
+              "type": "Identifier",
+              "line": 12,
+              "column": 0,
+              "name": "app"
+            },
+            "attr": "config"
+          },
+          "index": {
+            "type": "StringLiteral",
+            "line": 12,
+            "column": 11,
+            "value": "UPLOAD_FOLDER"
+          }
+        },
+        "value": {
+          "type": "Identifier",
+          "line": 12,
+          "column": 30,
+          "name": "UPLOAD_FOLDER"
+        }
+      },
+      {
+        "type": "Assignment",
+        "line": 14,
+        "column": 0,
+        "operator": "=",
+        "target": {
+          "type": "Identifier",
+          "line": 14,
+          "column": 0,
+          "name": "ALLOWED_EXTENSIONS"
+        },
+        "value": {
+          "type": "SetLiteral",
+          "line": 14,
+          "column": 21,
+          "elements": [
+            {
+              "type": "StringLiteral",
+              "line": 14,
+              "column": 22,
+              "value": "png"
+            },
+            {
+              "type": "StringLiteral",
+              "line": 14,
+              "column": 29,
+              "value": "jpg"
+            },
+            {
+              "type": "StringLiteral",
+              "line": 14,
+              "column": 36,
+              "value": "jpeg"
+            },
+            {
+              "type": "StringLiteral",
+              "line": 14,
+              "column": 44,
+              "value": "gif"
+            }
+          ]
+        }
+      },
+      {
+        "type": "Assignment",
+        "line": 16,
+        "column": 0,
+        "operator": "=",
+        "target": {
+          "type": "Index",
+          "line": 16,
+          "column": 10,
+          "collection": {
+            "type": "Attribute",
+            "line": 16,
+            "column": 3,
+            "object": {
+              "type": "Identifier",
+              "line": 16,
+              "column": 0,
+              "name": "app"
+            },
+            "attr": "config"
+          },
+          "index": {
+            "type": "StringLiteral",
+            "line": 16,
+            "column": 11,
+            "value": "SERVER_NAME"
+          }
+        },
+        "value": {
+          "type": "StringLiteral",
+          "line": 16,
+          "column": 28,
+          "value": "localhost:5000"
+        }
+      },
+      {
+        "type": "Assignment",
+        "line": 22,
+        "column": 0,
+        "operator": "=",
+        "target": {
+          "type": "Identifier",
+          "line": 22,
+          "column": 0,
+          "name": "PRODUCTS_BASE_DATA"
+        },
+        "value": {
+          "type": "ListLiteral",
+          "line": 22,
+          "column": 21,
+          "elements": [
+            {
+              "type": "DictLiteral",
+              "line": 23,
+              "column": 4,
+              "entries": [
+                {
+                  "key": {
+                    "type": "StringLiteral",
+                    "line": 24,
+                    "column": 8,
+                    "value": "id"
+                  },
+                  "value": {
+                    "type": "IntLiteral",
+                    "line": 24,
+                    "column": 14,
+                    "value": 1
+                  }
+                },
+                {
+                  "key": {
+                    "type": "StringLiteral",
+                    "line": 25,
+                    "column": 8,
+                    "value": "name"
+                  },
+                  "value": {
+                    "type": "StringLiteral",
+                    "line": 25,
+                    "column": 16,
+                    "value": "Smartphone X (Limited Edition)"
+                  }
+                },
+                {
+                  "key": {
+                    "type": "StringLiteral",
+                    "line": 26,
+                    "column": 8,
+                    "value": "price"
+                  },
+                  "value": {
+                    "type": "FloatLiteral",
+                    "line": 26,
+                    "column": 17,
+                    "value": 799.99
+                  }
+                },
+                {
+                  "key": {
+                    "type": "StringLiteral",
+                    "line": 27,
+                    "column": 8,
+                    "value": "details"
+                  },
+                  "value": {
+                    "type": "StringLiteral",
+                    "line": 27,
+                    "column": 19,
+                    "value": "Flagship phone for 2025. 200MP camera and A15 processor."
+                  }
+                },
+                {
+                  "key": {
+                    "type": "StringLiteral",
+                    "line": 28,
+                    "column": 8,
+                    "value": "image_filename"
+                  },
+                  "value": {
+                    "type": "StringLiteral",
+                    "line": 28,
+                    "column": 26,
+                    "value": "default.png"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "DictLiteral",
+              "line": 30,
+              "column": 4,
+              "entries": [
+                {
+                  "key": {
+                    "type": "StringLiteral",
+                    "line": 31,
+                    "column": 8,
+                    "value": "id"
+                  },
+                  "value": {
+                    "type": "IntLiteral",
+                    "line": 31,
+                    "column": 14,
+                    "value": 2
+                  }
+                },
+                {
+                  "key": {
+                    "type": "StringLiteral",
+                    "line": 32,
+                    "column": 8,
+                    "value": "name"
+                  },
+                  "value": {
+                    "type": "StringLiteral",
+                    "line": 32,
+                    "column": 16,
+                    "value": "Bluetooth Headphones Pro"
+                  }
+                },
+                {
+                  "key": {
+                    "type": "StringLiteral",
+                    "line": 33,
+                    "column": 8,
+                    "value": "price"
+                  },
+                  "value": {
+                    "type": "FloatLiteral",
+                    "line": 33,
+                    "column": 17,
+                    "value": 149.0
+                  }
+                },
+                {
+                  "key": {
+                    "type": "StringLiteral",
+                    "line": 34,
+                    "column": 8,
+                    "value": "details"
+                  },
+                  "value": {
+                    "type": "StringLiteral",
+                    "line": 34,
+                    "column": 19,
+                    "value": "High-quality sound and noise cancellation for 30 hours."
+                  }
+                },
+                {
+                  "key": {
+                    "type": "StringLiteral",
+                    "line": 35,
+                    "column": 8,
+                    "value": "image_filename"
+                  },
+                  "value": {
+                    "type": "StringLiteral",
+                    "line": 35,
+                    "column": 26,
+                    "value": "default.png"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "type": "Assignment",
+        "line": 39,
+        "column": 0,
+        "operator": "=",
+        "target": {
+          "type": "Identifier",
+          "line": 39,
+          "column": 0,
+          "name": "next_id"
+        },
+        "value": {
+          "type": "IntLiteral",
+          "line": 39,
+          "column": 10,
+          "value": 3
+        }
+      },
+      {
+        "type": "Function",
+        "line": 45,
+        "column": 0,
+        "name": "product_list",
+        "decorators": [
+          {
+            "type": "Decorator",
+            "line": 45,
+            "column": 0,
+            "name": "app.route",
+            "arguments": [
+              {
+                "type": "StringLiteral",
+                "line": 45,
+                "column": 11,
+                "value": "/"
+              }
+            ]
+          },
+          {
+            "type": "Decorator",
+            "line": 46,
+            "column": 0,
+            "name": "app.route",
+            "arguments": [
+              {
+                "type": "StringLiteral",
+                "line": 46,
+                "column": 11,
+                "value": "/products"
+              }
+            ]
+          }
+        ],
+        "parameters": [],
+        "body": {
+          "type": "Block",
+          "line": 48,
+          "column": 4,
+          "statements": [
+            {
+              "type": "Return",
+              "line": 48,
+              "column": 4,
+              "value": {
+                "type": "Call",
+                "line": 48,
+                "column": 26,
+                "function": {
+                  "type": "Identifier",
+                  "line": 48,
+                  "column": 11,
+                  "name": "render_template"
+                },
+                "arguments": [
+                  {
+                    "type": "StringLiteral",
+                    "line": 49,
+                    "column": 8,
+                    "value": "index.jinja"
+                  },
+                  {
+                    "type": "KeywordArg",
+                    "line": 50,
+                    "column": 8,
+                    "name": "products",
+                    "value": {
+                      "type": "Identifier",
+                      "line": 50,
+                      "column": 17,
+                      "name": "PRODUCTS_BASE_DATA"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "type": "Function",
+        "line": 54,
+        "column": 0,
+        "name": "product_detail",
+        "decorators": [
+          {
+            "type": "Decorator",
+            "line": 54,
+            "column": 0,
+            "name": "app.route",
+            "arguments": [
+              {
+                "type": "StringLiteral",
+                "line": 54,
+                "column": 11,
+                "value": "/products/<int:product_id>"
+              }
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "type": "Parameter",
+            "line": 55,
+            "column": 19,
+            "name": "product_id",
+            "kind": "NORMAL"
+          }
+        ],
+        "body": {
+          "type": "Block",
+          "line": 56,
+          "column": 4,
+          "statements": [
+            {
+              "type": "Assignment",
+              "line": 56,
+              "column": 4,
+              "operator": "=",
+              "target": {
+                "type": "Identifier",
+                "line": 56,
+                "column": 4,
+                "name": "product"
+              },
+              "value": {
+                "type": "NoneLiteral",
+                "line": 56,
+                "column": 14
+              }
+            },
+            {
+              "type": "For",
+              "line": 58,
+              "column": 4,
+              "variable": {
+                "type": "Identifier",
+                "line": 58,
+                "column": 8,
+                "name": "p"
+              },
+              "iterable": {
+                "type": "Identifier",
+                "line": 58,
+                "column": 13,
+                "name": "PRODUCTS_BASE_DATA"
+              },
+              "body": {
+                "type": "Block",
+                "line": 59,
+                "column": 8,
+                "statements": [
+                  {
+                    "type": "If",
+                    "line": 59,
+                    "column": 8,
+                    "condition": {
+                      "type": "BinaryOp",
+                      "line": 59,
+                      "column": 19,
+                      "op": "==",
+                      "left": {
+                        "type": "Index",
+                        "line": 59,
+                        "column": 12,
+                        "collection": {
+                          "type": "Identifier",
+                          "line": 59,
+                          "column": 11,
+                          "name": "p"
+                        },
+                        "index": {
+                          "type": "StringLiteral",
+                          "line": 59,
+                          "column": 13,
+                          "value": "id"
+                        }
+                      },
+                      "right": {
+                        "type": "Identifier",
+                        "line": 59,
+                        "column": 22,
+                        "name": "product_id"
+                      }
+                    },
+                    "then": {
+                      "type": "Block",
+                      "line": 60,
+                      "column": 12,
+                      "statements": [
+                        {
+                          "type": "Assignment",
+                          "line": 60,
+                          "column": 12,
+                          "operator": "=",
+                          "target": {
+                            "type": "Identifier",
+                            "line": 60,
+                            "column": 12,
+                            "name": "product"
+                          },
+                          "value": {
+                            "type": "Identifier",
+                            "line": 60,
+                            "column": 22,
+                            "name": "p"
+                          }
+                        },
+                        {
+                          "type": "Break",
+                          "line": 61,
+                          "column": 12
+                        }
+                      ]
+                    },
+                    "elif": [],
+                    "else": null
+                  }
+                ]
+              }
+            },
+            {
+              "type": "If",
+              "line": 63,
+              "column": 4,
+              "condition": {
+                "type": "BinaryOp",
+                "line": 63,
+                "column": 15,
+                "op": "is",
+                "left": {
+                  "type": "Identifier",
+                  "line": 63,
+                  "column": 7,
+                  "name": "product"
+                },
+                "right": {
+                  "type": "NoneLiteral",
+                  "line": 63,
+                  "column": 18
+                }
+              },
+              "then": {
+                "type": "Block",
+                "line": 64,
+                "column": 8,
+                "statements": [
+                  {
+                    "type": "Return",
+                    "line": 64,
+                    "column": 8,
+                    "value": {
+                      "type": "StringLiteral",
+                      "line": 64,
+                      "column": 15,
+                      "value": "Product Not Found"
+                    }
+                  }
+                ]
+              },
+              "elif": [],
+              "else": null
+            },
+            {
+              "type": "Return",
+              "line": 66,
+              "column": 4,
+              "value": {
+                "type": "Call",
+                "line": 66,
+                "column": 26,
+                "function": {
+                  "type": "Identifier",
+                  "line": 66,
+                  "column": 11,
+                  "name": "render_template"
+                },
+                "arguments": [
+                  {
+                    "type": "StringLiteral",
+                    "line": 67,
+                    "column": 8,
+                    "value": "product_detail.jinja"
+                  },
+                  {
+                    "type": "KeywordArg",
+                    "line": 68,
+                    "column": 8,
+                    "name": "product",
+                    "value": {
+                      "type": "Identifier",
+                      "line": 68,
+                      "column": 16,
+                      "name": "product"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "type": "Function",
+        "line": 72,
+        "column": 0,
+        "name": "add_product",
+        "decorators": [
+          {
+            "type": "Decorator",
+            "line": 72,
+            "column": 0,
+            "name": "app.route",
+            "arguments": [
+              {
+                "type": "StringLiteral",
+                "line": 72,
+                "column": 11,
+                "value": "/add"
+              },
+              {
+                "type": "KeywordArg",
+                "line": 72,
+                "column": 19,
+                "name": "methods",
+                "value": {
+                  "type": "ListLiteral",
+                  "line": 72,
+                  "column": 27,
+                  "elements": [
+                    {
+                      "type": "StringLiteral",
+                      "line": 72,
+                      "column": 28,
+                      "value": "GET"
+                    },
+                    {
+                      "type": "StringLiteral",
+                      "line": 72,
+                      "column": 35,
+                      "value": "POST"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "parameters": [],
+        "body": {
+          "type": "Block",
+          "line": 74,
+          "column": 4,
+          "statements": [
+            {
+              "type": "Global",
+              "line": 74,
+              "column": 4,
+              "names": [
+                "next_id"
+              ]
+            },
+            {
+              "type": "If",
+              "line": 76,
+              "column": 4,
+              "condition": {
+                "type": "BinaryOp",
+                "line": 76,
+                "column": 22,
+                "op": "==",
+                "left": {
+                  "type": "Attribute",
+                  "line": 76,
+                  "column": 14,
+                  "object": {
+                    "type": "Identifier",
+                    "line": 76,
+                    "column": 7,
+                    "name": "request"
+                  },
+                  "attr": "method"
+                },
+                "right": {
+                  "type": "StringLiteral",
+                  "line": 76,
+                  "column": 25,
+                  "value": "POST"
+                }
+              },
+              "then": {
+                "type": "Block",
+                "line": 77,
+                "column": 8,
+                "statements": [
+                  {
+                    "type": "Assignment",
+                    "line": 77,
+                    "column": 8,
+                    "operator": "=",
+                    "target": {
+                      "type": "Identifier",
+                      "line": 77,
+                      "column": 8,
+                      "name": "image_filename"
+                    },
+                    "value": {
+                      "type": "StringLiteral",
+                      "line": 77,
+                      "column": 25,
+                      "value": "default.png"
+                    }
+                  },
+                  {
+                    "type": "If",
+                    "line": 79,
+                    "column": 8,
+                    "condition": {
+                      "type": "BinaryOp",
+                      "line": 79,
+                      "column": 24,
+                      "op": "in",
+                      "left": {
+                        "type": "StringLiteral",
+                        "line": 79,
+                        "column": 11,
+                        "value": "image_file"
+                      },
+                      "right": {
+                        "type": "Attribute",
+                        "line": 79,
+                        "column": 34,
+                        "object": {
+                          "type": "Identifier",
+                          "line": 79,
+                          "column": 27,
+                          "name": "request"
+                        },
+                        "attr": "files"
+                      }
+                    },
+                    "then": {
+                      "type": "Block",
+                      "line": 80,
+                      "column": 12,
+                      "statements": [
+                        {
+                          "type": "Assignment",
+                          "line": 80,
+                          "column": 12,
+                          "operator": "=",
+                          "target": {
+                            "type": "Identifier",
+                            "line": 80,
+                            "column": 12,
+                            "name": "file"
+                          },
+                          "value": {
+                            "type": "Index",
+                            "line": 80,
+                            "column": 32,
+                            "collection": {
+                              "type": "Attribute",
+                              "line": 80,
+                              "column": 26,
+                              "object": {
+                                "type": "Identifier",
+                                "line": 80,
+                                "column": 19,
+                                "name": "request"
+                              },
+                              "attr": "files"
+                            },
+                            "index": {
+                              "type": "StringLiteral",
+                              "line": 80,
+                              "column": 33,
+                              "value": "image_file"
+                            }
+                          }
+                        },
+                        {
+                          "type": "If",
+                          "line": 81,
+                          "column": 12,
+                          "condition": {
+                            "type": "Identifier",
+                            "line": 81,
+                            "column": 15,
+                            "name": "file"
+                          },
+                          "then": {
+                            "type": "Block",
+                            "line": 82,
+                            "column": 16,
+                            "statements": [
+                              {
+                                "type": "Assignment",
+                                "line": 82,
+                                "column": 16,
+                                "operator": "=",
+                                "target": {
+                                  "type": "Identifier",
+                                  "line": 82,
+                                  "column": 16,
+                                  "name": "filename"
+                                },
+                                "value": {
+                                  "type": "Call",
+                                  "line": 82,
+                                  "column": 42,
+                                  "function": {
+                                    "type": "Identifier",
+                                    "line": 82,
+                                    "column": 27,
+                                    "name": "secure_filename"
+                                  },
+                                  "arguments": [
+                                    {
+                                      "type": "Attribute",
+                                      "line": 82,
+                                      "column": 47,
+                                      "object": {
+                                        "type": "Identifier",
+                                        "line": 82,
+                                        "column": 43,
+                                        "name": "file"
+                                      },
+                                      "attr": "filename"
+                                    }
+                                  ]
+                                }
+                              },
+                              {
+                                "type": "ExprStmt",
+                                "line": 83,
+                                "column": 16,
+                                "expression": {
+                                  "type": "Call",
+                                  "line": 83,
+                                  "column": 25,
+                                  "function": {
+                                    "type": "Attribute",
+                                    "line": 83,
+                                    "column": 20,
+                                    "object": {
+                                      "type": "Identifier",
+                                      "line": 83,
+                                      "column": 16,
+                                      "name": "file"
+                                    },
+                                    "attr": "save"
+                                  },
+                                  "arguments": [
+                                    {
+                                      "type": "Call",
+                                      "line": 83,
+                                      "column": 38,
+                                      "function": {
+                                        "type": "Attribute",
+                                        "line": 83,
+                                        "column": 33,
+                                        "object": {
+                                          "type": "Attribute",
+                                          "line": 83,
+                                          "column": 28,
+                                          "object": {
+                                            "type": "Identifier",
+                                            "line": 83,
+                                            "column": 26,
+                                            "name": "os"
+                                          },
+                                          "attr": "path"
+                                        },
+                                        "attr": "join"
+                                      },
+                                      "arguments": [
+                                        {
+                                          "type": "Identifier",
+                                          "line": 83,
+                                          "column": 39,
+                                          "name": "UPLOAD_FOLDER"
+                                        },
+                                        {
+                                          "type": "Identifier",
+                                          "line": 83,
+                                          "column": 54,
+                                          "name": "filename"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              },
+                              {
+                                "type": "Assignment",
+                                "line": 84,
+                                "column": 16,
+                                "operator": "=",
+                                "target": {
+                                  "type": "Identifier",
+                                  "line": 84,
+                                  "column": 16,
+                                  "name": "image_filename"
+                                },
+                                "value": {
+                                  "type": "Identifier",
+                                  "line": 84,
+                                  "column": 33,
+                                  "name": "filename"
+                                }
+                              }
+                            ]
+                          },
+                          "elif": [],
+                          "else": null
+                        }
+                      ]
+                    },
+                    "elif": [],
+                    "else": null
+                  },
+                  {
+                    "type": "Assignment",
+                    "line": 86,
+                    "column": 8,
+                    "operator": "=",
+                    "target": {
+                      "type": "Identifier",
+                      "line": 86,
+                      "column": 8,
+                      "name": "new_product"
+                    },
+                    "value": {
+                      "type": "DictLiteral",
+                      "line": 86,
+                      "column": 22,
+                      "entries": [
+                        {
+                          "key": {
+                            "type": "StringLiteral",
+                            "line": 87,
+                            "column": 12,
+                            "value": "id"
+                          },
+                          "value": {
+                            "type": "Identifier",
+                            "line": 87,
+                            "column": 18,
+                            "name": "next_id"
+                          }
+                        },
+                        {
+                          "key": {
+                            "type": "StringLiteral",
+                            "line": 88,
+                            "column": 12,
+                            "value": "name"
+                          },
+                          "value": {
+                            "type": "Index",
+                            "line": 88,
+                            "column": 32,
+                            "collection": {
+                              "type": "Attribute",
+                              "line": 88,
+                              "column": 27,
+                              "object": {
+                                "type": "Identifier",
+                                "line": 88,
+                                "column": 20,
+                                "name": "request"
+                              },
+                              "attr": "form"
+                            },
+                            "index": {
+                              "type": "StringLiteral",
+                              "line": 88,
+                              "column": 33,
+                              "value": "name"
+                            }
+                          }
+                        },
+                        {
+                          "key": {
+                            "type": "StringLiteral",
+                            "line": 89,
+                            "column": 12,
+                            "value": "price"
+                          },
+                          "value": {
+                            "type": "Call",
+                            "line": 89,
+                            "column": 26,
+                            "function": {
+                              "type": "Identifier",
+                              "line": 89,
+                              "column": 21,
+                              "name": "float"
+                            },
+                            "arguments": [
+                              {
+                                "type": "Index",
+                                "line": 89,
+                                "column": 39,
+                                "collection": {
+                                  "type": "Attribute",
+                                  "line": 89,
+                                  "column": 34,
+                                  "object": {
+                                    "type": "Identifier",
+                                    "line": 89,
+                                    "column": 27,
+                                    "name": "request"
+                                  },
+                                  "attr": "form"
+                                },
+                                "index": {
+                                  "type": "StringLiteral",
+                                  "line": 89,
+                                  "column": 40,
+                                  "value": "price"
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "key": {
+                            "type": "StringLiteral",
+                            "line": 90,
+                            "column": 12,
+                            "value": "details"
+                          },
+                          "value": {
+                            "type": "Index",
+                            "line": 90,
+                            "column": 35,
+                            "collection": {
+                              "type": "Attribute",
+                              "line": 90,
+                              "column": 30,
+                              "object": {
+                                "type": "Identifier",
+                                "line": 90,
+                                "column": 23,
+                                "name": "request"
+                              },
+                              "attr": "form"
+                            },
+                            "index": {
+                              "type": "StringLiteral",
+                              "line": 90,
+                              "column": 36,
+                              "value": "details"
+                            }
+                          }
+                        },
+                        {
+                          "key": {
+                            "type": "StringLiteral",
+                            "line": 91,
+                            "column": 12,
+                            "value": "image_filename"
+                          },
+                          "value": {
+                            "type": "Identifier",
+                            "line": 91,
+                            "column": 30,
+                            "name": "image_filename"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "type": "ExprStmt",
+                    "line": 94,
+                    "column": 8,
+                    "expression": {
+                      "type": "Call",
+                      "line": 94,
+                      "column": 33,
+                      "function": {
+                        "type": "Attribute",
+                        "line": 94,
+                        "column": 26,
+                        "object": {
+                          "type": "Identifier",
+                          "line": 94,
+                          "column": 8,
+                          "name": "PRODUCTS_BASE_DATA"
+                        },
+                        "attr": "append"
+                      },
+                      "arguments": [
+                        {
+                          "type": "Identifier",
+                          "line": 94,
+                          "column": 34,
+                          "name": "new_product"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "type": "Assignment",
+                    "line": 95,
+                    "column": 8,
+                    "operator": "+=",
+                    "target": {
+                      "type": "Identifier",
+                      "line": 95,
+                      "column": 8,
+                      "name": "next_id"
+                    },
+                    "value": {
+                      "type": "IntLiteral",
+                      "line": 95,
+                      "column": 19,
+                      "value": 1
+                    }
+                  },
+                  {
+                    "type": "Return",
+                    "line": 97,
+                    "column": 8,
+                    "value": {
+                      "type": "Call",
+                      "line": 97,
+                      "column": 23,
+                      "function": {
+                        "type": "Identifier",
+                        "line": 97,
+                        "column": 15,
+                        "name": "redirect"
+                      },
+                      "arguments": [
+                        {
+                          "type": "Call",
+                          "line": 97,
+                          "column": 31,
+                          "function": {
+                            "type": "Identifier",
+                            "line": 97,
+                            "column": 24,
+                            "name": "url_for"
+                          },
+                          "arguments": [
+                            {
+                              "type": "StringLiteral",
+                              "line": 97,
+                              "column": 32,
+                              "value": "product_list"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              "elif": [],
+              "else": null
+            },
+            {
+              "type": "Return",
+              "line": 99,
+              "column": 4,
+              "value": {
+                "type": "Call",
+                "line": 99,
+                "column": 26,
+                "function": {
+                  "type": "Identifier",
+                  "line": 99,
+                  "column": 11,
+                  "name": "render_template"
+                },
+                "arguments": [
+                  {
+                    "type": "StringLiteral",
+                    "line": 99,
+                    "column": 27,
+                    "value": "add_product.jinja"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "type": "Function",
+        "line": 102,
+        "column": 0,
+        "name": "delete_product",
+        "decorators": [
+          {
+            "type": "Decorator",
+            "line": 102,
+            "column": 0,
+            "name": "app.route",
+            "arguments": [
+              {
+                "type": "StringLiteral",
+                "line": 102,
+                "column": 11,
+                "value": "/delete/<int:product_id>"
+              },
+              {
+                "type": "KeywordArg",
+                "line": 102,
+                "column": 39,
+                "name": "methods",
+                "value": {
+                  "type": "ListLiteral",
+                  "line": 102,
+                  "column": 47,
+                  "elements": [
+                    {
+                      "type": "StringLiteral",
+                      "line": 102,
+                      "column": 48,
+                      "value": "POST"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "type": "Parameter",
+            "line": 103,
+            "column": 19,
+            "name": "product_id",
+            "kind": "NORMAL"
+          }
+        ],
+        "body": {
+          "type": "Block",
+          "line": 104,
+          "column": 4,
+          "statements": [
+            {
+              "type": "Global",
+              "line": 104,
+              "column": 4,
+              "names": [
+                "PRODUCTS_BASE_DATA"
+              ]
+            },
+            {
+              "type": "Assignment",
+              "line": 106,
+              "column": 4,
+              "operator": "=",
+              "target": {
+                "type": "Identifier",
+                "line": 106,
+                "column": 4,
+                "name": "product_to_delete"
+              },
+              "value": {
+                "type": "NoneLiteral",
+                "line": 106,
+                "column": 24
+              }
+            },
+            {
+              "type": "For",
+              "line": 108,
+              "column": 4,
+              "variable": {
+                "type": "Identifier",
+                "line": 108,
+                "column": 8,
+                "name": "p"
+              },
+              "iterable": {
+                "type": "Identifier",
+                "line": 108,
+                "column": 13,
+                "name": "PRODUCTS_BASE_DATA"
+              },
+              "body": {
+                "type": "Block",
+                "line": 109,
+                "column": 8,
+                "statements": [
+                  {
+                    "type": "If",
+                    "line": 109,
+                    "column": 8,
+                    "condition": {
+                      "type": "BinaryOp",
+                      "line": 109,
+                      "column": 19,
+                      "op": "==",
+                      "left": {
+                        "type": "Index",
+                        "line": 109,
+                        "column": 12,
+                        "collection": {
+                          "type": "Identifier",
+                          "line": 109,
+                          "column": 11,
+                          "name": "p"
+                        },
+                        "index": {
+                          "type": "StringLiteral",
+                          "line": 109,
+                          "column": 13,
+                          "value": "id"
+                        }
+                      },
+                      "right": {
+                        "type": "Identifier",
+                        "line": 109,
+                        "column": 22,
+                        "name": "product_id"
+                      }
+                    },
+                    "then": {
+                      "type": "Block",
+                      "line": 110,
+                      "column": 12,
+                      "statements": [
+                        {
+                          "type": "Assignment",
+                          "line": 110,
+                          "column": 12,
+                          "operator": "=",
+                          "target": {
+                            "type": "Identifier",
+                            "line": 110,
+                            "column": 12,
+                            "name": "product_to_delete"
+                          },
+                          "value": {
+                            "type": "Identifier",
+                            "line": 110,
+                            "column": 32,
+                            "name": "p"
+                          }
+                        },
+                        {
+                          "type": "Break",
+                          "line": 111,
+                          "column": 12
+                        }
+                      ]
+                    },
+                    "elif": [],
+                    "else": null
+                  }
+                ]
+              }
+            },
+            {
+              "type": "If",
+              "line": 113,
+              "column": 4,
+              "condition": {
+                "type": "Identifier",
+                "line": 113,
+                "column": 7,
+                "name": "product_to_delete"
+              },
+              "then": {
+                "type": "Block",
+                "line": 114,
+                "column": 8,
+                "statements": [
+                  {
+                    "type": "Assignment",
+                    "line": 114,
+                    "column": 8,
+                    "operator": "=",
+                    "target": {
+                      "type": "Identifier",
+                      "line": 114,
+                      "column": 8,
+                      "name": "filename_to_delete"
+                    },
+                    "value": {
+                      "type": "Call",
+                      "line": 114,
+                      "column": 50,
+                      "function": {
+                        "type": "Attribute",
+                        "line": 114,
+                        "column": 46,
+                        "object": {
+                          "type": "Identifier",
+                          "line": 114,
+                          "column": 29,
+                          "name": "product_to_delete"
+                        },
+                        "attr": "get"
+                      },
+                      "arguments": [
+                        {
+                          "type": "StringLiteral",
+                          "line": 114,
+                          "column": 51,
+                          "value": "image_filename"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "type": "If",
+                    "line": 116,
+                    "column": 8,
+                    "condition": {
+                      "type": "BinaryOp",
+                      "line": 116,
+                      "column": 30,
+                      "op": "and",
+                      "left": {
+                        "type": "Identifier",
+                        "line": 116,
+                        "column": 11,
+                        "name": "filename_to_delete"
+                      },
+                      "right": {
+                        "type": "BinaryOp",
+                        "line": 116,
+                        "column": 53,
+                        "op": "!=",
+                        "left": {
+                          "type": "Identifier",
+                          "line": 116,
+                          "column": 34,
+                          "name": "filename_to_delete"
+                        },
+                        "right": {
+                          "type": "StringLiteral",
+                          "line": 116,
+                          "column": 56,
+                          "value": "default.png"
+                        }
+                      }
+                    },
+                    "then": {
+                      "type": "Block",
+                      "line": 117,
+                      "column": 12,
+                      "statements": [
+                        {
+                          "type": "Assignment",
+                          "line": 117,
+                          "column": 12,
+                          "operator": "=",
+                          "target": {
+                            "type": "Identifier",
+                            "line": 117,
+                            "column": 12,
+                            "name": "file_path"
+                          },
+                          "value": {
+                            "type": "Call",
+                            "line": 117,
+                            "column": 36,
+                            "function": {
+                              "type": "Attribute",
+                              "line": 117,
+                              "column": 31,
+                              "object": {
+                                "type": "Attribute",
+                                "line": 117,
+                                "column": 26,
+                                "object": {
+                                  "type": "Identifier",
+                                  "line": 117,
+                                  "column": 24,
+                                  "name": "os"
+                                },
+                                "attr": "path"
+                              },
+                              "attr": "join"
+                            },
+                            "arguments": [
+                              {
+                                "type": "Identifier",
+                                "line": 118,
+                                "column": 16,
+                                "name": "UPLOAD_FOLDER"
+                              },
+                              {
+                                "type": "Identifier",
+                                "line": 119,
+                                "column": 16,
+                                "name": "filename_to_delete"
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "type": "If",
+                          "line": 122,
+                          "column": 12,
+                          "condition": {
+                            "type": "Call",
+                            "line": 122,
+                            "column": 29,
+                            "function": {
+                              "type": "Attribute",
+                              "line": 122,
+                              "column": 22,
+                              "object": {
+                                "type": "Attribute",
+                                "line": 122,
+                                "column": 17,
+                                "object": {
+                                  "type": "Identifier",
+                                  "line": 122,
+                                  "column": 15,
+                                  "name": "os"
+                                },
+                                "attr": "path"
+                              },
+                              "attr": "exists"
+                            },
+                            "arguments": [
+                              {
+                                "type": "Identifier",
+                                "line": 122,
+                                "column": 30,
+                                "name": "file_path"
+                              }
+                            ]
+                          },
+                          "then": {
+                            "type": "Block",
+                            "line": 123,
+                            "column": 16,
+                            "statements": [
+                              {
+                                "type": "ExprStmt",
+                                "line": 123,
+                                "column": 16,
+                                "expression": {
+                                  "type": "Call",
+                                  "line": 123,
+                                  "column": 25,
+                                  "function": {
+                                    "type": "Attribute",
+                                    "line": 123,
+                                    "column": 18,
+                                    "object": {
+                                      "type": "Identifier",
+                                      "line": 123,
+                                      "column": 16,
+                                      "name": "os"
+                                    },
+                                    "attr": "remove"
+                                  },
+                                  "arguments": [
+                                    {
+                                      "type": "Identifier",
+                                      "line": 123,
+                                      "column": 26,
+                                      "name": "file_path"
+                                    }
+                                  ]
+                                }
+                              }
+                            ]
+                          },
+                          "elif": [],
+                          "else": null
+                        }
+                      ]
+                    },
+                    "elif": [],
+                    "else": null
+                  },
+                  {
+                    "type": "Assignment",
+                    "line": 125,
+                    "column": 8,
+                    "operator": "=",
+                    "target": {
+                      "type": "Identifier",
+                      "line": 125,
+                      "column": 8,
+                      "name": "new_products"
+                    },
+                    "value": {
+                      "type": "ListLiteral",
+                      "line": 125,
+                      "column": 23,
+                      "elements": []
+                    }
+                  },
+                  {
+                    "type": "For",
+                    "line": 126,
+                    "column": 8,
+                    "variable": {
+                      "type": "Identifier",
+                      "line": 126,
+                      "column": 12,
+                      "name": "p"
+                    },
+                    "iterable": {
+                      "type": "Identifier",
+                      "line": 126,
+                      "column": 17,
+                      "name": "PRODUCTS_BASE_DATA"
+                    },
+                    "body": {
+                      "type": "Block",
+                      "line": 127,
+                      "column": 12,
+                      "statements": [
+                        {
+                          "type": "If",
+                          "line": 127,
+                          "column": 12,
+                          "condition": {
+                            "type": "BinaryOp",
+                            "line": 127,
+                            "column": 23,
+                            "op": "!=",
+                            "left": {
+                              "type": "Index",
+                              "line": 127,
+                              "column": 16,
+                              "collection": {
+                                "type": "Identifier",
+                                "line": 127,
+                                "column": 15,
+                                "name": "p"
+                              },
+                              "index": {
+                                "type": "StringLiteral",
+                                "line": 127,
+                                "column": 17,
+                                "value": "id"
+                              }
+                            },
+                            "right": {
+                              "type": "Identifier",
+                              "line": 127,
+                              "column": 26,
+                              "name": "product_id"
+                            }
+                          },
+                          "then": {
+                            "type": "Block",
+                            "line": 128,
+                            "column": 16,
+                            "statements": [
+                              {
+                                "type": "ExprStmt",
+                                "line": 128,
+                                "column": 16,
+                                "expression": {
+                                  "type": "Call",
+                                  "line": 128,
+                                  "column": 35,
+                                  "function": {
+                                    "type": "Attribute",
+                                    "line": 128,
+                                    "column": 28,
+                                    "object": {
+                                      "type": "Identifier",
+                                      "line": 128,
+                                      "column": 16,
+                                      "name": "new_products"
+                                    },
+                                    "attr": "append"
+                                  },
+                                  "arguments": [
+                                    {
+                                      "type": "Identifier",
+                                      "line": 128,
+                                      "column": 36,
+                                      "name": "p"
+                                    }
+                                  ]
+                                }
+                              }
+                            ]
+                          },
+                          "elif": [],
+                          "else": null
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "type": "Assignment",
+                    "line": 130,
+                    "column": 8,
+                    "operator": "=",
+                    "target": {
+                      "type": "Identifier",
+                      "line": 130,
+                      "column": 8,
+                      "name": "PRODUCTS_BASE_DATA"
+                    },
+                    "value": {
+                      "type": "Identifier",
+                      "line": 130,
+                      "column": 29,
+                      "name": "new_products"
+                    }
+                  }
+                ]
+              },
+              "elif": [],
+              "else": null
+            },
+            {
+              "type": "Return",
+              "line": 132,
+              "column": 4,
+              "value": {
+                "type": "Call",
+                "line": 132,
+                "column": 19,
+                "function": {
+                  "type": "Identifier",
+                  "line": 132,
+                  "column": 11,
+                  "name": "redirect"
+                },
+                "arguments": [
+                  {
+                    "type": "Call",
+                    "line": 132,
+                    "column": 27,
+                    "function": {
+                      "type": "Identifier",
+                      "line": 132,
+                      "column": 20,
+                      "name": "url_for"
+                    },
+                    "arguments": [
+                      {
+                        "type": "StringLiteral",
+                        "line": 132,
+                        "column": 28,
+                        "value": "product_list"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "type": "If",
+        "line": 135,
+        "column": 0,
+        "condition": {
+          "type": "BinaryOp",
+          "line": 135,
+          "column": 12,
+          "op": "==",
+          "left": {
+            "type": "Identifier",
+            "line": 135,
+            "column": 3,
+            "name": "__name__"
+          },
+          "right": {
+            "type": "StringLiteral",
+            "line": 135,
+            "column": 15,
+            "value": "__main__"
+          }
+        },
+        "then": {
+          "type": "Block",
+          "line": 136,
+          "column": 4,
+          "statements": [
+            {
+              "type": "ExprStmt",
+              "line": 136,
+              "column": 4,
+              "expression": {
+                "type": "Call",
+                "line": 136,
+                "column": 11,
+                "function": {
+                  "type": "Attribute",
+                  "line": 136,
+                  "column": 7,
+                  "object": {
+                    "type": "Identifier",
+                    "line": 136,
+                    "column": 4,
+                    "name": "app"
+                  },
+                  "attr": "run"
+                },
+                "arguments": []
+              }
+            }
+          ]
+        },
+        "elif": [],
+        "else": null
+      }
+    ]
+  }
+}

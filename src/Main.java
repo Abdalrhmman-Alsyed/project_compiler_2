@@ -1,3 +1,4 @@
+import output.CompilerArtifacts;
 import server.OutputHttpServer;
 import ast.python.PythonNode;
 import ast.python.visitors.PythonASTPrinter;
@@ -137,7 +138,7 @@ public class Main {
     }
 
     // ─── Python Pipeline (full) ────────────────────────────────────────────
-    private static PythonNode runPythonPipeline(String filePath)
+    private static PythonNode runPythonPipeline(String filePath, CompilerArtifacts artifacts)
             throws Exception {
         printSection("PYTHON: " + filePath);
 
