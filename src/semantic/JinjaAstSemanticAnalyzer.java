@@ -65,6 +65,8 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
             "xmlattr", "nl2br", "b64encode", "b64decode"
     );
 
+    private int maxListSize = 0;
+
     public JinjaAstSemanticAnalyzer(String templateName, String templateDir,
                                     Set<String> pythonContextVars, Map<String, Object> mockData) {
         this.templateName = templateName;
@@ -90,7 +92,11 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
                 collectKeys(val);
             }
         } else if (obj instanceof List) {
-            for (Object item : (List<?>) obj) {
+            List<?> list = (List<?>) obj;
+            if (list.size() > maxListSize) {
+                maxListSize = list.size();
+            }
+            for (Object item : list) {
                 collectKeys(item);
             }
         }
@@ -114,7 +120,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
 
     public void printReport() {
         System.out.println("\n" + "=".repeat(60));
-        System.out.println("  JINJA2 SEMANTIC ANALYSIS: " + templateName + "  (11 checks)");
+        System.out.println("  JINJA2 SEMANTIC ANALYSIS: " + templateName + "  (12 checks)");
         System.out.println("=".repeat(60));
         if (errors.isEmpty() && warnings.isEmpty()) {
             System.out.println("  No semantic issues found.");
@@ -218,7 +224,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
         }
         if (setVarLines.containsKey(name)) {
             warning("{% set " + name + " = ... %} redefines a template variable '" + name
-                            + "' already defined via {% set %} at line " + setVarLines.get(name),
+                             + "' already defined via {% set %} at line " + setVarLines.get(name),
                     line, col);
         } else {
             setVarLines.put(name, line);
@@ -293,6 +299,17 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
         return super.visit(node);
     }
 
+    @Override
+    public Void visit(IndexAccessNode node) {
+        if (node.getIndex() instanceof ast.template.jinja.expressions.literals.NumberLiteralNode numNode) {
+            int index = (int) numNode.getValue();
+            if (maxListSize > 0 && (index < 0 || index >= maxListSize)) {
+                error("Index out of bounds: maximum list size in mock data is " + maxListSize + ", but index " + index + " was requested", node.getLine(), node.getColumn());
+            }
+        }
+        return super.visit(node);
+    }
+
     /**
      * Checks 5 and 11. A name is legitimate when it comes from render_template,
      * {% set %}, an enclosing {% for %} or {% with %}, or is a Jinja/Flask
@@ -357,3 +374,4 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
         return s;
     }
 }
+
