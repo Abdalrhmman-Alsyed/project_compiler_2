@@ -94,6 +94,15 @@ public class TemplateASTBuilder extends FlaskTemplateParserBaseVisitor<TemplateN
         HTMLNormalElementNode htmlNormalElementNode = (HTMLNormalElementNode) visitOpeningTagNode((FlaskTemplateParser.OpeningTagNodeContext) ctx.openingTag());
 
         htmlNormalElementNode.addAllContent(visitTemplateContentList(ctx.templateContent()));
+        
+        if (ctx.closingTag() instanceof FlaskTemplateParser.ClosingTagNodeContext closingCtx) {
+            if (closingCtx.HTML_ID() != null) {
+                String closingTagName = closingCtx.HTML_ID().getText();
+                int closingLine = closingCtx.start.getLine();
+                int closingCol = closingCtx.start.getCharPositionInLine();
+                htmlNormalElementNode.setClosingTagInfo(closingTagName, closingLine, closingCol);
+            }
+        }
 
         return htmlNormalElementNode;
     }
