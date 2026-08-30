@@ -1,12 +1,12 @@
 {% extends "base.jinja" %}
 
 {% block title %}
-قائمة المنتجات
+Product list
 {% endblock %}
 
 {% block content %}
 
-<h2>قائمة المنتجات</h2>
+<h2>Product list</h2>
 
 {% if products %}
 <div class="product-grid">
@@ -15,7 +15,7 @@
 
         <img
                 src="{{ url_for('static', filename=product.image_filename) }}"
-                alt="صورة {{ product.name }}"
+                alt="Photo of {{ product.name }}"
                 class="product-image"
         >
 
@@ -29,7 +29,7 @@
                 href="{{ url_for('product_detail', product_id=product.id) }}"
                 class="details-button"
         >
-            عرض التفاصيل
+            View details
         </a>
 
         <form
@@ -37,7 +37,7 @@
                 method="post"
         >
             <button type="submit" class="delete-button">
-                حذف المنتج
+                Delete product
             </button>
         </form>
 
@@ -47,7 +47,7 @@
 
 {% else %}
 <p class="no-products">
-    لا توجد منتجات حالياً.
+    No products yet.
 </p>
 {% endif %}
 

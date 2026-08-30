@@ -1,19 +1,19 @@
 {% extends "base.jinja" %}
-{% block title %}تفاصيل: {{ product.name }}{% endblock %}
+{% block title %}Details: {{ product.name }}{% endblock %}
 
 {% block content %}
 <div class="detail-container">
-    <h2>تفاصيل المنتج</h2>
+    <h2>Product details</h2>
 
-    <img src="{{ url_for('static', filename=product.image_filename) }}" alt="صورة {{ product.name }}" class="detail-image">
+    <img src="{{ url_for('static', filename=product.image_filename) }}" alt="Photo of {{ product.name }}" class="detail-image">
 
     <div class="info-block">
-        <p><strong>اسم المنتج:</strong> {{ product.name }}</p>
-        <p><strong>السعر:</strong> {{ product.price }} $</p>
-        <p><strong>الوصف:</strong></p>
+        <p><strong>Name:</strong> {{ product.name }}</p>
+        <p><strong>Price:</strong> {{ product.price }} $</p>
+        <p><strong>Description:</strong></p>
         <p class="description-text">{{ product.details }}</p>
     </div>
 
-    <a href="{{ url_for('product_list') }}" class="back-link">العودة إلى القائمة الرئيسية</a>
+    <a href="{{ url_for('product_list') }}" class="back-link">Back to product list</a>
 </div>
 {% endblock %}

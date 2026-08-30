@@ -26,7 +26,7 @@ public class MockDataExtractor extends PythonBaseASTVisitor<Object> {
 
     public void printReport() {
         System.out.println("\n" + "=".repeat(60));
-        System.out.println("  MOCK DATA EXTRACTOR: Python Literals → Java Objects");
+        System.out.println("  MOCK DATA EXTRACTOR: Python Literals -> Java Objects");
         System.out.println("=".repeat(60));
         if (extractedData.isEmpty()) {
             System.out.println("  No literal data structures extracted.");

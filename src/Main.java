@@ -11,6 +11,7 @@ import gen.FlaskTemplateParser;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.ParseTree;
 import semantic.Generator;
+import semantic.HtmlCodeGenerator;
 import semantic.JinjaAstSemanticAnalyzer;
 import semantic.PythonSemanticAnalyzer;
 import symbolTable.PythonSymbolTable;
@@ -63,6 +64,16 @@ public class Main {
             Set<String> ctxVars = contextFor(tmplName, templateContextVars);
             runTemplatePipeline(template, ctxVars, mockData);
         }
+
+        // ── 3.5 HTML code generation ─────────────────────────────────────────
+        printBanner("HTML CODE GENERATION -> output/");
+        HtmlCodeGenerator htmlGen = new HtmlCodeGenerator(
+                Path.of("flask-app/templates"),
+                Path.of("output"));
+        htmlGen.loadTemplates();
+        htmlGen.generateRenderedPages(generator, mockData,
+                "compiler pipeline (Main) -- first create of HTML pages", true);
+        htmlGen.printReport();
 
         // ── 4. Semantic error demo: Python ────────────────────────────────────
         printBanner("SEMANTIC ERROR DEMO — Python (15 checks)");

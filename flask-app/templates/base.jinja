@@ -1,22 +1,22 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}تطبيق المنتجات{% endblock %}</title>
+    <title>{% block title %}Product Store{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 <header>
-    <h1>متجر التجارة الإلكترونية المصغر</h1>
+    <h1>Mini E-commerce Store</h1>
     <nav>
-        <a href="{{ url_for('product_list') }}">عرض المنتجات</a>
-        <a href="{{ url_for('add_product') }}">إضافة منتج</a>
+        <a href="{{ url_for('product_list') }}">Products</a>
+        <a href="{{ url_for('add_product') }}">Add product</a>
     </nav>
 </header>
 
 <main>
     {% block content %}
-    <p>محتوى افتراضي.</p>
+    <p>Default content.</p>
     {% endblock %}
 </main>
 

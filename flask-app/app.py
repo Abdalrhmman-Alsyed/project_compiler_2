@@ -22,16 +22,16 @@ app.config['SERVER_NAME'] = 'localhost:5000'
 PRODUCTS_BASE_DATA = [
     {
         'id': 1,
-        'name': 'هاتف ذكي X (إصدار محدود)',
+        'name': 'Smartphone X (Limited Edition)',
         'price': 799.99,
-        'details': 'أقوى هاتف لعام 2025. يتميز بكاميرا 200MP ومعالج A15.',
+        'details': 'Flagship phone for 2025. 200MP camera and A15 processor.',
         'image_filename': 'default.png'
     },
     {
         'id': 2,
-        'name': 'سماعات بلوتوث Pro',
+        'name': 'Bluetooth Headphones Pro',
         'price': 149.00,
-        'details': 'جودة صوت عالية وإلغاء ضوضاء فعال لمدة 30 ساعة متواصلة.',
+        'details': 'High-quality sound and noise cancellation for 30 hours.',
         'image_filename': 'default.png'
     }
 ]

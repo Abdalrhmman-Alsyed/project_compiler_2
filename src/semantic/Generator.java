@@ -133,7 +133,7 @@ public class Generator extends FlaskPythonParserBaseVisitor<Void> {
 
     public void printReport() {
         System.out.println("\n" + "=".repeat(60));
-        System.out.println("  GENERATOR: Python → Jinja2 Context Bridge");
+        System.out.println("  GENERATOR: Python -> Jinja2 Context Bridge");
         System.out.println("=".repeat(60));
 
         if (templateContextVars.isEmpty()) {
@@ -150,7 +150,7 @@ public class Generator extends FlaskPythonParserBaseVisitor<Void> {
                 String src = sources.get(var);
                 parts.add(src != null ? var + "=" + src : var);
             }
-            System.out.printf("  %-35s → %s%n",
+            System.out.printf("  %-35s -> %s%n",
                     tmpl,
                     parts.isEmpty() ? "(no variables)" : String.join(", ", parts));
         }
