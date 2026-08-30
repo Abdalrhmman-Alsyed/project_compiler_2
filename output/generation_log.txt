@@ -2,9 +2,45 @@ HTML code generation log
 ============================================================
 
 ------------------------------------------------------------
-Generated at 2026-08-30 22:34:37
+Generated at 2026-08-30 22:37:18
 Operation: compiler pipeline (Main) -- first create of HTML pages
 Wrote /home/saif/projects/java/project_compiler_2/output/index.html  (context keys: [products])
 Wrote /home/saif/projects/java/project_compiler_2/output/product_detail.html  (context keys: [product])
 Wrote /home/saif/projects/java/project_compiler_2/output/add_product.html  (context keys: [])
 Copied style.css
+
+------------------------------------------------------------
+REGENERATION at 2026-08-30 22:37:45
+Caused by: VIEW product detail (id=1, name=Smartphone X (Limited Edition))
+Wrote /home/saif/projects/java/project_compiler_2/output/product_detail.html  (context keys: [product])
+
+------------------------------------------------------------
+REGENERATION at 2026-08-30 22:37:49
+Caused by: DELETE product (id=2, name=Bluetooth Headphones Pro)
+Wrote /home/saif/projects/java/project_compiler_2/output/index.html  (context keys: [products])
+Wrote /home/saif/projects/java/project_compiler_2/output/product_detail.html  (context keys: [product])
+Wrote /home/saif/projects/java/project_compiler_2/output/add_product.html  (context keys: [])
+Copied style.css
+
+------------------------------------------------------------
+REGENERATION at 2026-08-30 22:37:59
+Caused by: ADD product (id=3, name=شسيبشسيب)
+Wrote /home/saif/projects/java/project_compiler_2/output/index.html  (context keys: [products])
+Wrote /home/saif/projects/java/project_compiler_2/output/product_detail.html  (context keys: [product])
+Wrote /home/saif/projects/java/project_compiler_2/output/add_product.html  (context keys: [])
+Copied style.css
+
+------------------------------------------------------------
+REGENERATION at 2026-08-30 22:38:01
+Caused by: VIEW product detail (id=3, name=شسيبشسيب)
+Wrote /home/saif/projects/java/project_compiler_2/output/product_detail.html  (context keys: [product])
+
+------------------------------------------------------------
+REGENERATION at 2026-08-30 22:38:03
+Caused by: VIEW product detail (id=3, name=شسيبشسيب)
+Wrote /home/saif/projects/java/project_compiler_2/output/product_detail.html  (context keys: [product])
+
+------------------------------------------------------------
+REGENERATION at 2026-08-30 22:42:03
+Caused by: VIEW product detail (id=1, name=Smartphone X (Limited Edition))
+Wrote /home/saif/projects/java/project_compiler_2/output/product_detail.html  (context keys: [product])

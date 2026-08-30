@@ -20,16 +20,29 @@ import symbolTable.visitores.PythonSymbolTableBuilder;
 import symbolTableJinja.JinjaSymbolTable;
 import symbolTableJinja.JinjaAstSymbolTableBuilder;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
+import ast.util.ASTJsonSerializer;
 
 public class Main {
 
     public static void main(String[] args) throws Exception {
         printBanner("Flask App Compiler — Full Pipeline");
 
+        // Create compiler_output directory and clear semantic report
+        Path compilerOutput = Paths.get("compiler_output");
+        Files.createDirectories(compilerOutput);
+        Path semanticReport = compilerOutput.resolve("semantic_report.txt");
+        Files.deleteIfExists(semanticReport);
+
         // ── 1. Python pipeline (valid Flask app) ─────────────────────────────
         PythonNode pythonAst = runPythonPipeline("flask-app/app.py");
+
+        // Write Python AST to JSON
+        String pythonJson = ASTJsonSerializer.toJson(pythonAst);
+        Files.writeString(compilerOutput.resolve("ast_python.json"), pythonJson);
 
         // ── 2. Generator: extract render_template() context variables ─────────
         Generator generator = new Generator();
@@ -55,6 +68,7 @@ public class Main {
         Map<String, Object> mockData = generator.bind(dataExtractor.getExtractedData());
 
         // ── 3. Template pipeline (valid Flask templates) ──────────────────────
+        Map<String, TemplateNode> jinjaAstMap = new LinkedHashMap<>();
         for (String template : List.of(
                 "flask-app/templates/base.jinja",
                 "flask-app/templates/index.jinja",
@@ -63,8 +77,13 @@ public class Main {
         )) {
             String tmplName = Path.of(template).getFileName().toString();
             Set<String> ctxVars = contextFor(tmplName, templateContextVars);
-            runTemplatePipeline(template, ctxVars, mockData);
+            TemplateNode tAst = runTemplatePipeline(template, ctxVars, mockData);
+            jinjaAstMap.put(tmplName, tAst);
         }
+
+        // Write Jinja ASTs to JSON
+        String jinjaJson = ASTJsonSerializer.toJson(jinjaAstMap);
+        Files.writeString(compilerOutput.resolve("ast_jinja.json"), jinjaJson);
 
         // ── 3.5 HTML code generation ─────────────────────────────────────────
         printBanner("HTML CODE GENERATION -> output/");
@@ -163,12 +182,13 @@ public class Main {
         PythonSemanticAnalyzer semanticAnalyzer = new PythonSemanticAnalyzer();
         ast.accept(semanticAnalyzer);
         semanticAnalyzer.printReport();
+        semanticAnalyzer.saveReportToFile("compiler_output/semantic_report.txt");
 
         return ast;
     }
 
     // ─── Template Pipeline (full) ──────────────────────────────────────────
-    private static void runTemplatePipeline(String filePath, Set<String> pythonCtxVars, Map<String, Object> mockData)
+    private static TemplateNode runTemplatePipeline(String filePath, Set<String> pythonCtxVars, Map<String, Object> mockData)
             throws Exception {
         printSection("TEMPLATE: " + filePath);
 
@@ -214,6 +234,9 @@ public class Main {
                 new JinjaAstSemanticAnalyzer(templateName, templateDir, pythonCtxVars, mockData);
         rootNode.accept(jinjaAnalyzer);
         jinjaAnalyzer.printReport();
+        jinjaAnalyzer.saveReportToFile("compiler_output/semantic_report.txt");
+
+        return rootNode;
     }
 
     // ─── Python Error Demo ─────────────────────────────────────────────────
