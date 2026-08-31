@@ -31,23 +31,31 @@ public class RunAllTests {
         System.out.println("            COMPILER TEST SUITE RUNNER                      ");
         System.out.println("============================================================\n");
         
-        runTest("tests/test1_basic/app.py", "tests/test1_basic/templates", "Test 1: Basic App");
-        runTest("tests/test2_advanced/app.py", "tests/test2_advanced/templates", "Test 2: Advanced (Loops, Ifs, Includes)");
+        runTest("tests/test1_basic/app.py", "tests/test1_basic/templates", "Test 1: Basic App", "tests/test1_basic/semantic_log.txt");
+        runTest("tests/test2_advanced/app.py", "tests/test2_advanced/templates", "Test 2: Advanced (Loops, Ifs, Includes)", "tests/test2_advanced/semantic_log.txt");
         
         System.out.println("\n\n============================================================");
         System.out.println("            TEST 3: SEMANTIC ERRORS DEMO                    ");
         System.out.println("============================================================\n");
-        runPythonErrorDemo("tests/test3_semantic_errors/app.py");
+        Files.deleteIfExists(Paths.get("tests/test3_semantic_errors/semantic_log.txt"));
+        runPythonErrorDemo("tests/test3_semantic_errors/app.py", "tests/test3_semantic_errors/semantic_log.txt");
         Set<String> demoCtxVars = new LinkedHashSet<>(List.of("items", "title", "user"));
-        runJinjaErrorDemo("tests/test3_semantic_errors/templates/bad.jinja", demoCtxVars, new HashMap<>());
+        runJinjaErrorDemo("tests/test3_semantic_errors/templates/bad.jinja", demoCtxVars, new HashMap<>(), "tests/test3_semantic_errors/semantic_log.txt");
+
+        System.out.println("\n\n============================================================");
+        System.out.println("            TEST 4: ADVANCED SEMANTIC ERRORS (ALL IN ONE)   ");
+        System.out.println("============================================================\n");
+        runTest("tests/test4_advanced_semantic_errors/app.py", "tests/test4_advanced_semantic_errors/templates", "Test 4: Ultimate Semantic Errors", "tests/test4_advanced_semantic_errors/semantic_log.txt");
         
-        System.out.println("\nAll tests executed. Please review the console output for semantic analysis results.");
+        System.out.println("\nAll tests executed. Please review the console output and the 'semantic_log.txt' generated inside each test folder.");
     }
 
-    private static void runTest(String pyFile, String templatesDir, String testName) throws Exception {
+    private static void runTest(String pyFile, String templatesDir, String testName, String logFile) throws Exception {
         System.out.println("\n\n############################################################");
         System.out.println("   " + testName);
         System.out.println("############################################################\n");
+        
+        Files.deleteIfExists(Paths.get(logFile));
         
         System.out.println("-> Parsing Python: " + pyFile);
         CharStream input = CharStreams.fromFileName(pyFile);
@@ -63,6 +71,7 @@ public class RunAllTests {
         ast.accept(semanticAnalyzer);
         System.out.println("\n--- Python Semantic Analysis ---");
         semanticAnalyzer.printReport();
+        semanticAnalyzer.saveReportToFile(logFile);
 
         Generator generator = new Generator();
         generator.visit(parseTree);
@@ -91,13 +100,14 @@ public class RunAllTests {
                     rootNode.accept(jAnalyzer);
                     System.out.println("\n--- Jinja Semantic Analysis (" + tName + ") ---");
                     jAnalyzer.printReport();
+                    jAnalyzer.saveReportToFile(logFile);
                 }
             }
         }
     }
     
     // ─── Python Error Demo ─────────────────────────────────────────────────
-    private static void runPythonErrorDemo(String filePath) throws Exception {
+    private static void runPythonErrorDemo(String filePath, String logFile) throws Exception {
         System.out.println("\n--- PYTHON ERROR DEMO: " + filePath + " ---");
         CharStream input = CharStreams.fromFileName(filePath);
         FlaskPythonParser parser = new FlaskPythonParser(new CommonTokenStream(new FlaskPythonLexer(input)));
@@ -106,10 +116,11 @@ public class RunAllTests {
         PythonSemanticAnalyzer analyzer = new PythonSemanticAnalyzer();
         ast.accept(analyzer);
         analyzer.printReport();
+        analyzer.saveReportToFile(logFile);
     }
 
     // ─── Jinja2 Error Demo ─────────────────────────────────────────────────
-    private static void runJinjaErrorDemo(String filePath, Set<String> pythonCtxVars, Map<String, Object> mockData) throws Exception {
+    private static void runJinjaErrorDemo(String filePath, Set<String> pythonCtxVars, Map<String, Object> mockData, String logFile) throws Exception {
         System.out.println("\n--- JINJA2 ERROR DEMO: " + filePath + " ---");
         CharStream charStream = CharStreams.fromPath(Path.of(filePath));
         FlaskTemplateParser parser = new FlaskTemplateParser(new CommonTokenStream(new FlaskJinjaLexer(charStream)));
@@ -118,5 +129,6 @@ public class RunAllTests {
         JinjaAstSemanticAnalyzer analyzer = new JinjaAstSemanticAnalyzer(Path.of(filePath).getFileName().toString(), Path.of(filePath).getParent().toString(), pythonCtxVars, mockData);
         rootNode.accept(analyzer);
         analyzer.printReport();
+        analyzer.saveReportToFile(logFile);
     }
 }

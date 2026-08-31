@@ -1,0 +1,46 @@
+<!-- [تحذير] extends ليست أول تعليمة في القالب -->
+<div>Some HTML before extends</div>
+
+<!-- [خطأ] القالب يمتد من نفسه (استدعاء دائري) -->
+{% extends "advanced.jinja" %}
+
+<!-- [خطأ] استخدام extends أكثر من مرة -->
+{% extends "base.jinja" %}
+
+{% block content %}
+    <h1>{{ title }}</h1>
+
+    <!-- [تحذير] set يعيد تعريف متغير تم تمريره من بايثون -->
+    {% set title = "New Title" %}
+
+    <!-- [تحذير] set يعيد تعريف متغير تم تحديده مسبقاً عبر set أخرى -->
+    {% set my_var = 1 %}
+    {% set my_var = 2 %}
+
+    <!-- [خطأ] متغير لم يتم تمريره من دالة render_template ولم يُعرّف في القالب -->
+    <p>Welcome, {{ missing_user }}!</p>
+
+    <!-- [تحذير] استخدام مرشح Filter غير معروف -->
+    <p>{{ title | unknown_magic_filter }}</p>
+
+    <!-- [تحذير] الدوران على قائمة فارغة تماماً [] -->
+    {% for item in [] %}
+        <p>Nothing here</p>
+    {% endfor %}
+
+    {% for num in items %}
+        <p>{{ num }}</p>
+    {% endfor %}
+
+    <!-- [تحذير] استخدام متغير الحلقة num خارج نطاق حلقة for -->
+    <p>Last number was: {{ num }}</p>
+
+    <!-- [تحذير] include يشير لملف غير موجود -->
+    {% include "ghost_template.jinja" %}
+
+{% endblock %}
+
+<!-- [خطأ] تكرار اسم الكتلة Block -->
+{% block content %}
+    <p>Duplicate block!</p>
+{% endblock %}
