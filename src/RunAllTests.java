@@ -50,7 +50,7 @@ public class RunAllTests {
         System.out.println("\nAll tests executed. Please review the console output and the 'semantic_log.txt' generated inside each test folder.");
     }
 
-    private static void runTest(String pyFile, String templatesDir, String testName, String logFile) throws Exception {
+    public static void runTest(String pyFile, String templatesDir, String testName, String logFile) throws Exception {
         System.out.println("\n\n############################################################");
         System.out.println("   " + testName);
         System.out.println("############################################################\n");
@@ -107,7 +107,7 @@ public class RunAllTests {
     }
     
     // ─── Python Error Demo ─────────────────────────────────────────────────
-    private static void runPythonErrorDemo(String filePath, String logFile) throws Exception {
+    public static void runPythonErrorDemo(String filePath, String logFile) throws Exception {
         System.out.println("\n--- PYTHON ERROR DEMO: " + filePath + " ---");
         CharStream input = CharStreams.fromFileName(filePath);
         FlaskPythonParser parser = new FlaskPythonParser(new CommonTokenStream(new FlaskPythonLexer(input)));
@@ -120,7 +120,7 @@ public class RunAllTests {
     }
 
     // ─── Jinja2 Error Demo ─────────────────────────────────────────────────
-    private static void runJinjaErrorDemo(String filePath, Set<String> pythonCtxVars, Map<String, Object> mockData, String logFile) throws Exception {
+    public static void runJinjaErrorDemo(String filePath, Set<String> pythonCtxVars, Map<String, Object> mockData, String logFile) throws Exception {
         System.out.println("\n--- JINJA2 ERROR DEMO: " + filePath + " ---");
         CharStream charStream = CharStreams.fromPath(Path.of(filePath));
         FlaskTemplateParser parser = new FlaskTemplateParser(new CommonTokenStream(new FlaskJinjaLexer(charStream)));
