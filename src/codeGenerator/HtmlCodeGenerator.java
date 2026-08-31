@@ -327,6 +327,7 @@ public class HtmlCodeGenerator {
         if (node instanceof ImportBlockNode) return "";
         if (node instanceof FromImportBlockNode) return "";
         if (node instanceof GenericBlockNode n) return renderChildren(n.getContent());
+        if (node instanceof CSSStyleNode n) return renderCssStyle(n);
         if (node instanceof CSSRuleNode n) return renderCssRule(n);
         if (node instanceof CSSSelectorNode n) return n.getSelector() != null ? n.getSelector() : "";
         if (node instanceof CSSDeclarationNode n)
@@ -337,6 +338,30 @@ public class HtmlCodeGenerator {
         }
         if (node instanceof ExpressionNode e) return escape(stringify(eval(e)));
         return renderChildren(node.getChildren());
+    }
+
+    private String renderCssStyle(CSSStyleNode node) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(indentLine("<style" + renderCssAttributes(node.getAttributes()) + ">"));
+        indentLevel++;
+        for (CSSRuleNode rule : node.getRules()) {
+            sb.append(renderCssRule(rule));
+        }
+        indentLevel--;
+        sb.append(indentLine("</style>"));
+        return sb.toString();
+    }
+
+    private String renderCssAttributes(List<CSSAttributeNode> attrs) {
+        if (attrs == null || attrs.isEmpty()) return "";
+        StringBuilder sb = new StringBuilder();
+        for (CSSAttributeNode attr : attrs) {
+            sb.append(' ').append(attr.getName());
+            if (attr.getValue() != null) {
+                sb.append("=\"").append(escapeAttr(attr.getValue())).append("\"");
+            }
+        }
+        return sb.toString();
     }
 
     private String renderChildren(List<TemplateNode> nodes) {
@@ -637,6 +662,18 @@ public class HtmlCodeGenerator {
         Object right = eval(node.getRight());
         if ("==".equals(op) || "eq".equals(op)) return Objects.equals(stringify(left), stringify(right));
         if ("!=".equals(op) || "ne".equals(op)) return !Objects.equals(stringify(left), stringify(right));
+        
+        if (left instanceof Number l && right instanceof Number r) {
+            double lv = l.doubleValue();
+            double rv = r.doubleValue();
+            switch (op) {
+                case ">": case "gt": return lv > rv;
+                case ">=": case "ge": return lv >= rv;
+                case "<": case "lt": return lv < rv;
+                case "<=": case "le": return lv <= rv;
+            }
+        }
+        
         if ("in".equals(op)) {
             if (right instanceof Collection<?> c) return c.contains(left);
             if (right instanceof String s) return s.contains(stringify(left));

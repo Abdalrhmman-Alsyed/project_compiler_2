@@ -296,7 +296,7 @@ CSS_COLOR
 // CSS Strings
 CSS_STRING: '"' (~["\\] | '\\' .)* '"' | '\'' (~['\\] | '\\' .)* '\'';
 CSS_KEYWORD
-    : [a-z][a-z-]*  // فقط الكلمات بحروف صغيرة
+    : [a-zA-Z][a-zA-Z-]*  // فقط الكلمات بحروف صغيرة
     ;
 // CSS Comments
 CSS_COMMENT: '/*' .*? '*/' -> skip;

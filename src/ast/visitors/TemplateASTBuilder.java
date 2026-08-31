@@ -973,7 +973,7 @@ public class TemplateASTBuilder extends FlaskTemplateParserBaseVisitor<TemplateN
         return new CSSSelectorNode(
                 ctx.start.getLine(),
                 ctx.start.getCharPositionInLine(),
-                ctx.CSS_CONTENT().toString()
+                ctx.getText()
         );
     }
 

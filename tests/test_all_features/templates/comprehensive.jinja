@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .app-header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+        .user-list {
+            margin-top: 20px;
+            display: block;
+            padding: 0;
+        }
+        .user-item {
+            background-color: #fff;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .user-item.active {
+            border: 5px solid #4CAF50;
+        }
+        .user-item.inactive {
+            border: 5px solid #f44336;
+        }
+        .btn {
+            display: inline-block;
+            padding: 5px 10px;
+            background-color: #2196F3;
+            color: white;
+            text-decoration: none;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+
+    {% include '_header.jinja' %}
+
+    <main>
+        <h3>User Management</h3>
+        
+        {% set total_users = users | length %}
+        <p>Total users: {{ total_users }}</p>
+
+        {% if total_users > 10 %}<button>Huge list</button>{% endif %}
+        {% if total_users > 0 %}
+            <ul class="user-list">
+                {% for user in users %}
+                    {% if user.active %}{% set status_class = "active" %}{% else %}{% set status_class = "inactive" %}{% endif %}
+                    <li class="user-item {{ status_class }}">
+                        <strong>{{ loop.index }}. {{ user.name | upper }}</strong>
+                        <span style="color: gray;">- Role: {{ user.role }}</span>
+                        
+                        {% if user.active %}
+                            <span style="color: green; margin-left: 10px;">[Online]</span>
+                        {% else %}
+                            <span style="color: red; margin-left: 10px;">[Offline]</span>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No users found.</p>
+        {% endif %}
+        
+        <!-- br here -->
+        <!-- image here -->
+        
+        <div style="margin-top: 20px;">
+            {% with greeting = "Welcome back," %}
+                <p><strong>{{ greeting }}</strong> please check your notifications.</p>
+            {% endwith %}
+        </div>
+    </main>
+
+</body>
+</html>
