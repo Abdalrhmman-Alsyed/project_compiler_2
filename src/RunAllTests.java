@@ -83,7 +83,7 @@ public class RunAllTests {
                     FlaskTemplateParser tParser = new FlaskTemplateParser(new CommonTokenStream(tLexer));
                     tParser.removeErrorListeners();
                     
-                    TemplateNode rootNode = new TemplateASTBuilder().visitTemplateRoot(tParser.template());
+                    TemplateNode rootNode = new TemplateASTBuilder().visitTemplateRoot((gen.FlaskTemplateParser.TemplateRootContext) tParser.template());
                     String tName = t.getName();
                     
                     Set<String> ctxVars = new LinkedHashSet<>(templateContextVars.getOrDefault(tName, Set.of()));
@@ -114,7 +114,7 @@ public class RunAllTests {
         CharStream charStream = CharStreams.fromPath(Path.of(filePath));
         FlaskTemplateParser parser = new FlaskTemplateParser(new CommonTokenStream(new FlaskJinjaLexer(charStream)));
         parser.removeErrorListeners();
-        TemplateNode rootNode = new TemplateASTBuilder().visitTemplateRoot(parser.template());
+        TemplateNode rootNode = new TemplateASTBuilder().visitTemplateRoot((gen.FlaskTemplateParser.TemplateRootContext) parser.template());
         JinjaAstSemanticAnalyzer analyzer = new JinjaAstSemanticAnalyzer(Path.of(filePath).getFileName().toString(), Path.of(filePath).getParent().toString(), pythonCtxVars, mockData);
         rootNode.accept(analyzer);
         analyzer.printReport();

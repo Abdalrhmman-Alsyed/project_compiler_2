@@ -39,7 +39,8 @@ public class Main {
         Files.deleteIfExists(semanticReport);
 
         // ── 1. Python pipeline (valid Flask app) ─────────────────────────────
-        PythonNode pythonAst = runPythonPipeline("flask-app/app.py");
+        output.CompilerArtifacts artifacts = new output.CompilerArtifacts(compilerOutput);
+        PythonNode pythonAst = runPythonPipeline("flask-app/app.py", artifacts);
 
         // Write Python AST to JSON
         String pythonJson = ASTJsonSerializer.toJson(pythonAst);
