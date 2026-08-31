@@ -15,8 +15,8 @@ import java.util.List;
 
 public class TestJinja {
     public static void main(String[] args) throws Exception {
-        String filePath = "jinja_tests/test_jinja_nesting.html";
-        Set<String> pythonCtxVars = new LinkedHashSet<>(List.of("products", "page_title"));
+        String filePath = "tests/test2_advanced/templates/grades.jinja";
+        Set<String> pythonCtxVars = new LinkedHashSet<>(List.of("grades_list", "title", "course_name"));
 
         CharStream charStream = CharStreams.fromPath(Path.of(filePath));
         FlaskJinjaLexer lexer = new FlaskJinjaLexer(charStream);
