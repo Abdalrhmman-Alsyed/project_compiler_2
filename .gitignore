@@ -41,3 +41,7 @@ __pycache__/
 output/
 compiler_output/
 *.zip
+61/
+DumpAST.java
+github_link.txt
+*.pdf
