@@ -681,8 +681,6 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
         return null;
     }
 
-    @Override public Void visit(PassNode n) { return null; }
-
     // ════════════════════════════════════════════════════════════════════════
     //  EXPRESSIONS
     // ════════════════════════════════════════════════════════════════════════
@@ -793,37 +791,6 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
 
         // Checks 1 / 3 / 15
         checkNameResolution(name, n.getLine(), n.getColumn());
-        return null;
-    }
-
-    // ════════════════════════════════════════════════════════════════════════
-    //  LITERALS
-    // ════════════════════════════════════════════════════════════════════════
-
-    @Override public Void visit(IntLiteralNode n)    { return null; }
-    @Override public Void visit(FloatLiteralNode n)  { return null; }
-    @Override public Void visit(StringLiteralNode n) { return null; }
-    @Override public Void visit(BoolLiteralNode n)   { return null; }
-    @Override public Void visit(NoneLiteralNode n)   { return null; }
-
-    @Override
-    public Void visit(ListLiteralNode n) {
-        for (var el : n.getElements()) el.accept(this);
-        return null;
-    }
-
-    @Override
-    public Void visit(DictLiteralNode n) {
-        for (var e : n.getEntries()) {
-            e.getKey().accept(this);
-            e.getValue().accept(this);
-        }
-        return null;
-    }
-
-    @Override
-    public Void visit(SetLiteralNode n) {
-        for (var el : n.getElements()) el.accept(this);
         return null;
     }
 }
