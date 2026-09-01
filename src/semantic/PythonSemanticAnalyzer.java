@@ -90,10 +90,6 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
     // Every name ever bound inside some function body → its first line.
     // Lets us say "out of scope" instead of "not defined" (checks 3 and 1).
     private final Map<String, Integer> functionLocalNames  = new LinkedHashMap<>();
-    // Names assigned anywhere in the function currently being walked, collected
-    // up-front so a use that precedes its assignment reads as "used before
-    // assignment" rather than "undefined".
-    private final Deque<Set<String>> assignedAhead         = new ArrayDeque<>();
     // Functions that have already been fully visited (for duplicate detection)
     private final Set<String>          visitedFunctions  = new LinkedHashSet<>();
 
@@ -328,7 +324,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
     private void checkNameResolution(String name, int line, int col) {
         if (isKnown(name)) return;
 
-        if (!assignedAhead.isEmpty() && assignedAhead.peek().contains(name)) {
+        if (symbolTable.isAssignedInFunctionScope(currentScope, name)) {
             warning("تم استخدام الاسم '" + name + "' قبل إسناد قيمة له في النطاق المحلي",
                     line, col);
         } else if (functionLocalNames.containsKey(name) || (currentScope.resolve(name) != null && currentScope.resolve(name).getScope() != currentScope)) {
@@ -339,24 +335,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
     }
 
     /** Collects every name this function assigns, before walking its body. */
-    private Set<String> collectAssignedNames(ast.python.PythonNode node) {
-        Set<String> names = new LinkedHashSet<>();
-        gatherAssigned(node, names);
-        return names;
-    }
 
-    private void gatherAssigned(ast.python.PythonNode node, Set<String> out) {
-        if (node == null) return;
-        if (node instanceof AssignmentNode asg
-                && asg.getTarget() instanceof IdentifierNode id) {
-            out.add(id.getName());
-        } else if (node instanceof ForNode f) {
-            out.add(f.getVariable().getName());
-        } else if (node instanceof WithNode w && w.hasAlias()) {
-            out.add(w.getAlias().getName());
-        }
-        for (ast.python.PythonNode child : node.getChildren()) gatherAssigned(child, out);
-    }
 
     // ── Public API ───────────────────────────────────────────────────────────
     public List<SemanticError> getErrors()   { return Collections.unmodifiableList(errors); }
@@ -484,10 +463,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
             scopeStack.peek().put(param.getName(), info);
         }
 
-        assignedAhead.push(n.getBody() != null
-                ? collectAssignedNames(n.getBody()) : new LinkedHashSet<>());
         if (n.getBody() != null) n.getBody().accept(this);
-        assignedAhead.pop();
 
         // Check 12: local variables defined but never used
         List<DefInfo> fnDefs = functionDefLists.pop();
@@ -785,6 +761,15 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
 
             // Checks 1 / 3: the callee must resolve somewhere
             checkNameResolution(name, n.getLine(), n.getColumn());
+            
+            // Check arity (number of parameters)
+            if (functionParamCount.containsKey(name)) {
+                int expectedParams = functionParamCount.get(name);
+                int actualParams = n.getArguments().size();
+                if (expectedParams != actualParams) {
+                    error("خطأ في استدعاء الدالة '" + name + "': تتوقع " + expectedParams + " معاملات، لكن تم تمرير " + actualParams, n.getLine(), n.getColumn());
+                }
+            }
 
             // Check: Template file existence for render_template
             if (name.equals("render_template") && n.getArguments().size() > 0) {

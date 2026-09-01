@@ -1,56 +1,56 @@
 
 ============================================================
-  تحليل الدلالات للغة بايثون  (18 فحص)
+  تحليل الدلالات للغة بايثون  (22 فحص)
 ============================================================
 
   الأخطاء (13):
-  [ERROR  ] Line 9:0 — استخدام تعليمة 'return' خارج الدالة
-  [ERROR  ] Line 12:0 — استخدام تعليمة 'break' خارج حلقة التكرار
-  [ERROR  ] Line 15:0 — استخدام تعليمة 'continue' خارج حلقة التكرار
-  [ERROR  ] Line 18:14 — تم اكتشاف قسمة على الصفر (القاسم الثابت هو 0)
-  [ERROR  ] Line 23:14 — أنواع المعاملات غير مدعومة للعملية '+': 'int' و 'str'
-  [ERROR  ] Line 26:12 — النوع 'int' غير قابل للتكرار (Not iterable)
-  [ERROR  ] Line 30:6 — المتغير 'ghost_var' غير معرّف
-  [ERROR  ] Line 36:4 — كود غير قابل للوصول بعد تعليمة 'return'
-  [ERROR  ] Line 39:0 — الدالة 'overloaded_func' تم تعريفها أكثر من مرة
-  [ERROR  ] Line 43:18 — المعامل 'x' مكرر في الدالة 'bad_params'
-  [ERROR  ] Line 56:4 — الاسم 'global_test' تم إسناده محلياً قبل الإعلان عنه كـ 'global'
-  [ERROR  ] Line 64:10 — المتغير 'unused_var' خارج النطاق (Out of scope)
-  [ERROR  ] Line 83:26 — ملف القالب 'advanced.jinja' غير موجود في المسار flask-app/templates/
+  [ERROR] [Line 9:0] — استخدام تعليمة 'return' خارج الدالة
+  [ERROR] [Line 12:0] — استخدام تعليمة 'break' خارج حلقة التكرار
+  [ERROR] [Line 15:0] — استخدام تعليمة 'continue' خارج حلقة التكرار
+  [ERROR] [Line 18:14] — تم اكتشاف قسمة على الصفر (القاسم الثابت هو 0)
+  [ERROR] [Line 23:14] — أنواع المعاملات غير مدعومة للعملية '+': 'int' و 'str'
+  [ERROR] [Line 26:12] — النوع 'int' غير قابل للتكرار (Not iterable)
+  [ERROR] [Line 30:6] — المتغير 'ghost_var' غير معرّف
+  [ERROR] [Line 36:4] — كود غير قابل للوصول بعد تعليمة 'return'
+  [ERROR] [Line 39:0] — الدالة 'overloaded_func' تم تعريفها أكثر من مرة
+  [ERROR] [Line 43:18] — المعامل 'x' مكرر في الدالة 'bad_params'
+  [ERROR] [Line 56:4] — الاسم 'global_test' تم إسناده محلياً قبل الإعلان عنه كـ 'global'
+  [ERROR] [Line 64:10] — المتغير 'unused_var' خارج النطاق (Out of scope)
+  [ERROR] [Line 83:26] — ملف القالب 'advanced.jinja' غير موجود في المسار flask-app/templates/
 
   التحذيرات (12):
-  [WARNING] Line 4:0 — الوحدة 'flask' تم استيرادها أكثر من مرة (أول مرة في السطر 1)
-  [WARNING] Line 33:0 — الدالة 'overloaded_func' تحتوي على عدد كبير جداً من المعاملات (8) — فكر في استخدام قاموس أو صنف بيانات
-  [WARNING] Line 39:0 — الدالة 'overloaded_func' تحتوي على جسم فارغ (فقط 'pass')
-  [WARNING] Line 43:0 — الدالة 'bad_params' تحتوي على جسم فارغ (فقط 'pass')
-  [WARNING] Line 47:0 — الدالة 'empty_function' تحتوي على جسم فارغ (فقط 'pass')
-  [WARNING] Line 59:10 — تم استخدام الاسم 'local_unassigned' قبل إسناد قيمة له في النطاق المحلي
-  [WARNING] Line 52:4 — المتغير 'unused_var' معرّف ولكنه لم يُستخدم أبداً
-  [WARNING] Line 60:4 — المتغير 'local_unassigned' معرّف ولكنه لم يُستخدم أبداً
-  [WARNING] Line 67:0 — إسناد قيمة للاسم المبني مسبقاً 'len' يخفي الدالة الأصلية
-  [WARNING] Line 70:0 — هذا الإسناد يقوم بالكتابة فوق الدالة التي تحمل الاسم 'empty_function'
-  [WARNING] Line 73:9 — استخدم 'is None' أو 'is not None' بدلاً من '== None'
-  [WARNING] Line 77:9 — المقارنة مع True/False باستخدام '==' ليست طريقة بايثونية — استخدم القيمة مباشرة (مثلاً 'if flag:')
+  [WARNING] [Line 4:0] — الوحدة 'flask' تم استيرادها أكثر من مرة (أول مرة في السطر 1)
+  [WARNING] [Line 33:0] — الدالة 'overloaded_func' تحتوي على عدد كبير جداً من المعاملات (8) — فكر في استخدام قاموس أو صنف بيانات
+  [WARNING] [Line 39:0] — الدالة 'overloaded_func' تحتوي على جسم فارغ (فقط 'pass')
+  [WARNING] [Line 43:0] — الدالة 'bad_params' تحتوي على جسم فارغ (فقط 'pass')
+  [WARNING] [Line 47:0] — الدالة 'empty_function' تحتوي على جسم فارغ (فقط 'pass')
+  [WARNING] [Line 59:10] — تم استخدام الاسم 'local_unassigned' قبل إسناد قيمة له في النطاق المحلي
+  [WARNING] [Line 52:4] — المتغير 'unused_var' معرّف ولكنه لم يُستخدم أبداً
+  [WARNING] [Line 60:4] — المتغير 'local_unassigned' معرّف ولكنه لم يُستخدم أبداً
+  [WARNING] [Line 67:0] — إسناد قيمة للاسم المبني مسبقاً 'len' يخفي الدالة الأصلية
+  [WARNING] [Line 70:0] — هذا الإسناد يقوم بالكتابة فوق الدالة التي تحمل الاسم 'empty_function'
+  [WARNING] [Line 73:9] — استخدم 'is None' أو 'is not None' بدلاً من '== None'
+  [WARNING] [Line 77:9] — المقارنة مع True/False باستخدام '==' ليست طريقة بايثونية — استخدم القيمة مباشرة (مثلاً 'if flag:')
 
   الملخص: 13 خطأ، 12 تحذير = 25 إجمالي المشاكل
 
 ============================================================
-  تحليل الدلالات لقوالب جينجا2 (V2): advanced.jinja  (13 فحص)
+  تحليل الدلالات لقوالب جينجا2 (V2): advanced.jinja  (17 فحص)
 ============================================================
 
-  الأخطاء (5):
-  [ERROR  ] Line 5:3 — القالب 'advanced.jinja' يمتد (extends) من نفسه — هذا استدعاء دائري (Circular dependency)
-  [ERROR  ] Line 8:3 — تم استخدام {% extends %} أكثر من مرة في القالب 'advanced.jinja'
-  [ERROR  ] Line 8:3 — {% extends "base.jinja" %} يشير إلى ملف غير موجود: /home/saif/projects/java/project_compiler_2/tests/test4_advanced_semantic_errors/templates/base.jinja
-  [ERROR  ] Line 21:19 — متغير القالب 'missing_user' لم يتم تمريره من دالة render_template
-  [ERROR  ] Line 44:0 — الكتلة (Block) 'content' تم تعريفها أكثر من مرة (أول مرة في السطر 10)
+  الأخطاء (6):
+  [ERROR] [Line 5:3] — القالب 'advanced.jinja' يمتد (extends) من نفسه — هذا استدعاء دائري (Circular dependency)
+  [ERROR] [Line 8:3] — تم استخدام {% extends %} أكثر من مرة في القالب 'advanced.jinja'
+  [ERROR] [Line 8:3] — {% extends "base.jinja" %} يشير إلى ملف غير موجود: /home/saif/projects/java/project_compiler_2/tests/test4_advanced_semantic_errors/templates/base.jinja
+  [ERROR] [Line 21:19] — متغير القالب 'missing_user' لم يتم تمريره من دالة render_template
+  [ERROR] [Line 39:7] — {% include "ghost_template.jinja" %} يشير إلى ملف غير موجود: /home/saif/projects/java/project_compiler_2/tests/test4_advanced_semantic_errors/templates/ghost_template.jinja
+  [ERROR] [Line 44:0] — الكتلة (Block) 'content' تم تعريفها أكثر من مرة (أول مرة في السطر 10)
 
-  التحذيرات (6):
-  [WARNING] Line 14:7 — {% set title = ... %} يعيد تعريف المتغير 'title' الذي تم تمريره من بايثون باستخدام الدالة render_template()
-  [WARNING] Line 18:7 — {% set my_var = ... %} يعيد تعريف متغير القالب 'my_var' الذي تم تحديده مسبقاً عبر {% set %}
-  [WARNING] Line 24:16 — مرشح جينجا2 (Filter) غير معروف 'unknown_magic_filter' — غير موجود في قائمة المرشحات المعروفة
-  [WARNING] Line 27:4 — {% for item in [] %} يقوم بالدوران على قائمة فارغة تماماً — لن يتم تنفيذ محتوى الحلقة أبداً
-  [WARNING] Line 36:27 — المتغير 'num' هو متغير حلقة 'for' يتم استخدامه خارج النطاق الخاص بتلك الحلقة
-  [WARNING] Line 39:7 — {% include "ghost_template.jinja" %} يشير إلى ملف غير موجود: /home/saif/projects/java/project_compiler_2/tests/test4_advanced_semantic_errors/templates/ghost_template.jinja
+  التحذيرات (5):
+  [WARNING] [Line 14:7] — {% set title = ... %} يعيد تعريف المتغير 'title' الذي تم تمريره من بايثون باستخدام الدالة render_template()
+  [WARNING] [Line 18:7] — {% set my_var = ... %} يعيد تعريف متغير القالب 'my_var' الذي تم تحديده مسبقاً عبر {% set %}
+  [WARNING] [Line 24:16] — مرشح جينجا2 (Filter) غير معروف 'unknown_magic_filter' — غير موجود في قائمة المرشحات المعروفة
+  [WARNING] [Line 27:4] — {% for item in [] %} يقوم بالدوران على قائمة فارغة تماماً — لن يتم تنفيذ محتوى الحلقة أبداً
+  [WARNING] [Line 36:27] — المتغير 'num' هو متغير حلقة 'for' يتم استخدامه خارج النطاق الخاص بتلك الحلقة
 
-  الملخص: 5 خطأ، 6 تحذير = 11 إجمالي المشاكل
+  الملخص: 6 خطأ، 5 تحذير = 11 إجمالي المشاكل

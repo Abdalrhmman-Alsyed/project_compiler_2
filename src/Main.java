@@ -199,7 +199,7 @@ public class Main {
         TemplateNode rootNode = astBuilder.visitTemplateRoot(tree);
 
         String templateName = Path.of(filePath).getFileName().toString();
-        String templateDir  = Path.of(filePath).getParent().toString();
+        String templateDir = Path.of(filePath).getParent().toString();
 
         JinjaSymbolTableBuilder symbolBuilder = new JinjaSymbolTableBuilder();
         rootNode.accept(symbolBuilder);
