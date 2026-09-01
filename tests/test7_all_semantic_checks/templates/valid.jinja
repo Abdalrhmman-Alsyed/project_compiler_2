@@ -1,0 +1,13 @@
+{% extends "base_valid.jinja" %}
+
+{% block title %}الصفحة الصحيحة{% endblock %}
+
+{% block content %}
+<ul>
+  {% for item in items %}
+    <li>{{ item }}</li>
+  {% endfor %}
+</ul>
+<p>المستخدم: {{ user.name }}</p>
+<p>العنوان: {{ title }}</p>
+{% endblock %}
