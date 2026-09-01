@@ -43,7 +43,7 @@ public class TestMock {
         // 3. Semantic Analysis
         Set<String> ctxVars = Set.of("users"); // Simulating generator extracting the context var
         JinjaAstSemanticAnalyzer jinjaAnalyzer = new JinjaAstSemanticAnalyzer(
-                "test_mock.jinja", "test/jinja", ctxVars, mockData);
+                "test_mock.jinja", "test/jinja", ctxVars, mockData, null);
         rootNode.accept(jinjaAnalyzer);
         jinjaAnalyzer.printReport();
     }

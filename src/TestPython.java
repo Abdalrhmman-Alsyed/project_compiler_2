@@ -38,7 +38,7 @@ public class TestPython {
         symbolTable.print();
 
         System.out.println("\n--- 4. SEMANTIC ANALYSIS ---");
-        PythonSemanticAnalyzer analyzer = new PythonSemanticAnalyzer();
+        PythonSemanticAnalyzer analyzer = new PythonSemanticAnalyzer(null);
         ast.accept(analyzer);
         analyzer.printReport();
     }

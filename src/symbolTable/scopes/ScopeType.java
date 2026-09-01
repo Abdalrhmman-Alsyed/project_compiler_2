@@ -9,11 +9,7 @@ public enum ScopeType {
     ELSE_BLOCK,
     WHILE_LOOP,
     WITH_BLOCK,
-    /*TRY_BLOCK,
-    EXCEPT_BLOCK,
-    COMPREHENSION,
-    CLASS,
-    MODULE*/;
+    BLOCK;
 
     public boolean isLoop() {
         return this == FOR_LOOP || this == WHILE_LOOP;

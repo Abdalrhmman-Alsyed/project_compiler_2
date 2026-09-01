@@ -43,6 +43,33 @@ import java.util.*;
  */
 public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
 
+    // ── Symbol Table Integration ──────────────────────────────────────────────
+    private final symbolTable.PythonSymbolTable symbolTable;
+    private symbolTable.scopes.Scope currentScope;
+    private final Map<symbolTable.scopes.Scope, Integer> childIndexMap = new HashMap<>();
+
+    public PythonSemanticAnalyzer(symbolTable.PythonSymbolTable symbolTable) {
+        this.symbolTable = symbolTable;
+        this.currentScope = symbolTable.getGlobalScope();
+    }
+
+    private void enterScope() {
+        int index = childIndexMap.getOrDefault(currentScope, 0);
+        java.util.List<symbolTable.scopes.Scope> children = symbolTable.getChildScopes(currentScope);
+        if (index < children.size()) {
+            symbolTable.scopes.Scope child = children.get(index);
+            childIndexMap.put(currentScope, index + 1);
+            currentScope = child;
+        }
+    }
+
+    private void exitScope() {
+        if (currentScope.getParent() != null) {
+            currentScope = currentScope.getParent();
+        }
+    }
+
+
     // ── Collected issues ─────────────────────────────────────────────────────
     private final List<SemanticError> errors   = new ArrayList<>();
     private final List<SemanticError> warnings = new ArrayList<>();
@@ -306,9 +333,9 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
         if (!assignedAhead.isEmpty() && assignedAhead.peek().contains(name)) {
             warning("تم استخدام الاسم '" + name + "' قبل إسناد قيمة له في النطاق المحلي",
                     line, col);
-        } else if (functionLocalNames.containsKey(name)) {
+        } else if (functionLocalNames.containsKey(name) || (currentScope.resolve(name) != null && currentScope.resolve(name).getScope() != currentScope)) {
             error("المتغير '" + name + "' خارج النطاق (Out of scope)", line, col);
-        } else {
+        } else if (currentScope.resolve(name) == null) {
             error("المتغير '" + name + "' غير معرّف", line, col);
         }
     }
@@ -401,10 +428,15 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
 
     @Override
     public Void visit(FunctionNode n) {
+        enterScope();
         // Check 4: duplicate function name
+        // Use symbolTable to check for duplicates
+        if (visitedFunctions.contains(n.getName()) || (symbolTable.getGlobalScope().getSymbol(n.getName()) != null && !visitedFunctions.contains(n.getName()))) {
+            // It's in the symbol table, we add to visited to prevent double warning since we do a single pass now
+        }
         if (visitedFunctions.contains(n.getName())) {
-            error("الدالة '" + n.getName() + "' تم تعريفها أكثر من مرة",
-                    n.getLine(), n.getColumn());
+             error("الدالة '" + n.getName() + "' تم تعريفها أكثر من مرة",
+                     n.getLine(), n.getColumn());
         }
         visitedFunctions.add(n.getName());
         globalKind.put(n.getName(), "function");
@@ -466,6 +498,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
         currentGlobals.addAll(savedGlobals);
         popScope();
         functionDepth--;
+        exitScope();
         return null;
     }
 
@@ -589,19 +622,20 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
     @Override
     public Void visit(IfNode n) {
         n.getCondition().accept(this);
-        pushScope(); n.getThenBlock().accept(this); popScope();
+        enterScope(); pushScope(); n.getThenBlock().accept(this); popScope(); exitScope();
         for (var elif : n.getElifBranches()) {
             elif.getCondition().accept(this);
             pushScope(); elif.getBlock().accept(this); popScope();
         }
         if (n.hasElse()) {
-            pushScope(); n.getElseBlock().accept(this); popScope();
+            enterScope(); pushScope(); n.getElseBlock().accept(this); popScope(); exitScope();
         }
         return null;
     }
 
     @Override
     public Void visit(ForNode n) {
+        enterScope();
         n.getIterable().accept(this);
 
         // Check 20: iterating something that is provably not iterable
@@ -624,11 +658,13 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
         n.getBody().accept(this);
         popScope();
         loopDepth--;
+        exitScope();
         return null;
     }
 
     @Override
     public Void visit(WhileNode n) {
+        enterScope();
         n.getCondition().accept(this);
 
         // loopDepth must rise so 'break'/'continue' inside a while are legal
@@ -637,6 +673,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
         n.getBody().accept(this);
         popScope();
         loopDepth--;
+        exitScope();
         return null;
     }
 
