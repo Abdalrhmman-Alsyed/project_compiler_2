@@ -241,7 +241,7 @@ public class OutputHttpServer {
         PythonNode ast = new PythonASTBuilderVisitor().visit(tree);
 
         generator = new Generator();
-        generator.visit(tree);
+        ast.accept(generator);
 
         MockDataExtractor extractor = new MockDataExtractor();
         ast.accept(extractor);

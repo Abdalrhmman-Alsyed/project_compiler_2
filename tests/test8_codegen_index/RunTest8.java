@@ -33,10 +33,7 @@ public class RunTest8 {
 
         // 2. استخراج الـ Context
         Generator generator = new Generator();
-        CharStream inputGen = CharStreams.fromFileName(appPy);
-        FlaskPythonLexer lexerGen = new FlaskPythonLexer(inputGen);
-        FlaskPythonParser parserGen = new FlaskPythonParser(new CommonTokenStream(lexerGen));
-        generator.visit(parserGen.program());
+        ast.accept(generator);
 
         // 3. استخراج البيانات الوهمية (Mock Data)
         semantic.MockDataExtractor dataExtractor = new semantic.MockDataExtractor();
