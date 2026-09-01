@@ -64,6 +64,10 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
         collectKeys(this.mockData);
     }
 
+    public boolean hasErrors() {
+        return !errors.isEmpty();
+    }
+
     public JinjaAstSemanticAnalyzer(String templateName, String templateDir, Set<String> pythonContextVars, symbolTable.JinjaSymbolTable symbolTable) {
         this(templateName, templateDir, pythonContextVars, null, symbolTable);
     }

@@ -442,9 +442,15 @@ public class HtmlCodeGenerator {
     }
 
     private String renderBlock(BlockBlockNode node) {
-        BlockBlockNode override = blockOverrides.get(node.getBlockName());
+        String blockName = node.getBlockName();
+        BlockBlockNode override = blockOverrides.get(blockName);
         if (override != null && override != node) {
-            return renderChildren(override.getContent());
+            blockOverrides.remove(blockName);
+            try {
+                return renderChildren(override.getContent());
+            } finally {
+                blockOverrides.put(blockName, override);
+            }
         }
         return renderChildren(node.getContent());
     }
