@@ -1,0 +1,2678 @@
+{
+  "base.jinja": {
+    "_type": "TemplateRootNode",
+    "documents": [
+      {
+        "_type": "DoctypeNode",
+        "doctype": "<!DOCTYPE html>",
+        "nodeType": "DOCTYPE",
+        "line": 1,
+        "column": 0
+      },
+      {
+        "_type": "HTMLDocumentNode",
+        "attributes": [
+          {
+            "_type": "HTMLAttributeNode",
+            "name": "lang",
+            "isBoolean": false,
+            "valueParts": [
+              {
+                "_type": "HTMLAttributeTextNode",
+                "text": "en",
+                "nodeType": "HTML_ATTRIBUTE_TEXT",
+                "line": 2,
+                "column": 12
+              }
+            ],
+            "nodeType": "HTML_ATTRIBUTE",
+            "line": 2,
+            "column": 6
+          },
+          {
+            "_type": "HTMLAttributeNode",
+            "name": "dir",
+            "isBoolean": false,
+            "valueParts": [
+              {
+                "_type": "HTMLAttributeTextNode",
+                "text": "ltr",
+                "nodeType": "HTML_ATTRIBUTE_TEXT",
+                "line": 2,
+                "column": 21
+              }
+            ],
+            "nodeType": "HTML_ATTRIBUTE",
+            "line": 2,
+            "column": 16
+          }
+        ],
+        "content": [
+          {
+            "_type": "HTMLNormalElementNode",
+            "content": [
+              {
+                "_type": "HTMLVoidElementNode",
+                "tagName": "meta",
+                "attributes": [
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "charset",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "HTMLAttributeTextNode",
+                        "text": "UTF-8",
+                        "nodeType": "HTML_ATTRIBUTE_TEXT",
+                        "line": 4,
+                        "column": 19
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 4,
+                    "column": 10
+                  }
+                ],
+                "nodeType": "HTML_VOID_ELEMENT",
+                "line": 4,
+                "column": 4
+              },
+              {
+                "_type": "HTMLNormalElementNode",
+                "content": [
+                  {
+                    "_type": "BlockBlockNode",
+                    "blockName": "title",
+                    "content": [
+                      {
+                        "_type": "HTMLTextNode",
+                        "text": "Product Store",
+                        "nodeType": "HTML_TEXT",
+                        "line": 5,
+                        "column": 28
+                      }
+                    ],
+                    "nodeType": "JINJA_BLOCK_BLOCK",
+                    "line": 5,
+                    "column": 11
+                  }
+                ],
+                "closingTagName": "title",
+                "closingLine": 5,
+                "closingColumn": 55,
+                "tagName": "title",
+                "attributes": [
+
+                ],
+                "nodeType": "HTML_ELEMENT",
+                "line": 5,
+                "column": 4
+              },
+              {
+                "_type": "HTMLVoidElementNode",
+                "tagName": "link",
+                "attributes": [
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "rel",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "HTMLAttributeTextNode",
+                        "text": "stylesheet",
+                        "nodeType": "HTML_ATTRIBUTE_TEXT",
+                        "line": 6,
+                        "column": 15
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 6,
+                    "column": 10
+                  },
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "href",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "JinjaExpressionNode",
+                        "expression": {
+                          "_type": "CallExpressionNode",
+                          "callee": {
+                            "_type": "VariableNode",
+                            "path": [
+                              "url_for"
+                            ],
+                            "nodeType": "JINJA_EXPR_VARIABLE",
+                            "line": 6,
+                            "column": 36
+                          },
+                          "arguments": [
+                            {
+                              "_type": "StringLiteralNode",
+                              "value": "static",
+                              "nodeType": "JINJA_LITERAL_STRING",
+                              "line": 6,
+                              "column": 44
+                            },
+                            {
+                              "_type": "StringLiteralNode",
+                              "value": "style.css",
+                              "nodeType": "JINJA_LITERAL_STRING",
+                              "line": 6,
+                              "column": 63
+                            }
+                          ],
+                          "keywordNames": [
+                            null,
+                            "filename"
+                          ],
+                          "nodeType": "JINJA_EXPR_CALL",
+                          "line": 6,
+                          "column": 43
+                        },
+                        "nodeType": "JINJA_EXPR_EXPRESSION",
+                        "line": 6,
+                        "column": 33
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 6,
+                    "column": 27
+                  }
+                ],
+                "nodeType": "HTML_VOID_ELEMENT",
+                "line": 6,
+                "column": 4
+              }
+            ],
+            "closingTagName": "head",
+            "closingLine": 7,
+            "closingColumn": 0,
+            "tagName": "head",
+            "attributes": [
+
+            ],
+            "nodeType": "HTML_ELEMENT",
+            "line": 3,
+            "column": 0
+          },
+          {
+            "_type": "HTMLNormalElementNode",
+            "content": [
+              {
+                "_type": "HTMLNormalElementNode",
+                "content": [
+                  {
+                    "_type": "HTMLNormalElementNode",
+                    "content": [
+                      {
+                        "_type": "HTMLTextNode",
+                        "text": "Mini E-commerce Store",
+                        "nodeType": "HTML_TEXT",
+                        "line": 10,
+                        "column": 8
+                      }
+                    ],
+                    "closingTagName": "h1",
+                    "closingLine": 10,
+                    "closingColumn": 29,
+                    "tagName": "h1",
+                    "attributes": [
+
+                    ],
+                    "nodeType": "HTML_ELEMENT",
+                    "line": 10,
+                    "column": 4
+                  },
+                  {
+                    "_type": "HTMLNormalElementNode",
+                    "content": [
+                      {
+                        "_type": "HTMLNormalElementNode",
+                        "content": [
+                          {
+                            "_type": "HTMLTextNode",
+                            "text": "Products",
+                            "nodeType": "HTML_TEXT",
+                            "line": 12,
+                            "column": 48
+                          }
+                        ],
+                        "closingTagName": "a",
+                        "closingLine": 12,
+                        "closingColumn": 56,
+                        "tagName": "a",
+                        "attributes": [
+                          {
+                            "_type": "HTMLAttributeNode",
+                            "name": "href",
+                            "isBoolean": false,
+                            "valueParts": [
+                              {
+                                "_type": "JinjaExpressionNode",
+                                "expression": {
+                                  "_type": "CallExpressionNode",
+                                  "callee": {
+                                    "_type": "VariableNode",
+                                    "path": [
+                                      "url_for"
+                                    ],
+                                    "nodeType": "JINJA_EXPR_VARIABLE",
+                                    "line": 12,
+                                    "column": 20
+                                  },
+                                  "arguments": [
+                                    {
+                                      "_type": "StringLiteralNode",
+                                      "value": "product_list",
+                                      "nodeType": "JINJA_LITERAL_STRING",
+                                      "line": 12,
+                                      "column": 28
+                                    }
+                                  ],
+                                  "keywordNames": [
+                                    null
+                                  ],
+                                  "nodeType": "JINJA_EXPR_CALL",
+                                  "line": 12,
+                                  "column": 27
+                                },
+                                "nodeType": "JINJA_EXPR_EXPRESSION",
+                                "line": 12,
+                                "column": 17
+                              }
+                            ],
+                            "nodeType": "HTML_ATTRIBUTE",
+                            "line": 12,
+                            "column": 11
+                          }
+                        ],
+                        "nodeType": "HTML_ELEMENT",
+                        "line": 12,
+                        "column": 8
+                      },
+                      {
+                        "_type": "HTMLNormalElementNode",
+                        "content": [
+                          {
+                            "_type": "HTMLTextNode",
+                            "text": "Add product",
+                            "nodeType": "HTML_TEXT",
+                            "line": 13,
+                            "column": 47
+                          }
+                        ],
+                        "closingTagName": "a",
+                        "closingLine": 13,
+                        "closingColumn": 58,
+                        "tagName": "a",
+                        "attributes": [
+                          {
+                            "_type": "HTMLAttributeNode",
+                            "name": "href",
+                            "isBoolean": false,
+                            "valueParts": [
+                              {
+                                "_type": "JinjaExpressionNode",
+                                "expression": {
+                                  "_type": "CallExpressionNode",
+                                  "callee": {
+                                    "_type": "VariableNode",
+                                    "path": [
+                                      "url_for"
+                                    ],
+                                    "nodeType": "JINJA_EXPR_VARIABLE",
+                                    "line": 13,
+                                    "column": 20
+                                  },
+                                  "arguments": [
+                                    {
+                                      "_type": "StringLiteralNode",
+                                      "value": "add_product",
+                                      "nodeType": "JINJA_LITERAL_STRING",
+                                      "line": 13,
+                                      "column": 28
+                                    }
+                                  ],
+                                  "keywordNames": [
+                                    null
+                                  ],
+                                  "nodeType": "JINJA_EXPR_CALL",
+                                  "line": 13,
+                                  "column": 27
+                                },
+                                "nodeType": "JINJA_EXPR_EXPRESSION",
+                                "line": 13,
+                                "column": 17
+                              }
+                            ],
+                            "nodeType": "HTML_ATTRIBUTE",
+                            "line": 13,
+                            "column": 11
+                          }
+                        ],
+                        "nodeType": "HTML_ELEMENT",
+                        "line": 13,
+                        "column": 8
+                      }
+                    ],
+                    "closingTagName": "nav",
+                    "closingLine": 14,
+                    "closingColumn": 4,
+                    "tagName": "nav",
+                    "attributes": [
+
+                    ],
+                    "nodeType": "HTML_ELEMENT",
+                    "line": 11,
+                    "column": 4
+                  }
+                ],
+                "closingTagName": "header",
+                "closingLine": 15,
+                "closingColumn": 0,
+                "tagName": "header",
+                "attributes": [
+
+                ],
+                "nodeType": "HTML_ELEMENT",
+                "line": 9,
+                "column": 0
+              },
+              {
+                "_type": "HTMLNormalElementNode",
+                "content": [
+                  {
+                    "_type": "BlockBlockNode",
+                    "blockName": "content",
+                    "content": [
+                      {
+                        "_type": "HTMLNormalElementNode",
+                        "content": [
+                          {
+                            "_type": "HTMLTextNode",
+                            "text": "Default content.",
+                            "nodeType": "HTML_TEXT",
+                            "line": 19,
+                            "column": 7
+                          }
+                        ],
+                        "closingTagName": "p",
+                        "closingLine": 19,
+                        "closingColumn": 23,
+                        "tagName": "p",
+                        "attributes": [
+
+                        ],
+                        "nodeType": "HTML_ELEMENT",
+                        "line": 19,
+                        "column": 4
+                      }
+                    ],
+                    "nodeType": "JINJA_BLOCK_BLOCK",
+                    "line": 18,
+                    "column": 4
+                  }
+                ],
+                "closingTagName": "main",
+                "closingLine": 21,
+                "closingColumn": 0,
+                "tagName": "main",
+                "attributes": [
+
+                ],
+                "nodeType": "HTML_ELEMENT",
+                "line": 17,
+                "column": 0
+              }
+            ],
+            "closingTagName": "body",
+            "closingLine": 24,
+            "closingColumn": 0,
+            "tagName": "body",
+            "attributes": [
+
+            ],
+            "nodeType": "HTML_ELEMENT",
+            "line": 8,
+            "column": 0
+          }
+        ],
+        "nodeType": "HTML_DOCUMENT",
+        "line": 2,
+        "column": 0
+      }
+    ],
+    "nodeType": "TEMPLATE_ROOT",
+    "line": 1,
+    "column": 0
+  },
+  "index.jinja": {
+    "_type": "TemplateRootNode",
+    "documents": [
+      {
+        "_type": "ExtendsBlockNode",
+        "templateName": "\"base.jinja\"",
+        "content": [
+
+        ],
+        "nodeType": "JINJA_EXTENDS_BLOCK",
+        "line": 1,
+        "column": 3
+      },
+      {
+        "_type": "BlockBlockNode",
+        "blockName": "title",
+        "content": [
+          {
+            "_type": "HTMLTextNode",
+            "text": "Product list",
+            "nodeType": "HTML_TEXT",
+            "line": 4,
+            "column": 0
+          }
+        ],
+        "nodeType": "JINJA_BLOCK_BLOCK",
+        "line": 3,
+        "column": 0
+      },
+      {
+        "_type": "BlockBlockNode",
+        "blockName": "content",
+        "content": [
+          {
+            "_type": "HTMLNormalElementNode",
+            "content": [
+              {
+                "_type": "HTMLTextNode",
+                "text": "Product list",
+                "nodeType": "HTML_TEXT",
+                "line": 9,
+                "column": 4
+              }
+            ],
+            "closingTagName": "h2",
+            "closingLine": 9,
+            "closingColumn": 16,
+            "tagName": "h2",
+            "attributes": [
+
+            ],
+            "nodeType": "HTML_ELEMENT",
+            "line": 9,
+            "column": 0
+          },
+          {
+            "_type": "IfBlockNode",
+            "condition": {
+              "_type": "VariableNode",
+              "path": [
+                "products"
+              ],
+              "nodeType": "JINJA_EXPR_VARIABLE",
+              "line": 11,
+              "column": 6
+            },
+            "elifBlocks": [
+
+            ],
+            "elseBlock": {
+              "_type": "ElseBlockNode",
+              "content": [
+                {
+                  "_type": "HTMLNormalElementNode",
+                  "content": [
+                    {
+                      "_type": "HTMLTextNode",
+                      "text": "No products yet.",
+                      "nodeType": "HTML_TEXT",
+                      "line": 50,
+                      "column": 4
+                    }
+                  ],
+                  "closingTagName": "p",
+                  "closingLine": 51,
+                  "closingColumn": 0,
+                  "tagName": "p",
+                  "attributes": [
+                    {
+                      "_type": "HTMLAttributeNode",
+                      "name": "class",
+                      "isBoolean": false,
+                      "valueParts": [
+                        {
+                          "_type": "HTMLAttributeTextNode",
+                          "text": "no-products",
+                          "nodeType": "HTML_ATTRIBUTE_TEXT",
+                          "line": 49,
+                          "column": 10
+                        }
+                      ],
+                      "nodeType": "HTML_ATTRIBUTE",
+                      "line": 49,
+                      "column": 3
+                    }
+                  ],
+                  "nodeType": "HTML_ELEMENT",
+                  "line": 49,
+                  "column": 0
+                }
+              ],
+              "nodeType": "JINJA_ELSE_BLOCK",
+              "line": 48,
+              "column": 0
+            },
+            "content": [
+              {
+                "_type": "HTMLNormalElementNode",
+                "content": [
+                  {
+                    "_type": "ForBlockNode",
+                    "variable": "product",
+                    "iterable": {
+                      "_type": "VariableNode",
+                      "path": [
+                        "products"
+                      ],
+                      "nodeType": "JINJA_EXPR_VARIABLE",
+                      "line": 13,
+                      "column": 22
+                    },
+                    "elseBlock": null,
+                    "content": [
+                      {
+                        "_type": "HTMLNormalElementNode",
+                        "content": [
+                          {
+                            "_type": "HTMLVoidElementNode",
+                            "tagName": "img",
+                            "attributes": [
+                              {
+                                "_type": "HTMLAttributeNode",
+                                "name": "src",
+                                "isBoolean": false,
+                                "valueParts": [
+                                  {
+                                    "_type": "JinjaExpressionNode",
+                                    "expression": {
+                                      "_type": "CallExpressionNode",
+                                      "callee": {
+                                        "_type": "VariableNode",
+                                        "path": [
+                                          "url_for"
+                                        ],
+                                        "nodeType": "JINJA_EXPR_VARIABLE",
+                                        "line": 17,
+                                        "column": 24
+                                      },
+                                      "arguments": [
+                                        {
+                                          "_type": "StringLiteralNode",
+                                          "value": "static",
+                                          "nodeType": "JINJA_LITERAL_STRING",
+                                          "line": 17,
+                                          "column": 32
+                                        },
+                                        {
+                                          "_type": "AttributeAccessNode",
+                                          "object": {
+                                            "_type": "VariableNode",
+                                            "path": [
+                                              "product"
+                                            ],
+                                            "nodeType": "JINJA_EXPR_VARIABLE",
+                                            "line": 17,
+                                            "column": 51
+                                          },
+                                          "attribute": "image_filename",
+                                          "nodeType": "JINJA_EXPR_ATTRIBUTE_ACCESS",
+                                          "line": 17,
+                                          "column": 58
+                                        }
+                                      ],
+                                      "keywordNames": [
+                                        null,
+                                        "filename"
+                                      ],
+                                      "nodeType": "JINJA_EXPR_CALL",
+                                      "line": 17,
+                                      "column": 31
+                                    },
+                                    "nodeType": "JINJA_EXPR_EXPRESSION",
+                                    "line": 17,
+                                    "column": 21
+                                  }
+                                ],
+                                "nodeType": "HTML_ATTRIBUTE",
+                                "line": 17,
+                                "column": 16
+                              },
+                              {
+                                "_type": "HTMLAttributeNode",
+                                "name": "alt",
+                                "isBoolean": false,
+                                "valueParts": [
+                                  {
+                                    "_type": "HTMLAttributeTextNode",
+                                    "text": "Photo of ",
+                                    "nodeType": "HTML_ATTRIBUTE_TEXT",
+                                    "line": 18,
+                                    "column": 21
+                                  },
+                                  {
+                                    "_type": "JinjaExpressionNode",
+                                    "expression": {
+                                      "_type": "AttributeAccessNode",
+                                      "object": {
+                                        "_type": "VariableNode",
+                                        "path": [
+                                          "product"
+                                        ],
+                                        "nodeType": "JINJA_EXPR_VARIABLE",
+                                        "line": 18,
+                                        "column": 33
+                                      },
+                                      "attribute": "name",
+                                      "nodeType": "JINJA_EXPR_ATTRIBUTE_ACCESS",
+                                      "line": 18,
+                                      "column": 40
+                                    },
+                                    "nodeType": "JINJA_EXPR_EXPRESSION",
+                                    "line": 18,
+                                    "column": 30
+                                  }
+                                ],
+                                "nodeType": "HTML_ATTRIBUTE",
+                                "line": 18,
+                                "column": 16
+                              },
+                              {
+                                "_type": "HTMLAttributeNode",
+                                "name": "class",
+                                "isBoolean": false,
+                                "valueParts": [
+                                  {
+                                    "_type": "HTMLAttributeTextNode",
+                                    "text": "product-image",
+                                    "nodeType": "HTML_ATTRIBUTE_TEXT",
+                                    "line": 19,
+                                    "column": 23
+                                  }
+                                ],
+                                "nodeType": "HTML_ATTRIBUTE",
+                                "line": 19,
+                                "column": 16
+                              }
+                            ],
+                            "nodeType": "HTML_VOID_ELEMENT",
+                            "line": 16,
+                            "column": 8
+                          },
+                          {
+                            "_type": "HTMLNormalElementNode",
+                            "content": [
+                              {
+                                "_type": "JinjaExpressionNode",
+                                "expression": {
+                                  "_type": "AttributeAccessNode",
+                                  "object": {
+                                    "_type": "VariableNode",
+                                    "path": [
+                                      "product"
+                                    ],
+                                    "nodeType": "JINJA_EXPR_VARIABLE",
+                                    "line": 22,
+                                    "column": 15
+                                  },
+                                  "attribute": "name",
+                                  "nodeType": "JINJA_EXPR_ATTRIBUTE_ACCESS",
+                                  "line": 22,
+                                  "column": 22
+                                },
+                                "nodeType": "JINJA_EXPR_EXPRESSION",
+                                "line": 22,
+                                "column": 12
+                              }
+                            ],
+                            "closingTagName": "h3",
+                            "closingLine": 22,
+                            "closingColumn": 30,
+                            "tagName": "h3",
+                            "attributes": [
+
+                            ],
+                            "nodeType": "HTML_ELEMENT",
+                            "line": 22,
+                            "column": 8
+                          },
+                          {
+                            "_type": "HTMLNormalElementNode",
+                            "content": [
+                              {
+                                "_type": "JinjaExpressionNode",
+                                "expression": {
+                                  "_type": "AttributeAccessNode",
+                                  "object": {
+                                    "_type": "VariableNode",
+                                    "path": [
+                                      "product"
+                                    ],
+                                    "nodeType": "JINJA_EXPR_VARIABLE",
+                                    "line": 25,
+                                    "column": 15
+                                  },
+                                  "attribute": "price",
+                                  "nodeType": "JINJA_EXPR_ATTRIBUTE_ACCESS",
+                                  "line": 25,
+                                  "column": 22
+                                },
+                                "nodeType": "JINJA_EXPR_EXPRESSION",
+                                "line": 25,
+                                "column": 12
+                              },
+                              {
+                                "_type": "HTMLTextNode",
+                                "text": " $",
+                                "nodeType": "HTML_TEXT",
+                                "line": 25,
+                                "column": 31
+                              }
+                            ],
+                            "closingTagName": "p",
+                            "closingLine": 26,
+                            "closingColumn": 8,
+                            "tagName": "p",
+                            "attributes": [
+                              {
+                                "_type": "HTMLAttributeNode",
+                                "name": "class",
+                                "isBoolean": false,
+                                "valueParts": [
+                                  {
+                                    "_type": "HTMLAttributeTextNode",
+                                    "text": "product-price",
+                                    "nodeType": "HTML_ATTRIBUTE_TEXT",
+                                    "line": 24,
+                                    "column": 18
+                                  }
+                                ],
+                                "nodeType": "HTML_ATTRIBUTE",
+                                "line": 24,
+                                "column": 11
+                              }
+                            ],
+                            "nodeType": "HTML_ELEMENT",
+                            "line": 24,
+                            "column": 8
+                          },
+                          {
+                            "_type": "HTMLNormalElementNode",
+                            "content": [
+                              {
+                                "_type": "HTMLTextNode",
+                                "text": "View details",
+                                "nodeType": "HTML_TEXT",
+                                "line": 32,
+                                "column": 12
+                              }
+                            ],
+                            "closingTagName": "a",
+                            "closingLine": 33,
+                            "closingColumn": 8,
+                            "tagName": "a",
+                            "attributes": [
+                              {
+                                "_type": "HTMLAttributeNode",
+                                "name": "href",
+                                "isBoolean": false,
+                                "valueParts": [
+                                  {
+                                    "_type": "JinjaExpressionNode",
+                                    "expression": {
+                                      "_type": "CallExpressionNode",
+                                      "callee": {
+                                        "_type": "VariableNode",
+                                        "path": [
+                                          "url_for"
+                                        ],
+                                        "nodeType": "JINJA_EXPR_VARIABLE",
+                                        "line": 29,
+                                        "column": 25
+                                      },
+                                      "arguments": [
+                                        {
+                                          "_type": "StringLiteralNode",
+                                          "value": "product_detail",
+                                          "nodeType": "JINJA_LITERAL_STRING",
+                                          "line": 29,
+                                          "column": 33
+                                        },
+                                        {
+                                          "_type": "AttributeAccessNode",
+                                          "object": {
+                                            "_type": "VariableNode",
+                                            "path": [
+                                              "product"
+                                            ],
+                                            "nodeType": "JINJA_EXPR_VARIABLE",
+                                            "line": 29,
+                                            "column": 62
+                                          },
+                                          "attribute": "id",
+                                          "nodeType": "JINJA_EXPR_ATTRIBUTE_ACCESS",
+                                          "line": 29,
+                                          "column": 69
+                                        }
+                                      ],
+                                      "keywordNames": [
+                                        null,
+                                        "product_id"
+                                      ],
+                                      "nodeType": "JINJA_EXPR_CALL",
+                                      "line": 29,
+                                      "column": 32
+                                    },
+                                    "nodeType": "JINJA_EXPR_EXPRESSION",
+                                    "line": 29,
+                                    "column": 22
+                                  }
+                                ],
+                                "nodeType": "HTML_ATTRIBUTE",
+                                "line": 29,
+                                "column": 16
+                              },
+                              {
+                                "_type": "HTMLAttributeNode",
+                                "name": "class",
+                                "isBoolean": false,
+                                "valueParts": [
+                                  {
+                                    "_type": "HTMLAttributeTextNode",
+                                    "text": "details-button",
+                                    "nodeType": "HTML_ATTRIBUTE_TEXT",
+                                    "line": 30,
+                                    "column": 23
+                                  }
+                                ],
+                                "nodeType": "HTML_ATTRIBUTE",
+                                "line": 30,
+                                "column": 16
+                              }
+                            ],
+                            "nodeType": "HTML_ELEMENT",
+                            "line": 28,
+                            "column": 8
+                          },
+                          {
+                            "_type": "HTMLNormalElementNode",
+                            "content": [
+                              {
+                                "_type": "HTMLNormalElementNode",
+                                "content": [
+                                  {
+                                    "_type": "HTMLTextNode",
+                                    "text": "Delete product",
+                                    "nodeType": "HTML_TEXT",
+                                    "line": 40,
+                                    "column": 16
+                                  }
+                                ],
+                                "closingTagName": "button",
+                                "closingLine": 41,
+                                "closingColumn": 12,
+                                "tagName": "button",
+                                "attributes": [
+                                  {
+                                    "_type": "HTMLAttributeNode",
+                                    "name": "type",
+                                    "isBoolean": false,
+                                    "valueParts": [
+                                      {
+                                        "_type": "HTMLAttributeTextNode",
+                                        "text": "submit",
+                                        "nodeType": "HTML_ATTRIBUTE_TEXT",
+                                        "line": 39,
+                                        "column": 26
+                                      }
+                                    ],
+                                    "nodeType": "HTML_ATTRIBUTE",
+                                    "line": 39,
+                                    "column": 20
+                                  },
+                                  {
+                                    "_type": "HTMLAttributeNode",
+                                    "name": "class",
+                                    "isBoolean": false,
+                                    "valueParts": [
+                                      {
+                                        "_type": "HTMLAttributeTextNode",
+                                        "text": "delete-button",
+                                        "nodeType": "HTML_ATTRIBUTE_TEXT",
+                                        "line": 39,
+                                        "column": 41
+                                      }
+                                    ],
+                                    "nodeType": "HTML_ATTRIBUTE",
+                                    "line": 39,
+                                    "column": 34
+                                  }
+                                ],
+                                "nodeType": "HTML_ELEMENT",
+                                "line": 39,
+                                "column": 12
+                              }
+                            ],
+                            "closingTagName": "form",
+                            "closingLine": 42,
+                            "closingColumn": 8,
+                            "tagName": "form",
+                            "attributes": [
+                              {
+                                "_type": "HTMLAttributeNode",
+                                "name": "action",
+                                "isBoolean": false,
+                                "valueParts": [
+                                  {
+                                    "_type": "JinjaExpressionNode",
+                                    "expression": {
+                                      "_type": "CallExpressionNode",
+                                      "callee": {
+                                        "_type": "VariableNode",
+                                        "path": [
+                                          "url_for"
+                                        ],
+                                        "nodeType": "JINJA_EXPR_VARIABLE",
+                                        "line": 36,
+                                        "column": 27
+                                      },
+                                      "arguments": [
+                                        {
+                                          "_type": "StringLiteralNode",
+                                          "value": "delete_product",
+                                          "nodeType": "JINJA_LITERAL_STRING",
+                                          "line": 36,
+                                          "column": 35
+                                        },
+                                        {
+                                          "_type": "AttributeAccessNode",
+                                          "object": {
+                                            "_type": "VariableNode",
+                                            "path": [
+                                              "product"
+                                            ],
+                                            "nodeType": "JINJA_EXPR_VARIABLE",
+                                            "line": 36,
+                                            "column": 64
+                                          },
+                                          "attribute": "id",
+                                          "nodeType": "JINJA_EXPR_ATTRIBUTE_ACCESS",
+                                          "line": 36,
+                                          "column": 71
+                                        }
+                                      ],
+                                      "keywordNames": [
+                                        null,
+                                        "product_id"
+                                      ],
+                                      "nodeType": "JINJA_EXPR_CALL",
+                                      "line": 36,
+                                      "column": 34
+                                    },
+                                    "nodeType": "JINJA_EXPR_EXPRESSION",
+                                    "line": 36,
+                                    "column": 24
+                                  }
+                                ],
+                                "nodeType": "HTML_ATTRIBUTE",
+                                "line": 36,
+                                "column": 16
+                              },
+                              {
+                                "_type": "HTMLAttributeNode",
+                                "name": "method",
+                                "isBoolean": false,
+                                "valueParts": [
+                                  {
+                                    "_type": "HTMLAttributeTextNode",
+                                    "text": "post",
+                                    "nodeType": "HTML_ATTRIBUTE_TEXT",
+                                    "line": 37,
+                                    "column": 24
+                                  }
+                                ],
+                                "nodeType": "HTML_ATTRIBUTE",
+                                "line": 37,
+                                "column": 16
+                              }
+                            ],
+                            "nodeType": "HTML_ELEMENT",
+                            "line": 35,
+                            "column": 8
+                          }
+                        ],
+                        "closingTagName": "div",
+                        "closingLine": 44,
+                        "closingColumn": 4,
+                        "tagName": "div",
+                        "attributes": [
+                          {
+                            "_type": "HTMLAttributeNode",
+                            "name": "class",
+                            "isBoolean": false,
+                            "valueParts": [
+                              {
+                                "_type": "HTMLAttributeTextNode",
+                                "text": "product-card",
+                                "nodeType": "HTML_ATTRIBUTE_TEXT",
+                                "line": 14,
+                                "column": 16
+                              }
+                            ],
+                            "nodeType": "HTML_ATTRIBUTE",
+                            "line": 14,
+                            "column": 9
+                          }
+                        ],
+                        "nodeType": "HTML_ELEMENT",
+                        "line": 14,
+                        "column": 4
+                      }
+                    ],
+                    "nodeType": "JINJA_FOR_BLOCK",
+                    "line": 13,
+                    "column": 4
+                  }
+                ],
+                "closingTagName": "div",
+                "closingLine": 46,
+                "closingColumn": 0,
+                "tagName": "div",
+                "attributes": [
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "class",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "HTMLAttributeTextNode",
+                        "text": "product-grid",
+                        "nodeType": "HTML_ATTRIBUTE_TEXT",
+                        "line": 12,
+                        "column": 12
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 12,
+                    "column": 5
+                  }
+                ],
+                "nodeType": "HTML_ELEMENT",
+                "line": 12,
+                "column": 0
+              }
+            ],
+            "nodeType": "JINJA_IF_BLOCK",
+            "line": 11,
+            "column": 0
+          }
+        ],
+        "nodeType": "JINJA_BLOCK_BLOCK",
+        "line": 7,
+        "column": 0
+      }
+    ],
+    "nodeType": "TEMPLATE_ROOT",
+    "line": 1,
+    "column": 0
+  },
+  "product_detail.jinja": {
+    "_type": "TemplateRootNode",
+    "documents": [
+      {
+        "_type": "ExtendsBlockNode",
+        "templateName": "\"base.jinja\"",
+        "content": [
+
+        ],
+        "nodeType": "JINJA_EXTENDS_BLOCK",
+        "line": 1,
+        "column": 3
+      },
+      {
+        "_type": "ExtendsBlockNode",
+        "templateName": "\"base2.jinja\"",
+        "content": [
+
+        ],
+        "nodeType": "JINJA_EXTENDS_BLOCK",
+        "line": 2,
+        "column": 3
+      },
+      {
+        "_type": "BlockBlockNode",
+        "blockName": "title",
+        "content": [
+          {
+            "_type": "HTMLTextNode",
+            "text": "Details: ",
+            "nodeType": "HTML_TEXT",
+            "line": 3,
+            "column": 17
+          },
+          {
+            "_type": "JinjaExpressionNode",
+            "expression": {
+              "_type": "AttributeAccessNode",
+              "object": {
+                "_type": "VariableNode",
+                "path": [
+                  "product"
+                ],
+                "nodeType": "JINJA_EXPR_VARIABLE",
+                "line": 3,
+                "column": 29
+              },
+              "attribute": "name",
+              "nodeType": "JINJA_EXPR_ATTRIBUTE_ACCESS",
+              "line": 3,
+              "column": 36
+            },
+            "nodeType": "JINJA_EXPR_EXPRESSION",
+            "line": 3,
+            "column": 26
+          }
+        ],
+        "nodeType": "JINJA_BLOCK_BLOCK",
+        "line": 3,
+        "column": 0
+      },
+      {
+        "_type": "BlockBlockNode",
+        "blockName": "content",
+        "content": [
+          {
+            "_type": "HTMLNormalElementNode",
+            "content": [
+              {
+                "_type": "HTMLNormalElementNode",
+                "content": [
+                  {
+                    "_type": "HTMLTextNode",
+                    "text": "Product details",
+                    "nodeType": "HTML_TEXT",
+                    "line": 7,
+                    "column": 8
+                  }
+                ],
+                "closingTagName": "h2",
+                "closingLine": 7,
+                "closingColumn": 23,
+                "tagName": "h2",
+                "attributes": [
+
+                ],
+                "nodeType": "HTML_ELEMENT",
+                "line": 7,
+                "column": 4
+              },
+              {
+                "_type": "HTMLVoidElementNode",
+                "tagName": "img",
+                "attributes": [
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "src",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "JinjaExpressionNode",
+                        "expression": {
+                          "_type": "CallExpressionNode",
+                          "callee": {
+                            "_type": "VariableNode",
+                            "path": [
+                              "url_for"
+                            ],
+                            "nodeType": "JINJA_EXPR_VARIABLE",
+                            "line": 9,
+                            "column": 17
+                          },
+                          "arguments": [
+                            {
+                              "_type": "StringLiteralNode",
+                              "value": "static",
+                              "nodeType": "JINJA_LITERAL_STRING",
+                              "line": 9,
+                              "column": 25
+                            },
+                            {
+                              "_type": "AttributeAccessNode",
+                              "object": {
+                                "_type": "VariableNode",
+                                "path": [
+                                  "product"
+                                ],
+                                "nodeType": "JINJA_EXPR_VARIABLE",
+                                "line": 9,
+                                "column": 44
+                              },
+                              "attribute": "image_filename",
+                              "nodeType": "JINJA_EXPR_ATTRIBUTE_ACCESS",
+                              "line": 9,
+                              "column": 51
+                            }
+                          ],
+                          "keywordNames": [
+                            null,
+                            "filename"
+                          ],
+                          "nodeType": "JINJA_EXPR_CALL",
+                          "line": 9,
+                          "column": 24
+                        },
+                        "nodeType": "JINJA_EXPR_EXPRESSION",
+                        "line": 9,
+                        "column": 14
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 9,
+                    "column": 9
+                  },
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "alt",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "HTMLAttributeTextNode",
+                        "text": "Photo of ",
+                        "nodeType": "HTML_ATTRIBUTE_TEXT",
+                        "line": 9,
+                        "column": 77
+                      },
+                      {
+                        "_type": "JinjaExpressionNode",
+                        "expression": {
+                          "_type": "AttributeAccessNode",
+                          "object": {
+                            "_type": "VariableNode",
+                            "path": [
+                              "product"
+                            ],
+                            "nodeType": "JINJA_EXPR_VARIABLE",
+                            "line": 9,
+                            "column": 89
+                          },
+                          "attribute": "name",
+                          "nodeType": "JINJA_EXPR_ATTRIBUTE_ACCESS",
+                          "line": 9,
+                          "column": 96
+                        },
+                        "nodeType": "JINJA_EXPR_EXPRESSION",
+                        "line": 9,
+                        "column": 86
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 9,
+                    "column": 72
+                  },
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "class",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "HTMLAttributeTextNode",
+                        "text": "detail-image",
+                        "nodeType": "HTML_ATTRIBUTE_TEXT",
+                        "line": 9,
+                        "column": 113
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 9,
+                    "column": 106
+                  }
+                ],
+                "nodeType": "HTML_VOID_ELEMENT",
+                "line": 9,
+                "column": 4
+              },
+              {
+                "_type": "HTMLVoidElementNode",
+                "tagName": "img",
+                "attributes": [
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "src",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "JinjaExpressionNode",
+                        "expression": {
+                          "_type": "CallExpressionNode",
+                          "callee": {
+                            "_type": "VariableNode",
+                            "path": [
+                              "url_for"
+                            ],
+                            "nodeType": "JINJA_EXPR_VARIABLE",
+                            "line": 10,
+                            "column": 17
+                          },
+                          "arguments": [
+                            {
+                              "_type": "StringLiteralNode",
+                              "value": "static",
+                              "nodeType": "JINJA_LITERAL_STRING",
+                              "line": 10,
+                              "column": 25
+                            },
+                            {
+                              "_type": "StringLiteralNode",
+                              "value": "product.image_filename",
+                              "nodeType": "JINJA_LITERAL_STRING",
+                              "line": 10,
+                              "column": 44
+                            }
+                          ],
+                          "keywordNames": [
+                            null,
+                            "filename"
+                          ],
+                          "nodeType": "JINJA_EXPR_CALL",
+                          "line": 10,
+                          "column": 24
+                        },
+                        "nodeType": "JINJA_EXPR_EXPRESSION",
+                        "line": 10,
+                        "column": 14
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 10,
+                    "column": 9
+                  },
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "alt",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "HTMLAttributeTextNode",
+                        "text": "Photo of ",
+                        "nodeType": "HTML_ATTRIBUTE_TEXT",
+                        "line": 10,
+                        "column": 79
+                      },
+                      {
+                        "_type": "JinjaExpressionNode",
+                        "expression": {
+                          "_type": "AttributeAccessNode",
+                          "object": {
+                            "_type": "VariableNode",
+                            "path": [
+                              "product"
+                            ],
+                            "nodeType": "JINJA_EXPR_VARIABLE",
+                            "line": 10,
+                            "column": 91
+                          },
+                          "attribute": "name",
+                          "nodeType": "JINJA_EXPR_ATTRIBUTE_ACCESS",
+                          "line": 10,
+                          "column": 98
+                        },
+                        "nodeType": "JINJA_EXPR_EXPRESSION",
+                        "line": 10,
+                        "column": 88
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 10,
+                    "column": 74
+                  },
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "class",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "HTMLAttributeTextNode",
+                        "text": "detail-image",
+                        "nodeType": "HTML_ATTRIBUTE_TEXT",
+                        "line": 10,
+                        "column": 115
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 10,
+                    "column": 108
+                  }
+                ],
+                "nodeType": "HTML_VOID_ELEMENT",
+                "line": 10,
+                "column": 4
+              },
+              {
+                "_type": "HTMLNormalElementNode",
+                "content": [
+                  {
+                    "_type": "HTMLNormalElementNode",
+                    "content": [
+                      {
+                        "_type": "HTMLNormalElementNode",
+                        "content": [
+                          {
+                            "_type": "HTMLTextNode",
+                            "text": "Name:",
+                            "nodeType": "HTML_TEXT",
+                            "line": 13,
+                            "column": 19
+                          }
+                        ],
+                        "closingTagName": "strong",
+                        "closingLine": 13,
+                        "closingColumn": 24,
+                        "tagName": "strong",
+                        "attributes": [
+
+                        ],
+                        "nodeType": "HTML_ELEMENT",
+                        "line": 13,
+                        "column": 11
+                      },
+                      {
+                        "_type": "JinjaExpressionNode",
+                        "expression": {
+                          "_type": "AttributeAccessNode",
+                          "object": {
+                            "_type": "VariableNode",
+                            "path": [
+                              "product"
+                            ],
+                            "nodeType": "JINJA_EXPR_VARIABLE",
+                            "line": 13,
+                            "column": 37
+                          },
+                          "attribute": "name",
+                          "nodeType": "JINJA_EXPR_ATTRIBUTE_ACCESS",
+                          "line": 13,
+                          "column": 44
+                        },
+                        "nodeType": "JINJA_EXPR_EXPRESSION",
+                        "line": 13,
+                        "column": 34
+                      }
+                    ],
+                    "closingTagName": "p",
+                    "closingLine": 13,
+                    "closingColumn": 52,
+                    "tagName": "p",
+                    "attributes": [
+
+                    ],
+                    "nodeType": "HTML_ELEMENT",
+                    "line": 13,
+                    "column": 8
+                  },
+                  {
+                    "_type": "HTMLNormalElementNode",
+                    "content": [
+                      {
+                        "_type": "HTMLNormalElementNode",
+                        "content": [
+                          {
+                            "_type": "HTMLTextNode",
+                            "text": "Price:",
+                            "nodeType": "HTML_TEXT",
+                            "line": 14,
+                            "column": 19
+                          }
+                        ],
+                        "closingTagName": "strong",
+                        "closingLine": 14,
+                        "closingColumn": 25,
+                        "tagName": "strong",
+                        "attributes": [
+
+                        ],
+                        "nodeType": "HTML_ELEMENT",
+                        "line": 14,
+                        "column": 11
+                      },
+                      {
+                        "_type": "JinjaExpressionNode",
+                        "expression": {
+                          "_type": "AttributeAccessNode",
+                          "object": {
+                            "_type": "VariableNode",
+                            "path": [
+                              "product"
+                            ],
+                            "nodeType": "JINJA_EXPR_VARIABLE",
+                            "line": 14,
+                            "column": 38
+                          },
+                          "attribute": "price",
+                          "nodeType": "JINJA_EXPR_ATTRIBUTE_ACCESS",
+                          "line": 14,
+                          "column": 45
+                        },
+                        "nodeType": "JINJA_EXPR_EXPRESSION",
+                        "line": 14,
+                        "column": 35
+                      },
+                      {
+                        "_type": "HTMLTextNode",
+                        "text": " $",
+                        "nodeType": "HTML_TEXT",
+                        "line": 14,
+                        "column": 54
+                      }
+                    ],
+                    "closingTagName": "p",
+                    "closingLine": 14,
+                    "closingColumn": 56,
+                    "tagName": "p",
+                    "attributes": [
+
+                    ],
+                    "nodeType": "HTML_ELEMENT",
+                    "line": 14,
+                    "column": 8
+                  },
+                  {
+                    "_type": "HTMLNormalElementNode",
+                    "content": [
+                      {
+                        "_type": "HTMLNormalElementNode",
+                        "content": [
+                          {
+                            "_type": "HTMLTextNode",
+                            "text": "Price:",
+                            "nodeType": "HTML_TEXT",
+                            "line": 15,
+                            "column": 19
+                          }
+                        ],
+                        "closingTagName": "strong",
+                        "closingLine": 15,
+                        "closingColumn": 25,
+                        "tagName": "strong",
+                        "attributes": [
+
+                        ],
+                        "nodeType": "HTML_ELEMENT",
+                        "line": 15,
+                        "column": 11
+                      },
+                      {
+                        "_type": "JinjaExpressionNode",
+                        "expression": {
+                          "_type": "AttributeAccessNode",
+                          "object": {
+                            "_type": "VariableNode",
+                            "path": [
+                              "product1"
+                            ],
+                            "nodeType": "JINJA_EXPR_VARIABLE",
+                            "line": 15,
+                            "column": 38
+                          },
+                          "attribute": "price",
+                          "nodeType": "JINJA_EXPR_ATTRIBUTE_ACCESS",
+                          "line": 15,
+                          "column": 46
+                        },
+                        "nodeType": "JINJA_EXPR_EXPRESSION",
+                        "line": 15,
+                        "column": 35
+                      },
+                      {
+                        "_type": "HTMLTextNode",
+                        "text": " $",
+                        "nodeType": "HTML_TEXT",
+                        "line": 15,
+                        "column": 55
+                      }
+                    ],
+                    "closingTagName": "p",
+                    "closingLine": 15,
+                    "closingColumn": 57,
+                    "tagName": "p",
+                    "attributes": [
+
+                    ],
+                    "nodeType": "HTML_ELEMENT",
+                    "line": 15,
+                    "column": 8
+                  },
+                  {
+                    "_type": "HTMLNormalElementNode",
+                    "content": [
+                      {
+                        "_type": "HTMLNormalElementNode",
+                        "content": [
+                          {
+                            "_type": "HTMLTextNode",
+                            "text": "Price:",
+                            "nodeType": "HTML_TEXT",
+                            "line": 16,
+                            "column": 19
+                          }
+                        ],
+                        "closingTagName": "strong",
+                        "closingLine": 16,
+                        "closingColumn": 25,
+                        "tagName": "strong",
+                        "attributes": [
+
+                        ],
+                        "nodeType": "HTML_ELEMENT",
+                        "line": 16,
+                        "column": 11
+                      },
+                      {
+                        "_type": "JinjaExpressionNode",
+                        "expression": {
+                          "_type": "AttributeAccessNode",
+                          "object": {
+                            "_type": "VariableNode",
+                            "path": [
+                              "product"
+                            ],
+                            "nodeType": "JINJA_EXPR_VARIABLE",
+                            "line": 16,
+                            "column": 38
+                          },
+                          "attribute": "price1",
+                          "nodeType": "JINJA_EXPR_ATTRIBUTE_ACCESS",
+                          "line": 16,
+                          "column": 45
+                        },
+                        "nodeType": "JINJA_EXPR_EXPRESSION",
+                        "line": 16,
+                        "column": 35
+                      },
+                      {
+                        "_type": "HTMLTextNode",
+                        "text": " $",
+                        "nodeType": "HTML_TEXT",
+                        "line": 16,
+                        "column": 55
+                      }
+                    ],
+                    "closingTagName": "p",
+                    "closingLine": 16,
+                    "closingColumn": 57,
+                    "tagName": "p",
+                    "attributes": [
+
+                    ],
+                    "nodeType": "HTML_ELEMENT",
+                    "line": 16,
+                    "column": 8
+                  },
+                  {
+                    "_type": "HTMLNormalElementNode",
+                    "content": [
+                      {
+                        "_type": "HTMLNormalElementNode",
+                        "content": [
+                          {
+                            "_type": "HTMLTextNode",
+                            "text": "Description:",
+                            "nodeType": "HTML_TEXT",
+                            "line": 17,
+                            "column": 19
+                          }
+                        ],
+                        "closingTagName": "strong",
+                        "closingLine": 17,
+                        "closingColumn": 31,
+                        "tagName": "strong",
+                        "attributes": [
+
+                        ],
+                        "nodeType": "HTML_ELEMENT",
+                        "line": 17,
+                        "column": 11
+                      }
+                    ],
+                    "closingTagName": "p",
+                    "closingLine": 17,
+                    "closingColumn": 40,
+                    "tagName": "p",
+                    "attributes": [
+
+                    ],
+                    "nodeType": "HTML_ELEMENT",
+                    "line": 17,
+                    "column": 8
+                  },
+                  {
+                    "_type": "HTMLNormalElementNode",
+                    "content": [
+                      {
+                        "_type": "JinjaExpressionNode",
+                        "expression": {
+                          "_type": "AttributeAccessNode",
+                          "object": {
+                            "_type": "VariableNode",
+                            "path": [
+                              "product"
+                            ],
+                            "nodeType": "JINJA_EXPR_VARIABLE",
+                            "line": 18,
+                            "column": 39
+                          },
+                          "attribute": "details",
+                          "nodeType": "JINJA_EXPR_ATTRIBUTE_ACCESS",
+                          "line": 18,
+                          "column": 46
+                        },
+                        "nodeType": "JINJA_EXPR_EXPRESSION",
+                        "line": 18,
+                        "column": 36
+                      }
+                    ],
+                    "closingTagName": "p",
+                    "closingLine": 18,
+                    "closingColumn": 57,
+                    "tagName": "p",
+                    "attributes": [
+                      {
+                        "_type": "HTMLAttributeNode",
+                        "name": "class",
+                        "isBoolean": false,
+                        "valueParts": [
+                          {
+                            "_type": "HTMLAttributeTextNode",
+                            "text": "description-text",
+                            "nodeType": "HTML_ATTRIBUTE_TEXT",
+                            "line": 18,
+                            "column": 18
+                          }
+                        ],
+                        "nodeType": "HTML_ATTRIBUTE",
+                        "line": 18,
+                        "column": 11
+                      }
+                    ],
+                    "nodeType": "HTML_ELEMENT",
+                    "line": 18,
+                    "column": 8
+                  }
+                ],
+                "closingTagName": "div",
+                "closingLine": 19,
+                "closingColumn": 4,
+                "tagName": "div",
+                "attributes": [
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "class",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "HTMLAttributeTextNode",
+                        "text": "info-block",
+                        "nodeType": "HTML_ATTRIBUTE_TEXT",
+                        "line": 12,
+                        "column": 16
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 12,
+                    "column": 9
+                  }
+                ],
+                "nodeType": "HTML_ELEMENT",
+                "line": 12,
+                "column": 4
+              },
+              {
+                "_type": "HTMLNormalElementNode",
+                "content": [
+                  {
+                    "_type": "HTMLTextNode",
+                    "text": "Back to product list",
+                    "nodeType": "HTML_TEXT",
+                    "line": 21,
+                    "column": 62
+                  }
+                ],
+                "closingTagName": "a",
+                "closingLine": 21,
+                "closingColumn": 82,
+                "tagName": "a",
+                "attributes": [
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "href",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "JinjaExpressionNode",
+                        "expression": {
+                          "_type": "CallExpressionNode",
+                          "callee": {
+                            "_type": "VariableNode",
+                            "path": [
+                              "url_for"
+                            ],
+                            "nodeType": "JINJA_EXPR_VARIABLE",
+                            "line": 21,
+                            "column": 16
+                          },
+                          "arguments": [
+                            {
+                              "_type": "StringLiteralNode",
+                              "value": "product_list",
+                              "nodeType": "JINJA_LITERAL_STRING",
+                              "line": 21,
+                              "column": 24
+                            }
+                          ],
+                          "keywordNames": [
+                            null
+                          ],
+                          "nodeType": "JINJA_EXPR_CALL",
+                          "line": 21,
+                          "column": 23
+                        },
+                        "nodeType": "JINJA_EXPR_EXPRESSION",
+                        "line": 21,
+                        "column": 13
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 21,
+                    "column": 7
+                  },
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "class",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "HTMLAttributeTextNode",
+                        "text": "back-link",
+                        "nodeType": "HTML_ATTRIBUTE_TEXT",
+                        "line": 21,
+                        "column": 51
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 21,
+                    "column": 44
+                  }
+                ],
+                "nodeType": "HTML_ELEMENT",
+                "line": 21,
+                "column": 4
+              }
+            ],
+            "closingTagName": "div",
+            "closingLine": 22,
+            "closingColumn": 0,
+            "tagName": "div",
+            "attributes": [
+              {
+                "_type": "HTMLAttributeNode",
+                "name": "class",
+                "isBoolean": false,
+                "valueParts": [
+                  {
+                    "_type": "HTMLAttributeTextNode",
+                    "text": "detail-container",
+                    "nodeType": "HTML_ATTRIBUTE_TEXT",
+                    "line": 6,
+                    "column": 12
+                  }
+                ],
+                "nodeType": "HTML_ATTRIBUTE",
+                "line": 6,
+                "column": 5
+              }
+            ],
+            "nodeType": "HTML_ELEMENT",
+            "line": 6,
+            "column": 0
+          }
+        ],
+        "nodeType": "JINJA_BLOCK_BLOCK",
+        "line": 5,
+        "column": 0
+      }
+    ],
+    "nodeType": "TEMPLATE_ROOT",
+    "line": 1,
+    "column": 0
+  },
+  "add_product.jinja": {
+    "_type": "TemplateRootNode",
+    "documents": [
+      {
+        "_type": "ExtendsBlockNode",
+        "templateName": "\"base.jinja\"",
+        "content": [
+
+        ],
+        "nodeType": "JINJA_EXTENDS_BLOCK",
+        "line": 1,
+        "column": 3
+      },
+      {
+        "_type": "BlockBlockNode",
+        "blockName": "title",
+        "content": [
+          {
+            "_type": "HTMLTextNode",
+            "text": "Add a new product",
+            "nodeType": "HTML_TEXT",
+            "line": 2,
+            "column": 17
+          }
+        ],
+        "nodeType": "JINJA_BLOCK_BLOCK",
+        "line": 2,
+        "column": 0
+      },
+      {
+        "_type": "BlockBlockNode",
+        "blockName": "content",
+        "content": [
+          {
+            "_type": "HTMLNormalElementNode",
+            "content": [
+              {
+                "_type": "HTMLTextNode",
+                "text": "Add a new product",
+                "nodeType": "HTML_TEXT",
+                "line": 5,
+                "column": 4
+              }
+            ],
+            "closingTagName": "h2",
+            "closingLine": 5,
+            "closingColumn": 21,
+            "tagName": "h2",
+            "attributes": [
+
+            ],
+            "nodeType": "HTML_ELEMENT",
+            "line": 5,
+            "column": 0
+          },
+          {
+            "_type": "HTMLNormalElementNode",
+            "content": [
+              {
+                "_type": "HTMLNormalElementNode",
+                "content": [
+                  {
+                    "_type": "HTMLTextNode",
+                    "text": "Product name:",
+                    "nodeType": "HTML_TEXT",
+                    "line": 9,
+                    "column": 22
+                  }
+                ],
+                "closingTagName": "label",
+                "closingLine": 9,
+                "closingColumn": 35,
+                "tagName": "label",
+                "attributes": [
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "for",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "HTMLAttributeTextNode",
+                        "text": "name",
+                        "nodeType": "HTML_ATTRIBUTE_TEXT",
+                        "line": 9,
+                        "column": 16
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 9,
+                    "column": 11
+                  }
+                ],
+                "nodeType": "HTML_ELEMENT",
+                "line": 9,
+                "column": 4
+              },
+              {
+                "_type": "HTMLVoidElementNode",
+                "tagName": "input",
+                "attributes": [
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "type",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "HTMLAttributeTextNode",
+                        "text": "text",
+                        "nodeType": "HTML_ATTRIBUTE_TEXT",
+                        "line": 10,
+                        "column": 17
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 10,
+                    "column": 11
+                  },
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "id",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "HTMLAttributeTextNode",
+                        "text": "name",
+                        "nodeType": "HTML_ATTRIBUTE_TEXT",
+                        "line": 10,
+                        "column": 27
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 10,
+                    "column": 23
+                  },
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "name",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "HTMLAttributeTextNode",
+                        "text": "name",
+                        "nodeType": "HTML_ATTRIBUTE_TEXT",
+                        "line": 10,
+                        "column": 39
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 10,
+                    "column": 33
+                  },
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "required",
+                    "isBoolean": true,
+                    "valueParts": [
+
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 10,
+                    "column": 45
+                  }
+                ],
+                "nodeType": "HTML_VOID_ELEMENT",
+                "line": 10,
+                "column": 4
+              },
+              {
+                "_type": "HTMLNormalElementNode",
+                "content": [
+                  {
+                    "_type": "HTMLTextNode",
+                    "text": "Price ($):",
+                    "nodeType": "HTML_TEXT",
+                    "line": 12,
+                    "column": 23
+                  }
+                ],
+                "closingTagName": "label",
+                "closingLine": 12,
+                "closingColumn": 33,
+                "tagName": "label",
+                "attributes": [
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "for",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "HTMLAttributeTextNode",
+                        "text": "price",
+                        "nodeType": "HTML_ATTRIBUTE_TEXT",
+                        "line": 12,
+                        "column": 16
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 12,
+                    "column": 11
+                  }
+                ],
+                "nodeType": "HTML_ELEMENT",
+                "line": 12,
+                "column": 4
+              },
+              {
+                "_type": "HTMLVoidElementNode",
+                "tagName": "input",
+                "attributes": [
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "type",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "HTMLAttributeTextNode",
+                        "text": "number",
+                        "nodeType": "HTML_ATTRIBUTE_TEXT",
+                        "line": 13,
+                        "column": 17
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 13,
+                    "column": 11
+                  },
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "id",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "HTMLAttributeTextNode",
+                        "text": "price",
+                        "nodeType": "HTML_ATTRIBUTE_TEXT",
+                        "line": 13,
+                        "column": 29
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 13,
+                    "column": 25
+                  },
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "name",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "HTMLAttributeTextNode",
+                        "text": "price",
+                        "nodeType": "HTML_ATTRIBUTE_TEXT",
+                        "line": 13,
+                        "column": 42
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 13,
+                    "column": 36
+                  },
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "step",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "HTMLAttributeTextNode",
+                        "text": "0.01",
+                        "nodeType": "HTML_ATTRIBUTE_TEXT",
+                        "line": 13,
+                        "column": 55
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 13,
+                    "column": 49
+                  },
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "min",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "HTMLAttributeTextNode",
+                        "text": "0.01",
+                        "nodeType": "HTML_ATTRIBUTE_TEXT",
+                        "line": 13,
+                        "column": 66
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 13,
+                    "column": 61
+                  },
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "required",
+                    "isBoolean": true,
+                    "valueParts": [
+
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 13,
+                    "column": 72
+                  }
+                ],
+                "nodeType": "HTML_VOID_ELEMENT",
+                "line": 13,
+                "column": 4
+              },
+              {
+                "_type": "HTMLNormalElementNode",
+                "content": [
+                  {
+                    "_type": "HTMLTextNode",
+                    "text": "Details / description:",
+                    "nodeType": "HTML_TEXT",
+                    "line": 15,
+                    "column": 25
+                  }
+                ],
+                "closingTagName": "label",
+                "closingLine": 15,
+                "closingColumn": 47,
+                "tagName": "label",
+                "attributes": [
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "for",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "HTMLAttributeTextNode",
+                        "text": "details",
+                        "nodeType": "HTML_ATTRIBUTE_TEXT",
+                        "line": 15,
+                        "column": 16
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 15,
+                    "column": 11
+                  }
+                ],
+                "nodeType": "HTML_ELEMENT",
+                "line": 15,
+                "column": 4
+              },
+              {
+                "_type": "HTMLNormalElementNode",
+                "content": [
+
+                ],
+                "closingTagName": "textarea",
+                "closingLine": 16,
+                "closingColumn": 60,
+                "tagName": "textarea",
+                "attributes": [
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "id",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "HTMLAttributeTextNode",
+                        "text": "details",
+                        "nodeType": "HTML_ATTRIBUTE_TEXT",
+                        "line": 16,
+                        "column": 18
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 16,
+                    "column": 14
+                  },
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "name",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "HTMLAttributeTextNode",
+                        "text": "details",
+                        "nodeType": "HTML_ATTRIBUTE_TEXT",
+                        "line": 16,
+                        "column": 33
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 16,
+                    "column": 27
+                  },
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "rows",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "HTMLAttributeTextNode",
+                        "text": "5",
+                        "nodeType": "HTML_ATTRIBUTE_TEXT",
+                        "line": 16,
+                        "column": 48
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 16,
+                    "column": 42
+                  },
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "required",
+                    "isBoolean": true,
+                    "valueParts": [
+
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 16,
+                    "column": 51
+                  }
+                ],
+                "nodeType": "HTML_ELEMENT",
+                "line": 16,
+                "column": 4
+              },
+              {
+                "_type": "HTMLNormalElementNode",
+                "content": [
+                  {
+                    "_type": "HTMLTextNode",
+                    "text": "Product image:",
+                    "nodeType": "HTML_TEXT",
+                    "line": 18,
+                    "column": 23
+                  }
+                ],
+                "closingTagName": "label",
+                "closingLine": 18,
+                "closingColumn": 37,
+                "tagName": "label",
+                "attributes": [
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "for",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "HTMLAttributeTextNode",
+                        "text": "image",
+                        "nodeType": "HTML_ATTRIBUTE_TEXT",
+                        "line": 18,
+                        "column": 16
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 18,
+                    "column": 11
+                  }
+                ],
+                "nodeType": "HTML_ELEMENT",
+                "line": 18,
+                "column": 4
+              },
+              {
+                "_type": "HTMLVoidElementNode",
+                "tagName": "input",
+                "attributes": [
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "type",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "HTMLAttributeTextNode",
+                        "text": "file",
+                        "nodeType": "HTML_ATTRIBUTE_TEXT",
+                        "line": 19,
+                        "column": 17
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 19,
+                    "column": 11
+                  },
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "id",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "HTMLAttributeTextNode",
+                        "text": "image",
+                        "nodeType": "HTML_ATTRIBUTE_TEXT",
+                        "line": 19,
+                        "column": 27
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 19,
+                    "column": 23
+                  },
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "name",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "HTMLAttributeTextNode",
+                        "text": "image_file",
+                        "nodeType": "HTML_ATTRIBUTE_TEXT",
+                        "line": 19,
+                        "column": 40
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 19,
+                    "column": 34
+                  },
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "accept",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "HTMLAttributeTextNode",
+                        "text": ".jpg, .jpeg, .png, .gif",
+                        "nodeType": "HTML_ATTRIBUTE_TEXT",
+                        "line": 19,
+                        "column": 60
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 19,
+                    "column": 52
+                  },
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "required",
+                    "isBoolean": true,
+                    "valueParts": [
+
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 19,
+                    "column": 85
+                  }
+                ],
+                "nodeType": "HTML_VOID_ELEMENT",
+                "line": 19,
+                "column": 4
+              },
+              {
+                "_type": "HTMLNormalElementNode",
+                "content": [
+                  {
+                    "_type": "HTMLTextNode",
+                    "text": "Save and add product",
+                    "nodeType": "HTML_TEXT",
+                    "line": 21,
+                    "column": 48
+                  }
+                ],
+                "closingTagName": "button",
+                "closingLine": 21,
+                "closingColumn": 68,
+                "tagName": "button",
+                "attributes": [
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "type",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "HTMLAttributeTextNode",
+                        "text": "submit",
+                        "nodeType": "HTML_ATTRIBUTE_TEXT",
+                        "line": 21,
+                        "column": 18
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 21,
+                    "column": 12
+                  },
+                  {
+                    "_type": "HTMLAttributeNode",
+                    "name": "class",
+                    "isBoolean": false,
+                    "valueParts": [
+                      {
+                        "_type": "HTMLAttributeTextNode",
+                        "text": "submit-button",
+                        "nodeType": "HTML_ATTRIBUTE_TEXT",
+                        "line": 21,
+                        "column": 33
+                      }
+                    ],
+                    "nodeType": "HTML_ATTRIBUTE",
+                    "line": 21,
+                    "column": 26
+                  }
+                ],
+                "nodeType": "HTML_ELEMENT",
+                "line": 21,
+                "column": 4
+              }
+            ],
+            "closingTagName": "form",
+            "closingLine": 22,
+            "closingColumn": 0,
+            "tagName": "form",
+            "attributes": [
+              {
+                "_type": "HTMLAttributeNode",
+                "name": "method",
+                "isBoolean": false,
+                "valueParts": [
+                  {
+                    "_type": "HTMLAttributeTextNode",
+                    "text": "POST",
+                    "nodeType": "HTML_ATTRIBUTE_TEXT",
+                    "line": 7,
+                    "column": 14
+                  }
+                ],
+                "nodeType": "HTML_ATTRIBUTE",
+                "line": 7,
+                "column": 6
+              },
+              {
+                "_type": "HTMLAttributeNode",
+                "name": "action",
+                "isBoolean": false,
+                "valueParts": [
+                  {
+                    "_type": "JinjaExpressionNode",
+                    "expression": {
+                      "_type": "CallExpressionNode",
+                      "callee": {
+                        "_type": "VariableNode",
+                        "path": [
+                          "url_for"
+                        ],
+                        "nodeType": "JINJA_EXPR_VARIABLE",
+                        "line": 7,
+                        "column": 31
+                      },
+                      "arguments": [
+                        {
+                          "_type": "StringLiteralNode",
+                          "value": "add_product",
+                          "nodeType": "JINJA_LITERAL_STRING",
+                          "line": 7,
+                          "column": 39
+                        }
+                      ],
+                      "keywordNames": [
+                        null
+                      ],
+                      "nodeType": "JINJA_EXPR_CALL",
+                      "line": 7,
+                      "column": 38
+                    },
+                    "nodeType": "JINJA_EXPR_EXPRESSION",
+                    "line": 7,
+                    "column": 28
+                  }
+                ],
+                "nodeType": "HTML_ATTRIBUTE",
+                "line": 7,
+                "column": 20
+              },
+              {
+                "_type": "HTMLAttributeNode",
+                "name": "class",
+                "isBoolean": false,
+                "valueParts": [
+                  {
+                    "_type": "HTMLAttributeTextNode",
+                    "text": "product-form",
+                    "nodeType": "HTML_ATTRIBUTE_TEXT",
+                    "line": 7,
+                    "column": 65
+                  }
+                ],
+                "nodeType": "HTML_ATTRIBUTE",
+                "line": 7,
+                "column": 58
+              },
+              {
+                "_type": "HTMLAttributeNode",
+                "name": "enctype",
+                "isBoolean": false,
+                "valueParts": [
+                  {
+                    "_type": "HTMLAttributeTextNode",
+                    "text": "multipart/form-data",
+                    "nodeType": "HTML_ATTRIBUTE_TEXT",
+                    "line": 7,
+                    "column": 88
+                  }
+                ],
+                "nodeType": "HTML_ATTRIBUTE",
+                "line": 7,
+                "column": 79
+              }
+            ],
+            "nodeType": "HTML_ELEMENT",
+            "line": 7,
+            "column": 0
+          }
+        ],
+        "nodeType": "JINJA_BLOCK_BLOCK",
+        "line": 4,
+        "column": 0
+      }
+    ],
+    "nodeType": "TEMPLATE_ROOT",
+    "line": 1,
+    "column": 0
+  }
+}

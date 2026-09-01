@@ -12,6 +12,8 @@ import java.util.*;
 import symbolTable.scopes.Scope;
 import symbolTable.scopes.ScopeType;
 import symbolTable.symbols.SymbolKind;
+import symbolTable.symbols.Symbol;
+import symbolTable.JinjaSymbolTable;
 
 /**
  * The 8 Jinja2 semantic checks:
@@ -31,7 +33,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
     private final Set<String> pythonContextVars;
     private final Map<String, Object> mockData;
     private final Set<String> allMockDataKeys = new LinkedHashSet<>();
-    private final symbolTable.JinjaSymbolTable symbolTable;
+    private final JinjaSymbolTable symbolTable;
     private final Map<String, Integer> visitedBlocks = new LinkedHashMap<>();
 
     private final List<SemanticError> errors = new ArrayList<>();
@@ -59,7 +61,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
 
     public JinjaAstSemanticAnalyzer(String templateName, String templateDir,
                                     Set<String> pythonContextVars, Map<String, Object> mockData,
-                                    symbolTable.JinjaSymbolTable symbolTable) {
+                                    JinjaSymbolTable symbolTable) {
         this.templateName = templateName;
         this.templateDir = templateDir;
         this.pythonContextVars = pythonContextVars != null ? pythonContextVars : Set.of();
@@ -68,7 +70,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
         collectKeys(this.mockData);
     }
 
-    public JinjaAstSemanticAnalyzer(String templateName, String templateDir, Set<String> pythonContextVars, symbolTable.JinjaSymbolTable symbolTable) {
+    public JinjaAstSemanticAnalyzer(String templateName, String templateDir, Set<String> pythonContextVars, JinjaSymbolTable symbolTable) {
         this(templateName, templateDir, pythonContextVars, null, symbolTable);
     }
 
@@ -387,7 +389,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
 
         // فحص جدول الرموز إن كان متاحاً
         if (symbolTable != null && currentScope != null) {
-            symbolTable.symbols.Symbol sym = currentScope.resolve(name);
+            Symbol sym = currentScope.resolve(name);
             // رمز BLOCK ليس متغيراً ممرراً من Python — نتجاهله
             if (sym != null && sym.getKind() != SymbolKind.BLOCK) {
                 if (sym.getLine() > line) {
