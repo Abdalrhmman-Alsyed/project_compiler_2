@@ -13,35 +13,15 @@ import symbolTable.symbols.SymbolKind;
 import java.util.*;
 
 /**
- * Performs 15 semantic checks on the Python AST:
- * <p>
- * ERRORS  (1-8):
+ * Performs exactly 8 semantic checks on the Python AST as requested:
  * 1. 'return' outside function
- * 2. 'break' outside loop
- * 3. 'continue' outside loop
- * 4. Duplicate function name
- * 5. Duplicate parameter name in same function
- * 6. 'global' declared after local assignment of same name
- * 7. Division by zero (constant literal)
- * 8. Unreachable code after 'return'
- * <p>
- * WARNINGS (9-18):
- * 9.  Duplicate import of same module
- * 10.  Assignment overwrites a function name
- * 11.  Assignment shadows a Python built-in name
- * 12.  Local variable defined but never used
- * 13.  Call to a name that cannot be resolved
- * 14.  Empty function body (only 'pass')
- * 15.  Name used before it is assigned in local scope
- * 16.  Function has too many parameters (> 7)
- * 17.  Comparison with None using == / != instead of is / is not
- * 18.  Comparison with True/False using == / != instead of truthiness
- * <p>
- * ERRORS (19-20) — required by the course spec:
- * 19.  Type Mismatch   : unsupported operand types for '+': 'str' and 'int'
- * 20.  Type Error      : 'int' object is not iterable
- * 21.  Undefined Var    : variable 'x' is not defined
- * 22.  Scope Error      : variable 'x' is out of scope
+ * 2. 'break' or 'continue' outside loop
+ * 3. Duplicate parameter name in same function
+ * 4. Division by zero (constant literal)
+ * 5. Unreachable code after 'return'
+ * 6. Type Mismatch (e.g., unsupported operand types for '+')
+ * 7. Type Error (Iterating over non-iterable)
+ * 8. Variable out of scope or undefined
  */
 public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
 
@@ -347,10 +327,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
     private void checkNameResolution(String name, int line, int col) {
         if (isKnown(name)) return;
 
-        if (symbolTable.isAssignedInFunctionScope(currentScope, name)) {
-            warning("تم استخدام الاسم '" + name + "' قبل إسناد قيمة له في النطاق المحلي",
-                    line, col);
-        } else if (functionLocalNames.containsKey(name) || (currentScope.resolve(name) != null && currentScope.resolve(name).getScope() != currentScope)) {
+        if (functionLocalNames.containsKey(name) || (currentScope.resolve(name) != null && currentScope.resolve(name).getScope() != currentScope)) {
             error("المتغير '" + name + "' خارج النطاق (Out of scope)", line, col);
         } else if (currentScope.resolve(name) == null) {
             error("المتغير '" + name + "' غير معرّف", line, col);
@@ -442,34 +419,6 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
     @Override
     public Void visit(FunctionNode n) {
         enterScope();
-        // فحص 4: اسم دالة مكرر
-        // Use symbolTable to check for duplicates
-        if (visitedFunctions.contains(n.getName()) || (symbolTable.getGlobalScope().getSymbol(n.getName()) != null && !visitedFunctions.contains(n.getName()))) {
-            // It's in the symbol table, we add to visited to prevent double warning since we do a single pass now
-        }
-        if (visitedFunctions.contains(n.getName())) {
-            error("الدالة '" + n.getName() + "' تم تعريفها أكثر من مرة",
-                    n.getLine(), n.getColumn());
-        }
-        visitedFunctions.add(n.getName());
-        globalKind.put(n.getName(), "function");
-        functionParamCount.put(n.getName(), n.getParameters().size());
-
-        // فحص 14: جسم دالة فارغ (يحتوي فقط على pass)
-        if (n.getBody() instanceof BlockNode blk
-                && blk.getStatements().size() == 1
-                && blk.getStatements().get(0) instanceof PassNode) {
-            warning("الدالة '" + n.getName() + "' تحتوي على جسم فارغ (فقط 'pass')",
-                    n.getLine(), n.getColumn());
-        }
-
-        // فحص 16: عدد كبير جداً من المعاملات (> 7)
-        if (n.getParameters().size() > 7) {
-            warning("الدالة '" + n.getName() + "' تحتوي على عدد كبير جداً من المعاملات ("
-                            + n.getParameters().size() + ") — فكر في استخدام قاموس أو صنف بيانات",
-                    n.getLine(), n.getColumn());
-        }
-
         for (var dec : n.getDecorators()) dec.accept(this);
 
         functionDepth++;
@@ -495,14 +444,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
 
         if (n.getBody() != null) n.getBody().accept(this);
 
-        // فحص 12: متغيرات محلية تم تعريفها ولم تستخدم
-        List<DefInfo> fnDefs = functionDefLists.pop();
-        for (DefInfo def : fnDefs) {
-            if (!def.used && !def.name.startsWith("_") && !currentGlobals.contains(def.name)) {
-                warning("المتغير '" + def.name + "' معرّف ولكنه لم يُستخدم أبداً",
-                        def.line, def.col);
-            }
-        }
+        functionDefLists.pop();
 
         currentGlobals.clear();
         currentGlobals.addAll(savedGlobals);
@@ -516,14 +458,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
     public Void visit(ImportNode n) {
         String mod = n.getModule();
         if (mod != null && !mod.isEmpty()) {
-            // فحص 9: استيراد مكرر
-            if (firstImportLine.containsKey(mod)) {
-                warning("الوحدة '" + mod + "' تم استيرادها أكثر من مرة (أول مرة في السطر "
-                                + firstImportLine.get(mod) + ")",
-                        n.getLine(), n.getColumn());
-            } else {
-                firstImportLine.put(mod, n.getLine());
-            }
+
             if (!n.isFromImport()) {
                 globalKind.put(mod, "import");
             }
@@ -561,17 +496,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
         if (n.getTarget() instanceof IdentifierNode id) {
             String name = id.getName();
 
-            // فحص 11: إخفاء دالة مبنية مسبقاً
-            if (BUILTINS.contains(name) && !name.equals("__name__") && !name.equals("app")) {
-                warning("إسناد قيمة للاسم المبني مسبقاً '" + name + "' يخفي الدالة الأصلية",
-                        n.getLine(), n.getColumn());
-            }
 
-            // فحص 10: الكتابة فوق اسم دالة
-            if ("function".equals(globalKind.get(name)) && functionDepth == 0) {
-                warning("هذا الإسناد يقوم بالكتابة فوق الدالة التي تحمل الاسم '" + name + "'",
-                        n.getLine(), n.getColumn());
-            }
 
             // An augmented assignment ('x += 1') refines the existing type
             // rather than replacing it, so keep what we already knew.
@@ -623,11 +548,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
     @Override
     public Void visit(GlobalNode n) {
         for (String varName : n.getVariables()) {
-            // فحص 6: استخدام global بعد إسناد محلي
-            if (!scopeStack.isEmpty() && scopeStack.peek().containsKey(varName)) {
-                error("الاسم '" + varName + "' تم إسناده محلياً قبل الإعلان عنه كـ 'global'",
-                        n.getLine(), n.getColumn());
-            }
+
             currentGlobals.add(varName);
         }
         return null;
@@ -767,13 +688,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
                     n.getLine(), n.getColumn());
         }
 
-        // فحص 17: مقارنة مع None باستخدام == أو !=
-        if ((op.equals("==") || op.equals("!="))
-                && (n.getRight() instanceof NoneLiteralNode
-                || n.getLeft() instanceof NoneLiteralNode)) {
-            warning("استخدم 'is None' أو 'is not None' بدلاً من '" + op + " None'",
-                    n.getLine(), n.getColumn());
-        }
+
 
         // فحص 19: أنواع المعاملات غير متوافقة مع العملية
         if (isArithmetic(op)) {
@@ -785,14 +700,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
             }
         }
 
-        // فحص 18: مقارنة مع True/False باستخدام == أو !=
-        if ((op.equals("==") || op.equals("!="))
-                && (n.getRight() instanceof BoolLiteralNode
-                || n.getLeft() instanceof BoolLiteralNode)) {
-            warning("المقارنة مع True/False باستخدام '" + op
-                            + "' ليست طريقة بايثونية — استخدم القيمة مباشرة (مثلاً 'if flag:')",
-                    n.getLine(), n.getColumn());
-        }
+
 
         return null;
     }
@@ -812,14 +720,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
             // Checks 1 / 3: the callee must resolve somewhere
             checkNameResolution(name, n.getLine(), n.getColumn());
 
-            // فحص عدد المعاملات الممررة للدالة
-            if (functionParamCount.containsKey(name)) {
-                int expectedParams = functionParamCount.get(name);
-                int actualParams = n.getArguments().size();
-                if (expectedParams != actualParams) {
-                    error("خطأ في استدعاء الدالة '" + name + "': تتوقع " + expectedParams + " معاملات، لكن تم تمرير " + actualParams, n.getLine(), n.getColumn());
-                }
-            }
+
 
             // Check: Template file existence for render_template
             if (name.equals("render_template") && n.getArguments().size() > 0) {
