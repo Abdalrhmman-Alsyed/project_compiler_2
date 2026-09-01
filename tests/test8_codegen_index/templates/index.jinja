@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ my_dict['title'] }}</title>
+    <title>{{ my_dict['nested'] }}</title>
+</head>
+<body>
+    <h1>التأكد من الوصول للفهرس (Index)</h1>
+    
+    <ul>
+        <li>العنصر الأول: {{ data_list[0] }}</li>
+        <li>العنصر الثاني: {{ data_list.name }}</li>
+        <li>العنصر الثالث: {{ data_list['s'] }}</li>
+    </ul>
+
+    <h2>التأكد من الوصول للمفاتيح والخصائص (Dict/Attribute)</h2>
+    <p>العنوان: {{ my_dict.title }}</p>
+    <p>القيمة المتداخلة: {{ my_dict.nested.value }}</p>
+
+</body>
+</html>
