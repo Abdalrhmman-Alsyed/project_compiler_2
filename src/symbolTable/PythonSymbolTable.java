@@ -268,4 +268,29 @@ public class PythonSymbolTable {
         return scopeIds.getOrDefault(scope, -1);
     }
 
+    public boolean isAssignedInFunctionScope(Scope currentScope, String name) {
+        Scope funcScope = currentScope;
+        while (funcScope != null && funcScope.getScopeType() != ScopeType.FUNCTION && funcScope.getScopeType() != ScopeType.GLOBAL) {
+            funcScope = funcScope.getParent();
+        }
+        return isAssignedInScopeOrDescendants(funcScope, name);
+    }
+
+    private boolean isAssignedInScopeOrDescendants(Scope scope, String name) {
+        if (scope == null) return false;
+        if (scope.getSymbol(name) != null) return true;
+        
+        List<Scope> children = childScopes.get(scope);
+        if (children != null) {
+            for (Scope child : children) {
+                if (child.getScopeType() == ScopeType.FUNCTION) {
+                    continue; 
+                }
+                if (isAssignedInScopeOrDescendants(child, name)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }
