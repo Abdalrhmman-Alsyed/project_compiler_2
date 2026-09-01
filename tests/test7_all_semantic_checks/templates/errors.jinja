@@ -1,0 +1,49 @@
+{% extends "non_existent_base.jinja" %}
+{% set title = "القاعدة" %}
+
+{% block content %}
+
+خطأ جينجا 1: تعريف نفس الـ block مرتين
+{% block same_block %}أول تعريف{% endblock %}
+{% block same_block %}تعريف مكرر — خطأ!{% endblock %}
+
+خطأ جينجا 2: extends أكثر من مرة
+{% extends "non_existent_base.jinja" %}
+
+تحذير جينجا 4: كود جينجا قبل extends (سبق تنفيذه أعلاه عبر set)
+
+خطأ جينجا 3: include لملف غير موجود
+{% include "ghost_file_xyz.jinja" %}
+
+خطأ جينجا 5: متغير لم يُمرَّر من render_template
+{{ missing_var_from_python }}
+
+خطأ جينجا 6: الوصول لخاصية غير موجودة في mock data
+{{ mock_dict.non_existent_attribute }}
+
+خطأ جينجا 7: الوصول لفهرس خارج حدود القائمة
+{{ mock_list[99] }}
+
+خطأ جينجا 8: url_for('static') لملف غير موجود في static/
+{% set img_url = url_for('static', filename='ghost_image_xyz.png') %}
+
+تحذير جينجا 1: فلتر غير معروف
+{{ items | totally_unknown_filter_abc }}
+
+تحذير جينجا 2: متغير حلقة for يُستخدم بعد انتهاء الحلقة
+{% for product in mock_list %}
+  {{ product.name }}
+{% endfor %}
+{{ product }}
+
+تحذير جينجا 3: set يُعيد تعريف متغير ممرر من بايثون
+{% set items = "تم تعريفه مرة أخرى بـ set" %}
+
+تحذير جينجا 5: حلقة for على قائمة فارغة تماماً
+{% for x in [] %}
+  {{ x }}
+{% endfor %}
+
+{{ mock_list[0].name }}
+
+{% endblock %}
