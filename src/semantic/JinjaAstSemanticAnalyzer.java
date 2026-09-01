@@ -14,23 +14,15 @@ import symbolTable.scopes.ScopeType;
 import symbolTable.symbols.SymbolKind;
 
 /**
- * The 11 Jinja2 semantic checks, running on the project's own AST instead of
- * the ANTLR parse tree — the Jinja counterpart of PythonSemanticAnalyzer.
- * <p>
- * ERRORS
+ * The 8 Jinja2 semantic checks:
  * 1. Duplicate block name in the same template
  * 2. {% extends %} used more than once
- * 3. Template extends itself (circular dependency)
- * 11. Template variable never passed from render_template   (spec #5)
- * <p>
- * WARNINGS
- * 4. Unknown Jinja2 filter name
- * 5. For-loop variable used after the loop has ended
- * 6. {% include %} references a file that does not exist
- * 7. {% set %} redefines a variable passed from Python
- * 8. {% set %} redefines a variable already set in this template
- * 9. {% extends %} is not the first Jinja2 statement
- * 10. {% for %} iterates a literal empty list
+ * 3. Template extends itself (circular dependency) or references non-existent file
+ * 4. HTML tag mismatch
+ * 5. Template variable never passed from render_template
+ * 6. Attribute not found in mock data
+ * 7. Index out of bounds
+ * 8. url_for('static') points to non-existent file
  */
 public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
 
@@ -41,14 +33,11 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
     private final Set<String> allMockDataKeys = new LinkedHashSet<>();
     private final symbolTable.JinjaSymbolTable symbolTable;
     private final Map<String, Integer> visitedBlocks = new LinkedHashMap<>();
-    private final Set<String> visitedSetVars = new LinkedHashSet<>();
-    private final Set<String> warnedExpiredLoopVars = new LinkedHashSet<>();
 
     private final List<SemanticError> errors = new ArrayList<>();
     private final List<SemanticError> warnings = new ArrayList<>();
 
     private int extendsCount = 0;
-    private boolean sawJinjaBeforeExtends = false;
 
     private static final Set<String> BUILTIN_NAMES = Set.of(
             "loop", "range", "dict", "list", "cycler", "namespace", "lipsum", "joiner",
@@ -116,7 +105,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
     public void saveReportToFile(String filePath) {
         try (java.io.PrintWriter writer = new java.io.PrintWriter(new java.io.FileWriter(filePath, true))) {
             writer.println("\n" + "=".repeat(60));
-            writer.println("  تحليل الدلالات لقوالب جينجا2 (V2): " + templateName + "  (17 فحص)");
+            writer.println("  تحليل الدلالات لقوالب جينجا2 (V2): " + templateName + "  (8 فحص)");
             writer.println("=".repeat(60));
 
             if (errors.isEmpty() && warnings.isEmpty()) {
@@ -177,7 +166,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
 
     public void printReport() {
         System.out.println("\n" + "=".repeat(60));
-        System.out.println("  JINJA2 SEMANTIC ANALYSIS (V2): " + templateName + "  (17 checks)");
+        System.out.println("  JINJA2 SEMANTIC ANALYSIS (V2): " + templateName + "  (8 checks)");
         System.out.println("=".repeat(60));
         if (errors.isEmpty() && warnings.isEmpty()) {
             System.out.println("  No semantic issues found.");
@@ -216,7 +205,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
         } else {
             visitedBlocks.put(name, node.getLine());
         }
-        sawJinjaBeforeExtends = true;
+
         
         pushScope();
         super.visit(node);
@@ -237,11 +226,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
             error("القالب '" + templateName + "' يمتد (extends) من نفسه — هذا استدعاء دائري (Circular dependency)",
                     line, col);
         }
-        if (sawJinjaBeforeExtends) {
-            warning("{% extends \"" + target + "\" %} يجب أن يكون أول تعليمة لجينجا2 في القالب "
-                    + "ولكن توجد محتويات أخرى لجينجا2 تسبقه", line, col);
-        }
-        
+
         File targetFile = new File(templateDir, target);
         if (!targetFile.exists()) {
             error("{% extends \"" + target + "\" %} يشير إلى ملف غير موجود: " + targetFile.getPath(), line, col);
@@ -253,13 +238,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
     @Override
     public Void visit(ForBlockNode node) {
         String loopVar = node.getVariable();
-        sawJinjaBeforeExtends = true;
 
-        if (node.getIterable() instanceof ListExpressionNode list
-                && list.getElements().isEmpty()) {
-            warning("{% for " + loopVar + " in [] %} يقوم بالدوران على قائمة فارغة تماماً"
-                    + " — لن يتم تنفيذ محتوى الحلقة أبداً", node.getLine(), node.getColumn());
-        }
 
         visitChild(node.getIterable());
         
@@ -273,7 +252,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
 
     @Override
     public Void visit(WithBlockNode node) {
-        sawJinjaBeforeExtends = true;
+
         visitChild(node.getExpression());
 
         pushScope();
@@ -288,18 +267,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
         String name = node.getVariable();
         int line = node.getLine(), col = node.getColumn();
 
-        if (pythonContextVars.contains(name)) {
-            warning("{% set " + name + " = ... %} يعيد تعريف المتغير '" + name
-                    + "' الذي تم تمريره من بايثون باستخدام الدالة render_template()", line, col);
-        }
-        if (visitedSetVars.contains(name)) {
-            warning("{% set " + name + " = ... %} يعيد تعريف متغير القالب '" + name
-                             + "' الذي تم تحديده مسبقاً عبر {% set %}",
-                    line, col);
-        } else {
-            visitedSetVars.add(name);
-        }
-        sawJinjaBeforeExtends = true;
+
         return super.visit(node);
     }
 
@@ -311,7 +279,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
             error("{% include \"" + included + "\" %} يشير إلى ملف غير موجود: "
                     + target.getPath(), node.getLine(), node.getColumn());
         }
-        sawJinjaBeforeExtends = true;
+
         return super.visit(node);
     }
 
@@ -322,7 +290,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
         if (!targetFile.exists()) {
             error("{% import \"" + target + "\" ... %} يشير إلى ملف غير موجود: " + targetFile.getPath(), node.getLine(), node.getColumn());
         }
-        sawJinjaBeforeExtends = true;
+
         return super.visit(node);
     }
 
@@ -333,7 +301,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
         if (!targetFile.exists()) {
             error("{% from \"" + target + "\" ... %} يشير إلى ملف غير موجود: " + targetFile.getPath(), node.getLine(), node.getColumn());
         }
-        sawJinjaBeforeExtends = true;
+
         return super.visit(node);
     }
 
@@ -341,10 +309,6 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
 
     @Override
     public Void visit(FilterExpressionNode node) {
-        if (!KNOWN_FILTERS.contains(node.getFilterName())) {
-            warning("مرشح جينجا2 (Filter) غير معروف '" + node.getFilterName()
-                    + "' — غير موجود في قائمة المرشحات المعروفة", node.getLine(), node.getColumn());
-        }
         return super.visit(node);
     }
 
@@ -433,24 +397,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
             }
         }
 
-        // لم يُعثر على الاسم في أي نطاق. هل كان متغير for في حلقة منتهية?
-        boolean wasLoopVar = false;
-        if (symbolTable != null) {
-            for (Scope s : symbolTable.getAllScopes()) {
-                if (s.getScopeType() == ScopeType.FOR_LOOP && s.getSymbol(name) != null) {
-                    wasLoopVar = true;
-                    break;
-                }
-            }
-        }
-        
-        if (wasLoopVar) {
-            if (!warnedExpiredLoopVars.contains(name)) {
-                warning("المتغير '" + name + "' هو متغير حلقة 'for' يتم استخدامه خارج النطاق الخاص بتلك الحلقة", line, col);
-                warnedExpiredLoopVars.add(name);
-            }
-            return;
-        }
+
 
         error("متغير القالب '" + name + "' لم يتم تمريره من دالة render_template",
                 line, col);
