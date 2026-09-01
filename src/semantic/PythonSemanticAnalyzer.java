@@ -70,7 +70,6 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
     private final Map<String, SymbolType> globalTypes     = new LinkedHashMap<>();
     // Every name ever bound inside some function body → its first line.
     // Lets us say "out of scope" instead of "not defined".
-    private final Map<String, Integer> functionLocalNames  = new LinkedHashMap<>();
     // Names assigned anywhere in the function currently being walked, collected
     // up-front so a use that precedes its assignment is not reported as undefined.
 
@@ -157,7 +156,6 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
         info.type = type;
         scopeStack.peek().put(name, info);
         if (!functionDefLists.isEmpty()) functionDefLists.peek().add(info);
-        if (functionDepth > 0) functionLocalNames.putIfAbsent(name, line);
     }
 
     private DefInfo resolveLocal(String name) {
