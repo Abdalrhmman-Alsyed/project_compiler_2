@@ -14,34 +14,34 @@ import java.util.*;
 
 /**
  * Performs 15 semantic checks on the Python AST:
- *
+ * <p>
  * ERRORS  (1-8):
- *   1. 'return' outside function
- *   2. 'break' outside loop
- *   3. 'continue' outside loop
- *   4. Duplicate function name
- *   5. Duplicate parameter name in same function
- *   6. 'global' declared after local assignment of same name
- *   7. Division by zero (constant literal)
- *   8. Unreachable code after 'return'
- *
+ * 1. 'return' outside function
+ * 2. 'break' outside loop
+ * 3. 'continue' outside loop
+ * 4. Duplicate function name
+ * 5. Duplicate parameter name in same function
+ * 6. 'global' declared after local assignment of same name
+ * 7. Division by zero (constant literal)
+ * 8. Unreachable code after 'return'
+ * <p>
  * WARNINGS (9-18):
- *   9.  Duplicate import of same module
- *  10.  Assignment overwrites a function name
- *  11.  Assignment shadows a Python built-in name
- *  12.  Local variable defined but never used
- *  13.  Call to a name that cannot be resolved
- *  14.  Empty function body (only 'pass')
- *  15.  Name used before it is assigned in local scope
- *  16.  Function has too many parameters (> 7)
- *  17.  Comparison with None using == / != instead of is / is not
- *  18.  Comparison with True/False using == / != instead of truthiness
- *
+ * 9.  Duplicate import of same module
+ * 10.  Assignment overwrites a function name
+ * 11.  Assignment shadows a Python built-in name
+ * 12.  Local variable defined but never used
+ * 13.  Call to a name that cannot be resolved
+ * 14.  Empty function body (only 'pass')
+ * 15.  Name used before it is assigned in local scope
+ * 16.  Function has too many parameters (> 7)
+ * 17.  Comparison with None using == / != instead of is / is not
+ * 18.  Comparison with True/False using == / != instead of truthiness
+ * <p>
  * ERRORS (19-20) — required by the course spec:
- *  19.  Type Mismatch   : unsupported operand types for '+': 'str' and 'int'
- *  20.  Type Error      : 'int' object is not iterable
- *  21.  Undefined Var    : variable 'x' is not defined
- *  22.  Scope Error      : variable 'x' is out of scope
+ * 19.  Type Mismatch   : unsupported operand types for '+': 'str' and 'int'
+ * 20.  Type Error      : 'int' object is not iterable
+ * 21.  Undefined Var    : variable 'x' is not defined
+ * 22.  Scope Error      : variable 'x' is out of scope
  */
 public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
 
@@ -73,58 +73,60 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
 
 
     // ── Collected issues ─────────────────────────────────────────────────────
-    private final List<SemanticError> errors   = new ArrayList<>();
+    private final List<SemanticError> errors = new ArrayList<>();
     private final List<SemanticError> warnings = new ArrayList<>();
 
     // ── Control-flow depth ───────────────────────────────────────────────────
     private int functionDepth = 0;
-    private int loopDepth     = 0;
+    private int loopDepth = 0;
 
     // ── Global scope knowledge ────────────────────────────────────────────────
     // Maps name → "function" | "import" | "variable"
-    private final Map<String, String>  globalKind        = new LinkedHashMap<>();
-    // Maps function name → parameter count (for call-site arity checks)
+    private final Map<String, String> globalKind = new LinkedHashMap<>();
+    // يربط اسم الدالة بعدد معاملاتها (لفحص عدد المعاملات عند الاستدعاء)
     private final Map<String, Integer> functionParamCount = new LinkedHashMap<>();
-    // Maps module name → first-seen line (for duplicate import check)
-    private final Map<String, Integer> firstImportLine   = new LinkedHashMap<>();
-    // Inferred type of each module-level variable (checks 19 and 20)
-    private final Map<String, SymbolType> globalTypes     = new LinkedHashMap<>();
-    // Every name ever bound inside some function body → its first line.
-    // Lets us say "out of scope" instead of "not defined" (checks 3 and 1).
-    private final Map<String, Integer> functionLocalNames  = new LinkedHashMap<>();
-    // Functions that have already been fully visited (for duplicate detection)
-    private final Set<String>          visitedFunctions  = new LinkedHashSet<>();
+    // يربط اسم المكتبة بسطر أول استيراد (لمنع التكرار)
+    private final Map<String, Integer> firstImportLine = new LinkedHashMap<>();
+    // النوع المستنتج لكل متغير عام (لفحوصات التوافق 19 و 20)
+    private final Map<String, SymbolType> globalTypes = new LinkedHashMap<>();
+    // كل اسم تم تعريفه داخل دالة يربط بأول سطر ظهر فيه.
+    // يتيح لنا طباعة "خارج النطاق" بدلاً من "غير معرّف".
+    private final Map<String, Integer> functionLocalNames = new LinkedHashMap<>();
+    // الدوال التي تم مسحها بالكامل (لاكتشاف التكرار)
+    private final Set<String> visitedFunctions = new LinkedHashSet<>();
 
-    // ── Local-scope tracking ──────────────────────────────────────────────────
-    // Each element of the deque is the local variable map for one scope level.
+    // ── تتبع النطاق المحلي ──────────────────────────────────────────────────
+    // كل عنصر في المكدس يمثل خريطة المتغيرات المحلية لمستوى واحد من النطاق.
     private final Deque<Map<String, DefInfo>> scopeStack = new ArrayDeque<>();
-    // Variables declared 'global' inside the current function
+    // المتغيرات المعلنة كـ 'global' داخل الدالة الحالية
     private final Set<String> currentGlobals = new HashSet<>();
-    // Per-function accumulation of all DefInfo objects (for unused-var check)
+    // تجميع كل كائنات DefInfo لكل دالة (لفحص المتغيرات غير المستخدمة)
     private final Deque<List<DefInfo>> functionDefLists = new ArrayDeque<>();
 
     // ── Known Python and Flask built-ins ────────────────────────────────────
     private static final Set<String> BUILTINS = Set.of(
-        "print","len","range","str","int","float","bool","list","dict","set","tuple",
-        "type","isinstance","hasattr","getattr","setattr","callable","enumerate","zip",
-        "map","filter","sorted","reversed","min","max","sum","abs","open","input",
-        "repr","format","vars","dir","id","hash","hex","oct","bin","super","object",
-        "Exception","ValueError","TypeError","KeyError","IndexError","AttributeError",
-        "NotImplementedError","StopIteration","ZeroDivisionError","RuntimeError",
-        "FileNotFoundError","PermissionError","OverflowError","RecursionError","True","False","None","__name__","__file__",
-        "staticmethod","classmethod","property","any","all","next","iter","bytes",
-        "bytearray","complex","frozenset","ord","chr","pow","round","divmod"
+            "print", "len", "range", "str", "int", "float", "bool", "list", "dict", "set", "tuple",
+            "type", "isinstance", "hasattr", "getattr", "setattr", "callable", "enumerate", "zip",
+            "map", "filter", "sorted", "reversed", "min", "max", "sum", "abs", "open", "input",
+            "repr", "format", "vars", "dir", "id", "hash", "hex", "oct", "bin", "super", "object",
+            "Exception", "ValueError", "TypeError", "KeyError", "IndexError", "AttributeError",
+            "NotImplementedError", "StopIteration", "ZeroDivisionError", "RuntimeError",
+            "FileNotFoundError", "PermissionError", "OverflowError", "RecursionError", "True", "False", "None", "__name__", "__file__",
+            "staticmethod", "classmethod", "property", "any", "all", "next", "iter", "bytes",
+            "bytearray", "complex", "frozenset", "ord", "chr", "pow", "round", "divmod"
     );
 
     // ── Inner model ──────────────────────────────────────────────────────────
     private static class DefInfo {
         final String name;
-        final int    line, col;
-        boolean      used = false;
-        SymbolType   type = SymbolType.UNKNOWN;
+        final int line, col;
+        boolean used = false;
+        SymbolType type = SymbolType.UNKNOWN;
 
         DefInfo(String name, int line, int col) {
-            this.name = name; this.line = line; this.col = col;
+            this.name = name;
+            this.line = line;
+            this.col = col;
         }
     }
 
@@ -162,7 +164,9 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
         }
     }
 
-    private void pushScope() { scopeStack.push(new LinkedHashMap<>()); }
+    private void pushScope() {
+        scopeStack.push(new LinkedHashMap<>());
+    }
 
     private void popScope() {
         scopeStack.pop();
@@ -191,15 +195,15 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
 
     private boolean isKnown(String name) {
         if (resolveLocal(name) != null) return true;
-        
+
         Symbol sym = currentScope.resolve(name);
         if (sym != null && sym.getKind() == SymbolKind.IMPORT) {
             return true;
         }
 
         return globalKind.containsKey(name)
-            || currentGlobals.contains(name)
-            || BUILTINS.contains(name);
+                || currentGlobals.contains(name)
+                || BUILTINS.contains(name);
     }
 
     private void markUsed(String name) {
@@ -215,14 +219,14 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
     private SymbolType typeOf(ExpressionNode expr) {
         if (expr == null) return SymbolType.UNKNOWN;
 
-        if (expr instanceof IntLiteralNode)    return SymbolType.INT;
-        if (expr instanceof FloatLiteralNode)  return SymbolType.FLOAT;
+        if (expr instanceof IntLiteralNode) return SymbolType.INT;
+        if (expr instanceof FloatLiteralNode) return SymbolType.FLOAT;
         if (expr instanceof StringLiteralNode) return SymbolType.STRING;
-        if (expr instanceof BoolLiteralNode)   return SymbolType.BOOL;
-        if (expr instanceof NoneLiteralNode)   return SymbolType.NONE;
-        if (expr instanceof ListLiteralNode)   return SymbolType.LIST;
-        if (expr instanceof DictLiteralNode)   return SymbolType.DICT;
-        if (expr instanceof SetLiteralNode)    return SymbolType.SET;
+        if (expr instanceof BoolLiteralNode) return SymbolType.BOOL;
+        if (expr instanceof NoneLiteralNode) return SymbolType.NONE;
+        if (expr instanceof ListLiteralNode) return SymbolType.LIST;
+        if (expr instanceof DictLiteralNode) return SymbolType.DICT;
+        if (expr instanceof SetLiteralNode) return SymbolType.SET;
 
         if (expr instanceof IdentifierNode id) {
             DefInfo local = resolveLocal(id.getName());
@@ -230,27 +234,37 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
             return globalTypes.getOrDefault(id.getName(), SymbolType.UNKNOWN);
         }
 
-        if (expr instanceof BinaryOpNode bin)  return typeOfBinary(bin);
-        if (expr instanceof CallNode call)     return typeOfCall(call);
+        if (expr instanceof BinaryOpNode bin) return typeOfBinary(bin);
+        if (expr instanceof CallNode call) return typeOfCall(call);
 
         return SymbolType.UNKNOWN;
     }
 
-    /** Result type of a constructor-like builtin; UNKNOWN for anything else. */
+    /**
+     * Result type of a constructor-like builtin; UNKNOWN for anything else.
+     */
     private SymbolType typeOfCall(CallNode call) {
         if (!(call.getFunction() instanceof IdentifierNode id)) return SymbolType.UNKNOWN;
         switch (id.getName()) {
-            case "str":   return SymbolType.STRING;
+            case "str":
+                return SymbolType.STRING;
             case "int":
-            case "len":   return SymbolType.INT;
-            case "float": return SymbolType.FLOAT;
-            case "bool":  return SymbolType.BOOL;
+            case "len":
+                return SymbolType.INT;
+            case "float":
+                return SymbolType.FLOAT;
+            case "bool":
+                return SymbolType.BOOL;
             case "list":
             case "range":
-            case "sorted": return SymbolType.LIST;
-            case "dict":  return SymbolType.DICT;
-            case "set":   return SymbolType.SET;
-            default:      return SymbolType.UNKNOWN;
+            case "sorted":
+                return SymbolType.LIST;
+            case "dict":
+                return SymbolType.DICT;
+            case "set":
+                return SymbolType.SET;
+            default:
+                return SymbolType.UNKNOWN;
         }
     }
 
@@ -286,16 +300,18 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
 
     private boolean isComparison(String op) {
         return op.equals("==") || op.equals("!=") || op.equals("<") || op.equals(">")
-            || op.equals("<=") || op.equals(">=") || op.equals("in") || op.equals("not in")
-            || op.equals("is") || op.equals("is not") || op.equals("and") || op.equals("or");
+                || op.equals("<=") || op.equals(">=") || op.equals("in") || op.equals("not in")
+                || op.equals("is") || op.equals("is not") || op.equals("and") || op.equals("or");
     }
 
     private boolean isArithmetic(String op) {
         return op.equals("+") || op.equals("-") || op.equals("*")
-            || op.equals("/") || op.equals("//") || op.equals("%");
+                || op.equals("/") || op.equals("//") || op.equals("%");
     }
 
-    /** True only when the pair is certainly rejected by Python at runtime. */
+    /**
+     * True only when the pair is certainly rejected by Python at runtime.
+     */
     private boolean isInvalidOperandPair(String op, SymbolType l, SymbolType r) {
         if (l == SymbolType.UNKNOWN || r == SymbolType.UNKNOWN
                 || l == SymbolType.ANY || r == SymbolType.ANY) return false;
@@ -318,8 +334,8 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
 
     private boolean isIterable(SymbolType t) {
         return t == SymbolType.STRING || t == SymbolType.LIST
-            || t == SymbolType.DICT   || t == SymbolType.SET
-            || t == SymbolType.UNKNOWN || t == SymbolType.ANY;
+                || t == SymbolType.DICT || t == SymbolType.SET
+                || t == SymbolType.UNKNOWN || t == SymbolType.ANY;
     }
 
     // ── Name resolution diagnostics (checks 1, 3, 15) ───────────────────────
@@ -341,12 +357,19 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
         }
     }
 
-    /** Collects every name this function assigns, before walking its body. */
+    /**
+     * Collects every name this function assigns, before walking its body.
+     */
 
 
     // ── Public API ───────────────────────────────────────────────────────────
-    public List<SemanticError> getErrors()   { return Collections.unmodifiableList(errors); }
-    public List<SemanticError> getWarnings() { return Collections.unmodifiableList(warnings); }
+    public List<SemanticError> getErrors() {
+        return Collections.unmodifiableList(errors);
+    }
+
+    public List<SemanticError> getWarnings() {
+        return Collections.unmodifiableList(warnings);
+    }
 
     public void printReport() {
         System.out.println("\n" + "=".repeat(60));
@@ -401,7 +424,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
     public Void visit(BlockNode n) {
         boolean seenReturn = false;
         for (var stmt : n.getStatements()) {
-            // Check 8: unreachable code after return
+            // فحص 8: كود غير قابل للوصول بعد تعليمة الإرجاع
             if (seenReturn && !(stmt instanceof PassNode)) {
                 error("كود غير قابل للوصول بعد تعليمة 'return'", stmt.getLine(), stmt.getColumn());
                 seenReturn = false;
@@ -419,20 +442,20 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
     @Override
     public Void visit(FunctionNode n) {
         enterScope();
-        // Check 4: duplicate function name
+        // فحص 4: اسم دالة مكرر
         // Use symbolTable to check for duplicates
         if (visitedFunctions.contains(n.getName()) || (symbolTable.getGlobalScope().getSymbol(n.getName()) != null && !visitedFunctions.contains(n.getName()))) {
             // It's in the symbol table, we add to visited to prevent double warning since we do a single pass now
         }
         if (visitedFunctions.contains(n.getName())) {
-             error("الدالة '" + n.getName() + "' تم تعريفها أكثر من مرة",
-                     n.getLine(), n.getColumn());
+            error("الدالة '" + n.getName() + "' تم تعريفها أكثر من مرة",
+                    n.getLine(), n.getColumn());
         }
         visitedFunctions.add(n.getName());
         globalKind.put(n.getName(), "function");
         functionParamCount.put(n.getName(), n.getParameters().size());
 
-        // Check 14: empty function body (only 'pass')
+        // فحص 14: جسم دالة فارغ (يحتوي فقط على pass)
         if (n.getBody() instanceof BlockNode blk
                 && blk.getStatements().size() == 1
                 && blk.getStatements().get(0) instanceof PassNode) {
@@ -440,10 +463,10 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
                     n.getLine(), n.getColumn());
         }
 
-        // Check 16: too many parameters (> 7)
+        // فحص 16: عدد كبير جداً من المعاملات (> 7)
         if (n.getParameters().size() > 7) {
             warning("الدالة '" + n.getName() + "' تحتوي على عدد كبير جداً من المعاملات ("
-                    + n.getParameters().size() + ") — فكر في استخدام قاموس أو صنف بيانات",
+                            + n.getParameters().size() + ") — فكر في استخدام قاموس أو صنف بيانات",
                     n.getLine(), n.getColumn());
         }
 
@@ -455,12 +478,12 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
         Set<String> savedGlobals = new HashSet<>(currentGlobals);
         currentGlobals.clear();
 
-        // Check 5: duplicate parameter name
+        // فحص 5: اسم معامل مكرر
         Set<String> paramNames = new LinkedHashSet<>();
         for (var param : n.getParameters()) {
             if (!paramNames.add(param.getName())) {
                 error("المعامل '" + param.getName()
-                        + "' مكرر في الدالة '" + n.getName() + "'",
+                                + "' مكرر في الدالة '" + n.getName() + "'",
                         param.getLine(), param.getColumn());
             }
             if (param.hasDefaultValue()) param.getDefaultValue().accept(this);
@@ -472,7 +495,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
 
         if (n.getBody() != null) n.getBody().accept(this);
 
-        // Check 12: local variables defined but never used
+        // فحص 12: متغيرات محلية تم تعريفها ولم تستخدم
         List<DefInfo> fnDefs = functionDefLists.pop();
         for (DefInfo def : fnDefs) {
             if (!def.used && !def.name.startsWith("_") && !currentGlobals.contains(def.name)) {
@@ -493,10 +516,10 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
     public Void visit(ImportNode n) {
         String mod = n.getModule();
         if (mod != null && !mod.isEmpty()) {
-            // Check 9: duplicate import
+            // فحص 9: استيراد مكرر
             if (firstImportLine.containsKey(mod)) {
                 warning("الوحدة '" + mod + "' تم استيرادها أكثر من مرة (أول مرة في السطر "
-                        + firstImportLine.get(mod) + ")",
+                                + firstImportLine.get(mod) + ")",
                         n.getLine(), n.getColumn());
             } else {
                 firstImportLine.put(mod, n.getLine());
@@ -521,7 +544,9 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
     }
 
     @Override
-    public Void visit(ParameterNode n) { return null; }
+    public Void visit(ParameterNode n) {
+        return null;
+    }
 
     // ════════════════════════════════════════════════════════════════════════
     //  STATEMENTS
@@ -536,13 +561,13 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
         if (n.getTarget() instanceof IdentifierNode id) {
             String name = id.getName();
 
-            // Check 11: shadowing built-in
+            // فحص 11: إخفاء دالة مبنية مسبقاً
             if (BUILTINS.contains(name) && !name.equals("__name__") && !name.equals("app")) {
                 warning("إسناد قيمة للاسم المبني مسبقاً '" + name + "' يخفي الدالة الأصلية",
                         n.getLine(), n.getColumn());
             }
 
-            // Check 10: overwriting function name
+            // فحص 10: الكتابة فوق اسم دالة
             if ("function".equals(globalKind.get(name)) && functionDepth == 0) {
                 warning("هذا الإسناد يقوم بالكتابة فوق الدالة التي تحمل الاسم '" + name + "'",
                         n.getLine(), n.getColumn());
@@ -569,7 +594,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
 
     @Override
     public Void visit(ReturnNode n) {
-        // Check 1: return outside function
+        // فحص 1: تعليمة return خارج الدالة
         if (functionDepth == 0) {
             error("استخدام تعليمة 'return' خارج الدالة", n.getLine(), n.getColumn());
         }
@@ -579,7 +604,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
 
     @Override
     public Void visit(BreakNode n) {
-        // Check 2: break outside loop
+        // فحص 2: تعليمة break خارج حلقة التكرار
         if (loopDepth == 0) {
             error("استخدام تعليمة 'break' خارج حلقة التكرار", n.getLine(), n.getColumn());
         }
@@ -588,7 +613,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
 
     @Override
     public Void visit(ContinueNode n) {
-        // Check 3: continue outside loop
+        // فحص 3: تعليمة continue خارج حلقة التكرار
         if (loopDepth == 0) {
             error("استخدام تعليمة 'continue' خارج حلقة التكرار", n.getLine(), n.getColumn());
         }
@@ -598,7 +623,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
     @Override
     public Void visit(GlobalNode n) {
         for (String varName : n.getVariables()) {
-            // Check 6: 'global' after local assignment
+            // فحص 6: استخدام global بعد إسناد محلي
             if (!scopeStack.isEmpty() && scopeStack.peek().containsKey(varName)) {
                 error("الاسم '" + varName + "' تم إسناده محلياً قبل الإعلان عنه كـ 'global'",
                         n.getLine(), n.getColumn());
@@ -611,13 +636,23 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
     @Override
     public Void visit(IfNode n) {
         n.getCondition().accept(this);
-        enterScope(); pushScope(); n.getThenBlock().accept(this); popScope(); exitScope();
+        enterScope();
+        pushScope();
+        n.getThenBlock().accept(this);
+        popScope();
+        exitScope();
         for (var elif : n.getElifBranches()) {
             elif.getCondition().accept(this);
-            pushScope(); elif.getBlock().accept(this); popScope();
+            pushScope();
+            elif.getBlock().accept(this);
+            popScope();
         }
         if (n.hasElse()) {
-            enterScope(); pushScope(); n.getElseBlock().accept(this); popScope(); exitScope();
+            enterScope();
+            pushScope();
+            n.getElseBlock().accept(this);
+            popScope();
+            exitScope();
         }
         return null;
     }
@@ -627,7 +662,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
         enterScope();
         n.getIterable().accept(this);
 
-        // Check 20: iterating something that is provably not iterable
+        // فحص 20: تكرار شيء غير قابل للتكرار
         SymbolType iterType = typeOf(n.getIterable());
         if (!isIterable(iterType) && iterType != SymbolType.FUNCTION_TYPE) {
             error("النوع '" + iterType + "' غير قابل للتكرار (Not iterable)",
@@ -668,7 +703,9 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
 
     @Override
     public Void visit(TryNode n) {
-        pushScope(); n.getTryBlock().accept(this); popScope();
+        pushScope();
+        n.getTryBlock().accept(this);
+        popScope();
 
         for (TryNode.ExceptHandler h : n.getHandlers()) {
             if (h.getExceptionType() != null) h.getExceptionType().accept(this);
@@ -683,7 +720,11 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
             popScope();
         }
 
-        if (n.hasFinally()) { pushScope(); n.getFinallyBlock().accept(this); popScope(); }
+        if (n.hasFinally()) {
+            pushScope();
+            n.getFinallyBlock().accept(this);
+            popScope();
+        }
         return null;
     }
 
@@ -697,7 +738,9 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
     public Void visit(WithNode n) {
         n.getExpression().accept(this);
         if (n.hasAlias()) defineLocal(n.getAlias().getName(), n.getLine(), n.getColumn());
-        pushScope(); n.getBody().accept(this); popScope();
+        pushScope();
+        n.getBody().accept(this);
+        popScope();
         return null;
     }
 
@@ -716,7 +759,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
         n.getLeft().accept(this);
         n.getRight().accept(this);
 
-        // Check 7: division by zero
+        // فحص 7: قسمة على الصفر
         String op = n.getOperator();
         if ((op.equals("/") || op.equals("//"))
                 && n.getRight() instanceof IntLiteralNode rhs && rhs.getValue() == 0) {
@@ -724,15 +767,15 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
                     n.getLine(), n.getColumn());
         }
 
-        // Check 17: == None or != None (use 'is None' / 'is not None' instead)
+        // فحص 17: مقارنة مع None باستخدام == أو !=
         if ((op.equals("==") || op.equals("!="))
                 && (n.getRight() instanceof NoneLiteralNode
-                 || n.getLeft()  instanceof NoneLiteralNode)) {
+                || n.getLeft() instanceof NoneLiteralNode)) {
             warning("استخدم 'is None' أو 'is not None' بدلاً من '" + op + " None'",
                     n.getLine(), n.getColumn());
         }
 
-        // Check 19: operands whose types cannot combine under this operator
+        // فحص 19: أنواع المعاملات غير متوافقة مع العملية
         if (isArithmetic(op)) {
             SymbolType lt = typeOf(n.getLeft());
             SymbolType rt = typeOf(n.getRight());
@@ -742,12 +785,12 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
             }
         }
 
-        // Check 18: == True/False or != True/False (use truthiness instead)
+        // فحص 18: مقارنة مع True/False باستخدام == أو !=
         if ((op.equals("==") || op.equals("!="))
                 && (n.getRight() instanceof BoolLiteralNode
-                 || n.getLeft()  instanceof BoolLiteralNode)) {
+                || n.getLeft() instanceof BoolLiteralNode)) {
             warning("المقارنة مع True/False باستخدام '" + op
-                    + "' ليست طريقة بايثونية — استخدم القيمة مباشرة (مثلاً 'if flag:')",
+                            + "' ليست طريقة بايثونية — استخدم القيمة مباشرة (مثلاً 'if flag:')",
                     n.getLine(), n.getColumn());
         }
 
@@ -768,8 +811,8 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
 
             // Checks 1 / 3: the callee must resolve somewhere
             checkNameResolution(name, n.getLine(), n.getColumn());
-            
-            // Check arity (number of parameters)
+
+            // فحص عدد المعاملات الممررة للدالة
             if (functionParamCount.containsKey(name)) {
                 int expectedParams = functionParamCount.get(name);
                 int actualParams = n.getArguments().size();

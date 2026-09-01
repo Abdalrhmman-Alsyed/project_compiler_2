@@ -107,7 +107,7 @@ public class PythonSymbolTableBuilder extends PythonBaseASTVisitor<Void> {
         return null;
     }
 
-    //   Statements
+    //   التعليمات (Statements)
 
     @Override
     public Void visit(AssignmentNode n) {
@@ -192,7 +192,7 @@ public class PythonSymbolTableBuilder extends PythonBaseASTVisitor<Void> {
         for (TryNode.ExceptHandler h : n.getHandlers()) {
             if (h.getExceptionType() != null) h.getExceptionType().accept(this);
 
-            // 'except E as name' binds 'name' for the duration of the handler
+            // 'except E as name' يقوم بربط 'name' طوال فترة عمل المعالج
             if (h.hasAlias()) {
                 symbolTable.defineSymbol(new Symbol(
                         h.getAlias(), n.getLine(), n.getColumn(),
@@ -215,12 +215,12 @@ public class PythonSymbolTableBuilder extends PythonBaseASTVisitor<Void> {
     public Void visit(IfNode n) {
         n.getCondition().accept(this);
 
-        //  then
+        //  جزء then
         symbolTable.enterIfScope();
         n.getThenBlock().accept(this);
         symbolTable.exitScope();
 
-        //  else
+        //  جزء else
         if (n.hasElse()) {
             symbolTable.enterElseScope();
             n.getElseBlock().accept(this);
@@ -260,7 +260,7 @@ public class PythonSymbolTableBuilder extends PythonBaseASTVisitor<Void> {
         return null;
     }
 
-    //  Helper Methods
+    //  دوال مساعدة (Helper Methods)
 
     private SymbolType inferTypeFromExpression(ExpressionNode expr) {
         if (expr == null) return SymbolType.UNKNOWN;

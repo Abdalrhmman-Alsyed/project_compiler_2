@@ -162,7 +162,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
 
     @Override
     public Void visit(ast.template.TemplateRootNode node) {
-        pushScope(); // enter global scope
+        pushScope(); // الدخول للنطاق العام
         super.visit(node);
         return null;
     }
@@ -195,7 +195,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
                 errors.size(), warnings.size(), errors.size() + warnings.size());
     }
 
-    // ── Blocks ───────────────────────────────────────────────────────────────
+    // ── الكتل (Blocks) ───────────────────────────────────────────────────────
 
     @Override
     public Void visit(ast.template.html.HTMLNormalElementNode node) {
@@ -337,7 +337,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
         return super.visit(node);
     }
 
-    // ── Expressions ──────────────────────────────────────────────────────────
+    // ── التعابير (Expressions) ───────────────────────────────────────────────
 
     @Override
     public Void visit(FilterExpressionNode node) {
@@ -356,7 +356,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
 
     @Override
     public Void visit(AttributeAccessNode node) {
-        // Skip checking attributes of builtin Jinja variables like 'loop'
+        // تخطي فحص خصائص المتغيرات المبنية مسبقاً في جينجا مثل 'loop'
         if (node.getObject() instanceof VariableNode varNode && "loop".equals(varNode.getName())) {
             return super.visit(node);
         }
