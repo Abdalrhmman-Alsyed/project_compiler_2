@@ -15,8 +15,8 @@ import semantic.JinjaAstSemanticAnalyzer;
 import semantic.PythonSemanticAnalyzer;
 import symbolTable.PythonSymbolTable;
 import symbolTable.visitores.PythonSymbolTableBuilder;
-import symbolTableJinja.JinjaSymbolTable;
-import symbolTableJinja.JinjaAstSymbolTableBuilder;
+import symbolTable.JinjaSymbolTable;
+import symbolTable.visitores.JinjaSymbolTableBuilder;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -67,7 +67,10 @@ public class RunAllTests {
         PythonASTBuilderVisitor astBuilder = new PythonASTBuilderVisitor();
         PythonNode ast = astBuilder.visit(parseTree);
         
-        PythonSemanticAnalyzer semanticAnalyzer = new PythonSemanticAnalyzer(null);
+        PythonSymbolTable pySymbolTable = new PythonSymbolTable();
+        ast.accept(new PythonSymbolTableBuilder(pySymbolTable));
+        
+        PythonSemanticAnalyzer semanticAnalyzer = new PythonSemanticAnalyzer(pySymbolTable);
         ast.accept(semanticAnalyzer);
         System.out.println("\n--- Python Semantic Analysis ---");
         semanticAnalyzer.printReport();
@@ -95,8 +98,12 @@ public class RunAllTests {
                     TemplateNode rootNode = new TemplateASTBuilder().visitTemplateRoot((gen.FlaskTemplateParser.TemplateRootContext) tParser.template());
                     String tName = t.getName();
                     
+                    JinjaSymbolTableBuilder jBuilder = new JinjaSymbolTableBuilder();
+                    rootNode.accept(jBuilder);
+                    JinjaSymbolTable jSymbolTable = jBuilder.getSymbolTable();
+                    
                     Set<String> ctxVars = new LinkedHashSet<>(templateContextVars.getOrDefault(tName, Set.of()));
-                    JinjaAstSemanticAnalyzer jAnalyzer = new JinjaAstSemanticAnalyzer(tName, tDir.getAbsolutePath(), ctxVars, mockData, null);
+                    JinjaAstSemanticAnalyzer jAnalyzer = new JinjaAstSemanticAnalyzer(tName, tDir.getAbsolutePath(), ctxVars, mockData, jSymbolTable);
                     rootNode.accept(jAnalyzer);
                     System.out.println("\n--- Jinja Semantic Analysis (" + tName + ") ---");
                     jAnalyzer.printReport();
@@ -113,7 +120,11 @@ public class RunAllTests {
         FlaskPythonParser parser = new FlaskPythonParser(new CommonTokenStream(new FlaskPythonLexer(input)));
         parser.removeErrorListeners();
         PythonNode ast = new PythonASTBuilderVisitor().visit(parser.program());
-        PythonSemanticAnalyzer analyzer = new PythonSemanticAnalyzer(null);
+        
+        PythonSymbolTable pySymbolTable = new PythonSymbolTable();
+        ast.accept(new PythonSymbolTableBuilder(pySymbolTable));
+        
+        PythonSemanticAnalyzer analyzer = new PythonSemanticAnalyzer(pySymbolTable);
         ast.accept(analyzer);
         analyzer.printReport();
         analyzer.saveReportToFile(logFile);
@@ -126,7 +137,12 @@ public class RunAllTests {
         FlaskTemplateParser parser = new FlaskTemplateParser(new CommonTokenStream(new FlaskJinjaLexer(charStream)));
         parser.removeErrorListeners();
         TemplateNode rootNode = new TemplateASTBuilder().visitTemplateRoot((gen.FlaskTemplateParser.TemplateRootContext) parser.template());
-        JinjaAstSemanticAnalyzer analyzer = new JinjaAstSemanticAnalyzer(Path.of(filePath).getFileName().toString(), Path.of(filePath).getParent().toString(), pythonCtxVars, mockData, null);
+        
+        JinjaSymbolTableBuilder jBuilder = new JinjaSymbolTableBuilder();
+        rootNode.accept(jBuilder);
+        JinjaSymbolTable jSymbolTable = jBuilder.getSymbolTable();
+        
+        JinjaAstSemanticAnalyzer analyzer = new JinjaAstSemanticAnalyzer(Path.of(filePath).getFileName().toString(), Path.of(filePath).getParent().toString(), pythonCtxVars, mockData, jSymbolTable);
         rootNode.accept(analyzer);
         analyzer.printReport();
         analyzer.saveReportToFile(logFile);

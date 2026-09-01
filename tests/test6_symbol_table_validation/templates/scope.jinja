@@ -1,0 +1,6 @@
+{% for item in items %}
+  {{ item }}
+  {% set inner_var = item %}
+{% endfor %}
+{{ inner_var }}
+{{ missing_ctx_var }}
