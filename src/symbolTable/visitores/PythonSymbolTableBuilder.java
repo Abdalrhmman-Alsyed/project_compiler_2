@@ -65,16 +65,44 @@ public class PythonSymbolTableBuilder extends PythonBaseASTVisitor<Void> {
 
     @Override
     public Void visit(ImportNode n) {
+        if (n.isFromImport()) {
+            if (!n.isImportAll()) {
+                for (IdentifierNode id : n.getImports()) {
+                    Symbol importSymbol = new Symbol(
+                            id.getName(),
+                            id.getLine(),
+                            id.getColumn(),
+                            SymbolKind.IMPORT,
+                            SymbolType.UNKNOWN
+                    );
+                    importSymbol.setAttribute("isImported", true);
+                    importSymbol.setAttribute("fromModule", n.getModule());
+                    symbolTable.defineSymbol(importSymbol);
+                }
+            }
+        } else {
+            Symbol moduleSymbol = new Symbol(
+                    n.getModule(),
+                    n.getLine(),
+                    n.getColumn(),
+                    SymbolKind.IMPORT,
+                    SymbolType.MODULE_TYPE
+            );
+            moduleSymbol.setAttribute("isImported", true);
+            symbolTable.defineSymbol(moduleSymbol);
 
-        Symbol importSymbol = new Symbol(
-                n.getModule(),
-                n.getLine(),
-                n.getColumn(),
-                SymbolKind.IMPORT,
-                SymbolType.MODULE_TYPE
-        );
-        importSymbol.setAttribute("isImported", true);
-        symbolTable.defineSymbol(importSymbol);
+            for (IdentifierNode id : n.getImports()) {
+                Symbol importSymbol = new Symbol(
+                        id.getName(),
+                        id.getLine(),
+                        id.getColumn(),
+                        SymbolKind.IMPORT,
+                        SymbolType.MODULE_TYPE
+                );
+                importSymbol.setAttribute("isImported", true);
+                symbolTable.defineSymbol(importSymbol);
+            }
+        }
 
         return null;
     }
