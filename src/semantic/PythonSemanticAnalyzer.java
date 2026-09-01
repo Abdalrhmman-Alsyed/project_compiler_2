@@ -115,10 +115,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
         "NotImplementedError","StopIteration","ZeroDivisionError","RuntimeError",
         "FileNotFoundError","PermissionError","OverflowError","RecursionError","True","False","None","__name__","__file__",
         "staticmethod","classmethod","property","any","all","next","iter","bytes",
-        "bytearray","complex","frozenset","ord","chr","pow","round","divmod",
-        // Flask / common libs always available in a Flask project
-        "Flask","render_template","request","redirect","url_for","secure_filename",
-        "os","app","jsonify","abort","json"
+        "bytearray","complex","frozenset","ord","chr","pow","round","divmod"
     );
 
     // ── Inner model ──────────────────────────────────────────────────────────
@@ -399,8 +396,14 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
                 globalKind.put(fn.getName(), "function");
                 functionParamCount.put(fn.getName(), fn.getParameters().size());
             } else if (stmt instanceof ImportNode imp) {
-                if (imp.getModule() != null) globalKind.put(imp.getModule(), "import");
-                for (var id : imp.getImports()) globalKind.put(id.getName(), "import");
+                if (imp.isFromImport()) {
+                    if (!imp.isImportAll()) {
+                        for (var id : imp.getImports()) globalKind.put(id.getName(), "import");
+                    }
+                } else {
+                    if (imp.getModule() != null) globalKind.put(imp.getModule(), "import");
+                    for (var id : imp.getImports()) globalKind.put(id.getName(), "import");
+                }
             }
         }
         for (var stmt : n.getStatements()) stmt.accept(this);
@@ -514,6 +517,8 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
                         n.getLine(), n.getColumn());
             } else {
                 importedModules.put(mod, n.getLine());
+            }
+            if (!n.isFromImport()) {
                 globalKind.put(mod, "import");
             }
         }
