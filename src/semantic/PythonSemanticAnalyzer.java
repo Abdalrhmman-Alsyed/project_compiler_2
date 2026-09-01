@@ -7,6 +7,8 @@ import ast.python.program.*;
 import ast.python.statements.*;
 import ast.python.visitors.PythonBaseASTVisitor;
 import symbolTable.symbols.SymbolType;
+import symbolTable.symbols.Symbol;
+import symbolTable.symbols.SymbolKind;
 
 import java.util.*;
 
@@ -84,7 +86,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
     // Maps function name → parameter count (for call-site arity checks)
     private final Map<String, Integer> functionParamCount = new LinkedHashMap<>();
     // Maps module name → first-seen line (for duplicate import check)
-    private final Map<String, Integer> importedModules   = new LinkedHashMap<>();
+    private final Map<String, Integer> firstImportLine   = new LinkedHashMap<>();
     // Inferred type of each module-level variable (checks 19 and 20)
     private final Map<String, SymbolType> globalTypes     = new LinkedHashMap<>();
     // Every name ever bound inside some function body → its first line.
@@ -189,8 +191,13 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
 
     private boolean isKnown(String name) {
         if (resolveLocal(name) != null) return true;
+        
+        Symbol sym = currentScope.resolve(name);
+        if (sym != null && sym.getKind() == SymbolKind.IMPORT) {
+            return true;
+        }
+
         return globalKind.containsKey(name)
-            || importedModules.containsKey(name)
             || currentGlobals.contains(name)
             || BUILTINS.contains(name);
     }
@@ -487,12 +494,12 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
         String mod = n.getModule();
         if (mod != null && !mod.isEmpty()) {
             // Check 9: duplicate import
-            if (importedModules.containsKey(mod)) {
+            if (firstImportLine.containsKey(mod)) {
                 warning("الوحدة '" + mod + "' تم استيرادها أكثر من مرة (أول مرة في السطر "
-                        + importedModules.get(mod) + ")",
+                        + firstImportLine.get(mod) + ")",
                         n.getLine(), n.getColumn());
             } else {
-                importedModules.put(mod, n.getLine());
+                firstImportLine.put(mod, n.getLine());
             }
             if (!n.isFromImport()) {
                 globalKind.put(mod, "import");
