@@ -1,8 +1,12 @@
 package semantic;
 
 import ast.template.TemplateNode;
+import ast.template.html.HTMLNormalElementNode;
 import ast.template.jinja.blocks.*;
 import ast.template.jinja.expressions.*;
+import ast.template.jinja.expressions.literals.BooleanLiteralNode;
+import ast.template.jinja.expressions.literals.NoneLiteralNode;
+import ast.template.jinja.expressions.literals.NumberLiteralNode;
 import ast.template.jinja.expressions.literals.StringLiteralNode;
 import ast.visitors.TemplateBaseASTVisitor;
 
@@ -14,23 +18,17 @@ import symbolTable.scopes.ScopeType;
 import symbolTable.symbols.SymbolKind;
 
 /**
- * The 11 Jinja2 semantic checks, running on the project's own AST instead of
- * the ANTLR parse tree — the Jinja counterpart of PythonSemanticAnalyzer.
- * <p>
- * ERRORS
- * 1. Duplicate block name in the same template
- * 2. {% extends %} used more than once
- * 3. Template extends itself (circular dependency)
- * 11. Template variable never passed from render_template   (spec #5)
- * <p>
- * WARNINGS
- * 4. Unknown Jinja2 filter name
- * 5. For-loop variable used after the loop has ended
- * 6. {% include %} references a file that does not exist
- * 7. {% set %} redefines a variable passed from Python
- * 8. {% set %} redefines a variable already set in this template
- * 9. {% extends %} is not the first Jinja2 statement
- * 10. {% for %} iterates a literal empty list
+ * Jinja2 semantic checks:
+ *   duplicate {% block %} name
+ *   {% extends %} more than once or circular
+ *   missing file in {% include %} / {% import %} / {% extends %}
+ *   HTML opening/closing tag mismatch
+ *   missing flask variable (never passed from render_template)
+ *   attribute missing from mock data
+ *   index out of bounds
+ *   url_for('static') file not found
+ *   scope error (for-loop variable used after the loop)
+ *   type error: {% for %} iterable is not iterable
  */
 public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
 
@@ -41,32 +39,19 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
     private final Set<String> allMockDataKeys = new LinkedHashSet<>();
     private final symbolTable.JinjaSymbolTable symbolTable;
     private final Map<String, Integer> visitedBlocks = new LinkedHashMap<>();
-    private final Set<String> visitedSetVars = new LinkedHashSet<>();
-    private final Set<String> warnedExpiredLoopVars = new LinkedHashSet<>();
+    private final Set<String> reportedExpiredLoopVars = new LinkedHashSet<>();
 
     private final List<SemanticError> errors = new ArrayList<>();
     private final List<SemanticError> warnings = new ArrayList<>();
 
     private int extendsCount = 0;
-    private boolean sawJinjaBeforeExtends = false;
+    private int maxListSize = 0;
 
     private static final Set<String> BUILTIN_NAMES = Set.of(
             "loop", "range", "dict", "list", "cycler", "namespace", "lipsum", "joiner",
             "url_for", "get_flashed_messages", "request", "session", "g", "config",
             "self", "super", "true", "false", "none", "True", "False", "None"
     );
-
-    private static final Set<String> KNOWN_FILTERS = Set.of(
-            "abs", "attr", "batch", "capitalize", "center", "count", "d", "default", "dictsort",
-            "e", "escape", "filesizeformat", "first", "float", "forceescape", "format", "groupby",
-            "indent", "int", "items", "join", "last", "length", "list", "lower", "map", "max", "min",
-            "pprint", "random", "reject", "rejectattr", "replace", "reverse", "round", "safe",
-            "select", "selectattr", "slice", "sort", "string", "striptags", "sum", "title", "tojson",
-            "trim", "truncate", "unique", "upper", "urlencode", "urlize", "wordcount", "wordwrap",
-            "xmlattr", "nl2br", "b64encode", "b64decode"
-    );
-
-    private int maxListSize = 0;
 
     public JinjaAstSemanticAnalyzer(String templateName, String templateDir,
                                     Set<String> pythonContextVars, Map<String, Object> mockData,
@@ -84,24 +69,14 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
     }
 
     private void collectKeys(Object obj) {
-        if (obj instanceof Map) {
-            Map<?, ?> map = (Map<?, ?>) obj;
+        if (obj instanceof Map<?, ?> map) {
             for (Object key : map.keySet()) {
-                if (key instanceof String) {
-                    allMockDataKeys.add((String) key);
-                }
+                if (key instanceof String s) allMockDataKeys.add(s);
             }
-            for (Object val : map.values()) {
-                collectKeys(val);
-            }
-        } else if (obj instanceof List) {
-            List<?> list = (List<?>) obj;
-            if (list.size() > maxListSize) {
-                maxListSize = list.size();
-            }
-            for (Object item : list) {
-                collectKeys(item);
-            }
+            for (Object val : map.values()) collectKeys(val);
+        } else if (obj instanceof List<?> list) {
+            if (list.size() > maxListSize) maxListSize = list.size();
+            for (Object item : list) collectKeys(item);
         }
     }
 
@@ -109,14 +84,10 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
         errors.add(new SemanticError(SemanticError.Severity.ERROR, m, l, c));
     }
 
-    private void warning(String m, int l, int c) {
-        warnings.add(new SemanticError(SemanticError.Severity.WARNING, m, l, c));
-    }
-
     public void saveReportToFile(String filePath) {
         try (java.io.PrintWriter writer = new java.io.PrintWriter(new java.io.FileWriter(filePath, true))) {
             writer.println("\n" + "=".repeat(60));
-            writer.println("  تحليل الدلالات لقوالب جينجا2 (V2): " + templateName + "  (17 فحص)");
+            writer.println("  تحليل الدلالات لقوالب جينجا2: " + templateName);
             writer.println("=".repeat(60));
 
             if (errors.isEmpty() && warnings.isEmpty()) {
@@ -162,7 +133,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
 
     @Override
     public Void visit(ast.template.TemplateRootNode node) {
-        pushScope(); // enter global scope
+        pushScope();
         super.visit(node);
         return null;
     }
@@ -177,7 +148,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
 
     public void printReport() {
         System.out.println("\n" + "=".repeat(60));
-        System.out.println("  JINJA2 SEMANTIC ANALYSIS (V2): " + templateName + "  (17 checks)");
+        System.out.println("  JINJA2 SEMANTIC ANALYSIS: " + templateName);
         System.out.println("=".repeat(60));
         if (errors.isEmpty() && warnings.isEmpty()) {
             System.out.println("  No semantic issues found.");
@@ -195,14 +166,14 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
                 errors.size(), warnings.size(), errors.size() + warnings.size());
     }
 
-    // ── Blocks ───────────────────────────────────────────────────────────────
-
     @Override
-    public Void visit(ast.template.html.HTMLNormalElementNode node) {
+    public Void visit(HTMLNormalElementNode node) {
         String opening = node.getTagName();
         String closing = node.getClosingTagName();
         if (closing != null && !opening.equals(closing)) {
-            error("عدم تطابق في التاغ (HTML): التاغ المفتوح <" + opening + "> لا يطابق التاغ المغلق </" + closing + ">", node.getClosingLine(), node.getClosingColumn());
+            error("عدم تطابق في التاغ (HTML): التاغ المفتوح <" + opening
+                    + "> لا يطابق التاغ المغلق </" + closing + ">",
+                    node.getClosingLine(), node.getClosingColumn());
         }
         return super.visit(node);
     }
@@ -216,8 +187,6 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
         } else {
             visitedBlocks.put(name, node.getLine());
         }
-        sawJinjaBeforeExtends = true;
-        
         pushScope();
         super.visit(node);
         popScope();
@@ -237,69 +206,12 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
             error("القالب '" + templateName + "' يمتد (extends) من نفسه — هذا استدعاء دائري (Circular dependency)",
                     line, col);
         }
-        if (sawJinjaBeforeExtends) {
-            warning("{% extends \"" + target + "\" %} يجب أن يكون أول تعليمة لجينجا2 في القالب "
-                    + "ولكن توجد محتويات أخرى لجينجا2 تسبقه", line, col);
-        }
-        
+
         File targetFile = new File(templateDir, target);
         if (!targetFile.exists()) {
-            error("{% extends \"" + target + "\" %} يشير إلى ملف غير موجود: " + targetFile.getPath(), line, col);
-        }
-
-        return super.visit(node);
-    }
-
-    @Override
-    public Void visit(ForBlockNode node) {
-        String loopVar = node.getVariable();
-        sawJinjaBeforeExtends = true;
-
-        if (node.getIterable() instanceof ListExpressionNode list
-                && list.getElements().isEmpty()) {
-            warning("{% for " + loopVar + " in [] %} يقوم بالدوران على قائمة فارغة تماماً"
-                    + " — لن يتم تنفيذ محتوى الحلقة أبداً", node.getLine(), node.getColumn());
-        }
-
-        visitChild(node.getIterable());
-        
-        pushScope();
-        for (TemplateNode c : node.getContent()) visitChild(c);
-        popScope();
-
-        if (node.hasElseBlock()) visitChild(node.getElseBlock());
-        return null;
-    }
-
-    @Override
-    public Void visit(WithBlockNode node) {
-        sawJinjaBeforeExtends = true;
-        visitChild(node.getExpression());
-
-        pushScope();
-        for (TemplateNode c : node.getContent()) visitChild(c);
-        popScope();
-        
-        return null;
-    }
-
-    @Override
-    public Void visit(SetBlockNode node) {
-        String name = node.getVariable();
-        int line = node.getLine(), col = node.getColumn();
-
-        if (pythonContextVars.contains(name)) {
-            warning("{% set " + name + " = ... %} يعيد تعريف المتغير '" + name
-                    + "' الذي تم تمريره من بايثون باستخدام الدالة render_template()", line, col);
-        }
-        if (visitedSetVars.contains(name)) {
-            warning("{% set " + name + " = ... %} يعيد تعريف متغير القالب '" + name
-                             + "' الذي تم تحديده مسبقاً عبر {% set %}",
+            error("{% extends \"" + target + "\" %} يشير إلى ملف غير موجود: " + targetFile.getPath(),
                     line, col);
-        } else {
-            visitedSetVars.add(name);
         }
-        sawJinjaBeforeExtends = true;
         return super.visit(node);
     }
 
@@ -311,7 +223,6 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
             error("{% include \"" + included + "\" %} يشير إلى ملف غير موجود: "
                     + target.getPath(), node.getLine(), node.getColumn());
         }
-        sawJinjaBeforeExtends = true;
         return super.visit(node);
     }
 
@@ -320,9 +231,9 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
         String target = stripQuotes(node.getTemplateName());
         File targetFile = new File(templateDir, target);
         if (!targetFile.exists()) {
-            error("{% import \"" + target + "\" ... %} يشير إلى ملف غير موجود: " + targetFile.getPath(), node.getLine(), node.getColumn());
+            error("{% import \"" + target + "\" ... %} يشير إلى ملف غير موجود: "
+                    + targetFile.getPath(), node.getLine(), node.getColumn());
         }
-        sawJinjaBeforeExtends = true;
         return super.visit(node);
     }
 
@@ -331,21 +242,34 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
         String target = stripQuotes(node.getTemplateName());
         File targetFile = new File(templateDir, target);
         if (!targetFile.exists()) {
-            error("{% from \"" + target + "\" ... %} يشير إلى ملف غير موجود: " + targetFile.getPath(), node.getLine(), node.getColumn());
+            error("{% from \"" + target + "\" ... %} يشير إلى ملف غير موجود: "
+                    + targetFile.getPath(), node.getLine(), node.getColumn());
         }
-        sawJinjaBeforeExtends = true;
         return super.visit(node);
     }
 
-    // ── Expressions ──────────────────────────────────────────────────────────
+    @Override
+    public Void visit(ForBlockNode node) {
+        visitChild(node.getIterable());
+        checkIterable(node.getIterable());
+
+        pushScope();
+        for (TemplateNode c : node.getContent()) visitChild(c);
+        popScope();
+
+        if (node.hasElseBlock()) visitChild(node.getElseBlock());
+        return null;
+    }
 
     @Override
-    public Void visit(FilterExpressionNode node) {
-        if (!KNOWN_FILTERS.contains(node.getFilterName())) {
-            warning("مرشح جينجا2 (Filter) غير معروف '" + node.getFilterName()
-                    + "' — غير موجود في قائمة المرشحات المعروفة", node.getLine(), node.getColumn());
-        }
-        return super.visit(node);
+    public Void visit(WithBlockNode node) {
+        visitChild(node.getExpression());
+
+        pushScope();
+        for (TemplateNode c : node.getContent()) visitChild(c);
+        popScope();
+
+        return null;
     }
 
     @Override
@@ -356,57 +280,48 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
 
     @Override
     public Void visit(AttributeAccessNode node) {
-        // Skip checking attributes of builtin Jinja variables like 'loop'
         if (node.getObject() instanceof VariableNode varNode && "loop".equals(varNode.getName())) {
             return super.visit(node);
         }
-
-        if (!allMockDataKeys.isEmpty()) {
-            if (!allMockDataKeys.contains(node.getAttribute())) {
-                error("السمة (Attribute) '" + node.getAttribute() + "' لم يتم العثور عليها في أي قاموس بيانات وهمية من بايثون", node.getLine(), node.getColumn());
-            }
+        if (!allMockDataKeys.isEmpty() && node.getAttribute() != null
+                && !allMockDataKeys.contains(node.getAttribute())) {
+            error("السمة (Attribute) '" + node.getAttribute()
+                    + "' لم يتم العثور عليها في أي قاموس بيانات وهمية من بايثون",
+                    node.getLine(), node.getColumn());
         }
         return super.visit(node);
     }
 
     @Override
     public Void visit(IndexAccessNode node) {
-        if (node.getIndex() instanceof ast.template.jinja.expressions.literals.NumberLiteralNode numNode) {
-            int index = (int) numNode.getValue();
+        if (node.getIndex() instanceof NumberLiteralNode numNode) {
+            int index = numNode.getValue().intValue();
             if (maxListSize > 0 && (index < 0 || index >= maxListSize)) {
-                error("الفهرس خارج النطاق: الحد الأقصى لحجم القائمة هو " + maxListSize + "، ولكن تم طلب الفهرس " + index, node.getLine(), node.getColumn());
+                error("الفهرس خارج النطاق: الحد الأقصى لحجم القائمة هو " + maxListSize
+                        + "، ولكن تم طلب الفهرس " + index, node.getLine(), node.getColumn());
             }
         }
         return super.visit(node);
     }
 
-    /**
-     * Checks 5 and 11. A name is legitimate when it comes from render_template,
-     * {% set %}, an enclosing {% for %} or {% with %}, or is a Jinja/Flask
-     * builtin — anything else was never supplied to this template.
-     */
-    
     @Override
     public Void visit(CallExpressionNode node) {
-        
-        if (node.getCallee() instanceof VariableNode varNode) {
-            if ("url_for".equals(varNode.getName())) {
-                boolean isStatic = false;
-                if (node.getArgumentCount() > 0 && node.getArgument(0) instanceof StringLiteralNode) {
-                    StringLiteralNode str = (StringLiteralNode) node.getArgument(0);
-                    if ("static".equals(stripQuotes(str.getValue()))) {
-                        isStatic = true;
-                    }
-                }
-                if (isStatic) {
-                    for (int i = 0; i < node.getArgumentCount(); i++) {
-                        if ("filename".equals(node.getKeywordName(i)) && node.getArgument(i) instanceof StringLiteralNode) {
-                            StringLiteralNode str = (StringLiteralNode) node.getArgument(i);
-                            String filename = stripQuotes(str.getValue());
-                            File targetFile = new File(new File(templateDir).getParentFile(), "static/" + filename);
-                            if (!targetFile.exists()) {
-                                error("استدعاء url_for('static', filename='" + filename + "') يشير إلى ملف غير موجود: " + targetFile.getPath(), node.getLine(), node.getColumn());
-                            }
+        if (node.getCallee() instanceof VariableNode varNode && "url_for".equals(varNode.getName())) {
+            boolean isStatic = false;
+            if (node.getArgumentCount() > 0 && node.getArgument(0) instanceof StringLiteralNode str
+                    && "static".equals(stripQuotes(str.getValue()))) {
+                isStatic = true;
+            }
+            if (isStatic) {
+                for (int i = 0; i < node.getArgumentCount(); i++) {
+                    if ("filename".equals(node.getKeywordName(i))
+                            && node.getArgument(i) instanceof StringLiteralNode str) {
+                        String filename = stripQuotes(str.getValue());
+                        File targetFile = new File(new File(templateDir).getParentFile(), "static/" + filename);
+                        if (!targetFile.exists()) {
+                            error("استدعاء url_for('static', filename='" + filename
+                                    + "') يشير إلى ملف غير موجود: " + targetFile.getPath(),
+                                    node.getLine(), node.getColumn());
                         }
                     }
                 }
@@ -415,25 +330,75 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
         return super.visit(node);
     }
 
+    private void checkIterable(ExpressionNode iterable) {
+        if (iterable == null) return;
+        if (!isProvablyNotIterable(iterable)) return;
+
+        String typeName = describeNonIterable(iterable);
+        error("Type Error: النوع '" + typeName + "' غير قابل للتكرار (Not iterable)",
+                iterable.getLine(), iterable.getColumn());
+    }
+
+    private boolean isProvablyNotIterable(ExpressionNode expr) {
+        if (expr instanceof NumberLiteralNode) return true;
+        if (expr instanceof BooleanLiteralNode) return true;
+        if (expr instanceof NoneLiteralNode) return true;
+        if (expr instanceof ListExpressionNode) return false;
+        if (expr instanceof DictExpressionNode) return false;
+        if (expr instanceof StringLiteralNode) return false;
+
+        if (expr instanceof VariableNode var) {
+            String name = var.getName();
+            if (name == null || !mockData.containsKey(name)) return false;
+            Object val = mockData.get(name);
+            return !isIterableValue(val);
+        }
+        return false;
+    }
+
+    private boolean isIterableValue(Object val) {
+        if (val == null) return false;
+        if (val instanceof String) return true;
+        if (val instanceof Map) return true;
+        if (val instanceof Iterable) return true;
+        return val.getClass().isArray();
+    }
+
+    private String describeNonIterable(ExpressionNode expr) {
+        if (expr instanceof NumberLiteralNode) return "NUMBER";
+        if (expr instanceof BooleanLiteralNode) return "BOOL";
+        if (expr instanceof NoneLiteralNode) return "NONE";
+        if (expr instanceof VariableNode var) {
+            Object val = mockData.get(var.getName());
+            if (val == null) return "NONE";
+            if (val instanceof Number) return "NUMBER";
+            if (val instanceof Boolean) return "BOOL";
+            return val.getClass().getSimpleName().toUpperCase(Locale.ROOT);
+        }
+        return "UNKNOWN";
+    }
+
+    /**
+     * A name is legitimate when it comes from render_template, {% set %},
+     * an enclosing {% for %} or {% with %}, or is a Jinja/Flask builtin.
+     */
     private void checkName(String name, int line, int col) {
         if (name == null || name.isEmpty()) return;
 
         if (BUILTIN_NAMES.contains(name)) return;
         if (pythonContextVars.contains(name)) return;
 
-        // فحص جدول الرموز إن كان متاحاً
         if (symbolTable != null && currentScope != null) {
             symbolTable.symbols.Symbol sym = currentScope.resolve(name);
-            // رمز BLOCK ليس متغيراً ممرراً من Python — نتجاهله
             if (sym != null && sym.getKind() != SymbolKind.BLOCK) {
                 if (sym.getLine() > line) {
-                    error("متغير القالب '" + name + "' لم يتم تمريره من دالة render_template", line, col);
+                    error("Missing Flask Variable: متغير القالب '" + name
+                            + "' لم يتم تمريره من دالة render_template", line, col);
                 }
                 return;
             }
         }
 
-        // لم يُعثر على الاسم في أي نطاق. هل كان متغير for في حلقة منتهية?
         boolean wasLoopVar = false;
         if (symbolTable != null) {
             for (Scope s : symbolTable.getAllScopes()) {
@@ -443,17 +408,19 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
                 }
             }
         }
-        
+
         if (wasLoopVar) {
-            if (!warnedExpiredLoopVars.contains(name)) {
-                warning("المتغير '" + name + "' هو متغير حلقة 'for' يتم استخدامه خارج النطاق الخاص بتلك الحلقة", line, col);
-                warnedExpiredLoopVars.add(name);
+            if (!reportedExpiredLoopVars.contains(name)) {
+                error("Scope Error: المتغير '" + name
+                        + "' هو متغير حلقة 'for' يتم استخدامه خارج النطاق الخاص بتلك الحلقة",
+                        line, col);
+                reportedExpiredLoopVars.add(name);
             }
             return;
         }
 
-        error("متغير القالب '" + name + "' لم يتم تمريره من دالة render_template",
-                line, col);
+        error("Missing Flask Variable: متغير القالب '" + name
+                + "' لم يتم تمريره من دالة render_template", line, col);
     }
 
     private static String stripQuotes(String s) {
@@ -465,4 +432,3 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
         return s;
     }
 }
-

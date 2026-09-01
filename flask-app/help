@@ -4,3 +4,5 @@ to show html page enter
 2-source venv/bin/activate
 #لتشغيل الملف
 3-python app.py
+
+.\run.bat  
