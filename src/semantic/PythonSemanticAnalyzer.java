@@ -32,6 +32,10 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
         this.currentScope = symbolTable.getGlobalScope();
     }
 
+    public boolean hasErrors() {
+        return !errors.isEmpty();
+    }
+
     private void enterScope() {
         int index = childIndexMap.getOrDefault(currentScope, 0);
         java.util.List<symbolTable.scopes.Scope> children = symbolTable.getChildScopes(currentScope);
@@ -66,10 +70,8 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
     private final Map<String, SymbolType> globalTypes     = new LinkedHashMap<>();
     // Every name ever bound inside some function body → its first line.
     // Lets us say "out of scope" instead of "not defined".
-    private final Map<String, Integer> functionLocalNames  = new LinkedHashMap<>();
     // Names assigned anywhere in the function currently being walked, collected
     // up-front so a use that precedes its assignment is not reported as undefined.
-    private final Deque<Set<String>> assignedAhead         = new ArrayDeque<>();
 
     // ── Local-scope tracking ──────────────────────────────────────────────────
     // Each element of the deque is the local variable map for one scope level.
@@ -154,7 +156,6 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
         info.type = type;
         scopeStack.peek().put(name, info);
         if (!functionDefLists.isEmpty()) functionDefLists.peek().add(info);
-        if (functionDepth > 0) functionLocalNames.putIfAbsent(name, line);
     }
 
     private DefInfo resolveLocal(String name) {
@@ -198,7 +199,16 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
         if (expr instanceof IdentifierNode id) {
             DefInfo local = resolveLocal(id.getName());
             if (local != null) return local.type;
-            return globalTypes.getOrDefault(id.getName(), SymbolType.UNKNOWN);
+            
+            // Check manual global types first
+            SymbolType manualType = globalTypes.get(id.getName());
+            if (manualType != null) return manualType;
+            
+            // Fallback to SymbolTable
+            symbolTable.symbols.Symbol sym = currentScope.resolve(id.getName());
+            if (sym != null && sym.getType() != SymbolType.UNKNOWN) return sym.getType();
+            
+            return SymbolType.UNKNOWN;
         }
 
         if (expr instanceof BinaryOpNode bin)  return typeOfBinary(bin);
@@ -301,12 +311,20 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
 
     private void checkNameResolution(String name, int line, int col) {
         if (isKnown(name)) return;
-        if (!assignedAhead.isEmpty() && assignedAhead.peek().contains(name)) return;
 
-        if (functionLocalNames.containsKey(name) || (currentScope.resolve(name) != null && currentScope.resolve(name).getScope() != currentScope)) {
-            error("Scope Error: المتغير '" + name + "' خارج النطاق", line, col);
-        } else if (currentScope.resolve(name) == null) {
+        symbolTable.symbols.Symbol sym = currentScope.resolveLocal(name);
+        if (sym == null) {
+            sym = currentScope.resolve(name);
+        }
+
+        if (sym == null) {
             error("Undefined Variable: المتغير '" + name + "' غير معرّف", line, col);
+            return;
+        }
+
+        // Variable exists but used before its declaration line in the local scope
+        if (sym.getScope() == currentScope && sym.getLine() > line) {
+            warning("Scope Error: المتغير '" + name + "' مستخدم قبل تعريفه (خارج النطاق)", line, col);
         }
     }
 
@@ -429,10 +447,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
             scopeStack.peek().put(param.getName(), info);
         }
 
-        assignedAhead.push(n.getBody() != null
-                ? collectAssignedNames(n.getBody()) : new LinkedHashSet<>());
         if (n.getBody() != null) n.getBody().accept(this);
-        assignedAhead.pop();
 
         functionDefLists.pop();
 

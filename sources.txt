@@ -1,4 +1,3 @@
-E:\project_compiler_2\src\DumpJinjaBlocks.java
 E:\project_compiler_2\src\Main.java
 E:\project_compiler_2\src\RunAllTests.java
 E:\project_compiler_2\src\ast\ASTNode.java

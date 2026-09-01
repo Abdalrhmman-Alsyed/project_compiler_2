@@ -40,6 +40,11 @@ public class Main {
         // ── 1. Python pipeline (valid Flask app) ─────────────────────────────
         PythonNode pythonAst = runPythonPipeline("flask-app/app.py");
 
+        if (pythonAst == null) {
+            System.err.println("\n[FATAL] Semantic errors found in Python! Compilation aborted.");
+            System.exit(1);
+        }
+
         // Write Python AST to JSON
         String pythonJson = ASTJsonSerializer.toJson(pythonAst);
         Files.writeString(compilerOutput.resolve("ast_python.json"), pythonJson);
@@ -62,6 +67,7 @@ public class Main {
 
         // ── 3. Template pipeline (valid Flask templates) ──────────────────────
         Map<String, TemplateNode> jinjaAstMap = new LinkedHashMap<>();
+        boolean jinjaHasErrors = false;
         for (String template : List.of(
                 "flask-app/templates/base.jinja",
                 "flask-app/templates/index.jinja",
@@ -71,7 +77,15 @@ public class Main {
             String tmplName = Path.of(template).getFileName().toString();
             Set<String> ctxVars = contextFor(tmplName, templateContextVars);
             TemplateNode tAst = runTemplatePipeline(template, ctxVars, mockData);
+            if (tAst == null) {
+                jinjaHasErrors = true;
+            }
             jinjaAstMap.put(tmplName, tAst);
+        }
+
+        if (jinjaHasErrors) {
+            System.err.println("\n[FATAL] Semantic errors found in Jinja templates! HTML Code Generation aborted.");
+            System.exit(1);
         }
 
         // Write Jinja ASTs to JSON
@@ -166,9 +180,14 @@ public class Main {
         // Semantic analysis on the valid Flask app
         PythonSemanticAnalyzer semanticAnalyzer = new PythonSemanticAnalyzer(symbolTable);
         ast.accept(semanticAnalyzer);
+
+        printSub("Python Semantic Analysis");
         semanticAnalyzer.printReport();
         semanticAnalyzer.saveReportToFile("compiler_output/semantic_report.txt");
 
+        if (semanticAnalyzer.hasErrors()) {
+            return null;
+        }
 
         return ast;
     }
@@ -218,6 +237,10 @@ public class Main {
         rootNode.accept(jinjaAnalyzer);
         jinjaAnalyzer.printReport();
         jinjaAnalyzer.saveReportToFile("compiler_output/semantic_report.txt");
+
+        if (jinjaAnalyzer.hasErrors()) {
+            return null;
+        }
 
         return rootNode;
     }
