@@ -7,6 +7,23 @@ app = Flask(__name__)
 # ----------------------------------------------------------------------
 # إعدادات التطبيق والملفات
 # ----------------------------------------------------------------------
+return
+continue
+break
+fn()
+x = 10
+print(x)
+x=2/0
+
+def first_func(e,e):
+    secret_code = 1234
+
+def second_func():
+    # الخطأ هنا: المتغير 'secret_code' موجود، لكنه خارج نطاق هذه الدالة!
+    print(secret_code)
+
+x = 20 + "s"
+
 
 UPLOAD_FOLDER = 'static'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
