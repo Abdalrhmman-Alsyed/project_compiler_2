@@ -213,8 +213,8 @@ public class Main {
 
         JinjaSymbolTable symbolTable = symbolBuilder.getSymbolTable();
 
-        printSub("Jinja2 Symbol Table (V2)");
-        // symbolTable.printSymbolTable() not implemented for V2 yet
+        printSub("Jinja2 Symbol Table");
+        symbolTable.print();
 
         printSub("Template AST");
         PrintASTVisitor.printNode(rootNode, 0);

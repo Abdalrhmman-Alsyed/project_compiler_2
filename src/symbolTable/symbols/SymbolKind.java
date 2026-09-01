@@ -10,7 +10,8 @@ public enum SymbolKind {
     MODULE("module"),
   //  CONSTANT("constant"),
     ATTRIBUTE("attribute"),
-    BUILTIN("builtin");
+    BUILTIN("builtin"),
+    BLOCK("block");
 
     private final String description;
 

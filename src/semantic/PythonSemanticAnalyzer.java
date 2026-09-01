@@ -112,7 +112,8 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
         "map","filter","sorted","reversed","min","max","sum","abs","open","input",
         "repr","format","vars","dir","id","hash","hex","oct","bin","super","object",
         "Exception","ValueError","TypeError","KeyError","IndexError","AttributeError",
-        "NotImplementedError","StopIteration","True","False","None","__name__","__file__",
+        "NotImplementedError","StopIteration","ZeroDivisionError","RuntimeError",
+        "FileNotFoundError","PermissionError","OverflowError","RecursionError","True","False","None","__name__","__file__",
         "staticmethod","classmethod","property","any","all","next","iter","bytes",
         "bytearray","complex","frozenset","ord","chr","pow","round","divmod",
         // Flask / common libs always available in a Flask project

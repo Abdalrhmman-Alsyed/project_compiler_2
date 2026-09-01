@@ -185,6 +185,7 @@ public class JinjaSymbolTable {
             case "variable": icon = "𝑣"; break;
             case "import": icon = "📦"; break;
             case "builtin": icon = "⚙️"; break;
+            case "block": icon = "🧱"; break;
             default: icon = "•";
         }
 

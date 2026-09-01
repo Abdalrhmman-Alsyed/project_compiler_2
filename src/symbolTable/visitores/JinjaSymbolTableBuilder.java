@@ -36,10 +36,9 @@ public class JinjaSymbolTableBuilder extends TemplateBaseASTVisitor<Void> {
                 node.getBlockName(),
                 node.getLine(),
                 node.getColumn(),
-                SymbolKind.VARIABLE, // using variable or function for block
+                SymbolKind.BLOCK,
                 SymbolType.UNKNOWN
         );
-        // Symbol doesn't have addAttribute, we'll just define it.
         symbolTable.getGlobalScope().define(blockSymbol);
 
         symbolTable.enterScope(ScopeType.BLOCK);

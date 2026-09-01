@@ -11,6 +11,7 @@ import java.util.*;
 
 import symbolTable.scopes.Scope;
 import symbolTable.scopes.ScopeType;
+import symbolTable.symbols.SymbolKind;
 
 /**
  * The 11 Jinja2 semantic checks, running on the project's own AST instead of
@@ -420,21 +421,26 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
         if (BUILTIN_NAMES.contains(name)) return;
         if (pythonContextVars.contains(name)) return;
 
-        symbolTable.symbols.Symbol sym = currentScope.resolve(name);
-        if (sym != null) {
-            if (sym.getLine() > line) {
-                // Used before definition
-                error("متغير القالب '" + name + "' لم يتم تمريره من دالة render_template", line, col);
+        // فحص جدول الرموز إن كان متاحاً
+        if (symbolTable != null && currentScope != null) {
+            symbolTable.symbols.Symbol sym = currentScope.resolve(name);
+            // رمز BLOCK ليس متغيراً ممرراً من Python — نتجاهله
+            if (sym != null && sym.getKind() != SymbolKind.BLOCK) {
+                if (sym.getLine() > line) {
+                    error("متغير القالب '" + name + "' لم يتم تمريره من دالة render_template", line, col);
+                }
+                return;
             }
-            return;
         }
 
-        // It is not in scope. Let's see if it was a loop var in ANY scope.
+        // لم يُعثر على الاسم في أي نطاق. هل كان متغير for في حلقة منتهية?
         boolean wasLoopVar = false;
-        for (Scope s : symbolTable.getAllScopes()) {
-            if (s.getScopeType() == ScopeType.FOR_LOOP && s.getSymbol(name) != null) {
-                wasLoopVar = true;
-                break;
+        if (symbolTable != null) {
+            for (Scope s : symbolTable.getAllScopes()) {
+                if (s.getScopeType() == ScopeType.FOR_LOOP && s.getSymbol(name) != null) {
+                    wasLoopVar = true;
+                    break;
+                }
             }
         }
         
