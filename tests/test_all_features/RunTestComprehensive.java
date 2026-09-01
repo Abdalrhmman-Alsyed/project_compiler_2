@@ -20,10 +20,11 @@ public class RunTestComprehensive {
 
         FlaskPythonLexer lexer = new FlaskPythonLexer(CharStreams.fromPath(Path.of(pythonFile)));
         FlaskPythonParser parser = new FlaskPythonParser(new CommonTokenStream(lexer));
-        ParseTree tree = parser.program();
+        FlaskPythonParser.ProgramContext tree = parser.program();
+        ast.python.PythonNode ast = new ast.python.visitors.PythonASTBuilderVisitor().visit(tree);
 
         Generator generator = new Generator();
-        generator.visit(tree);
+        ast.accept(generator);
 
         System.out.println("-> Semantic Analysis OK. Templates to generate: " + generator.getTemplateContextVars().keySet());
 

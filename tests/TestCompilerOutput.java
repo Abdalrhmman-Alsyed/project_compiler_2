@@ -57,12 +57,7 @@ public class TestCompilerOutput {
 
         // ── 2. Generator: extract render_template() context variables ─────────
         Generator generator = new Generator();
-        CharStream input = CharStreams.fromFileName(PYTHON_FILE);
-        FlaskPythonLexer lexer = new FlaskPythonLexer(input);
-        FlaskPythonParser parser = new FlaskPythonParser(new CommonTokenStream(lexer));
-        FlaskPythonParser.ProgramContext pythonParseTree = parser.program();
-        
-        if (pythonParseTree != null) generator.visit(pythonParseTree);
+        if (pythonAst != null) pythonAst.accept(generator);
         generator.printReport();
         Map<String, Set<String>> templateContextVars = generator.getTemplateContextVars();
 

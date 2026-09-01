@@ -46,15 +46,8 @@ public class Main {
 
         // ── 2. Generator: extract render_template() context variables ─────────
         Generator generator = new Generator();
-        
-        CharStream input = CharStreams.fromFileName("flask-app/app.py");
-        FlaskPythonLexer lexer = new FlaskPythonLexer(input);
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        FlaskPythonParser parser = new FlaskPythonParser(tokens);
-        FlaskPythonParser.ProgramContext pythonParseTree = parser.program();
-        
-        if (pythonParseTree != null) {
-            generator.visit(pythonParseTree);
+        if (pythonAst != null) {
+            pythonAst.accept(generator);
         }
         generator.printReport();
         Map<String, Set<String>> templateContextVars = generator.getTemplateContextVars();
