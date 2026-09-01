@@ -77,7 +77,7 @@ public class RunAllTests {
         semanticAnalyzer.saveReportToFile(logFile);
 
         Generator generator = new Generator();
-        generator.visit(parseTree);
+        ast.accept(generator);
         Map<String, Set<String>> templateContextVars = generator.getTemplateContextVars();
         
         semantic.MockDataExtractor dataExtractor = new semantic.MockDataExtractor();

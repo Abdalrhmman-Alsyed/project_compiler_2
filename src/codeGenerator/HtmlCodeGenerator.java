@@ -25,6 +25,40 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
+ * generateRenderedPages()
+          │
+          ▼
+    contextFor()
+          │
+          ▼
+        write()
+          │
+          ▼
+       render()
+          │
+          ▼
+   renderTemplate()
+          │
+          ├──── extends/block handling
+          │
+          ▼
+     renderNode()
+          │
+          ├── HTML
+          ├── if
+          ├── for
+          ├── block
+          ├── expression
+          └── ...
+               │
+               ▼
+             eval()
+               │
+               ▼
+           lookup/scopes
+ */
+
+/**
  * Walks a Jinja AST with bound Python context data and writes finished HTML
  * files. {@code {% extends %}} is resolved against sibling templates; Flask
  * {@code url_for} calls become relative links in {@code output/}.
