@@ -145,7 +145,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
     public void saveReportToFile(String filePath) {
         try (java.io.PrintWriter writer = new java.io.PrintWriter(new java.io.FileWriter(filePath, true))) {
             writer.println("\n" + "=".repeat(60));
-            writer.println("  تحليل الدلالات للغة بايثون  (18 فحص)");
+            writer.println("  تحليل الدلالات للغة بايثون  (22 فحص)");
             writer.println("=".repeat(60));
 
             if (errors.isEmpty() && warnings.isEmpty()) {
@@ -367,7 +367,7 @@ public class PythonSemanticAnalyzer extends PythonBaseASTVisitor<Void> {
 
     public void printReport() {
         System.out.println("\n" + "=".repeat(60));
-        System.out.println("  PYTHON SEMANTIC ANALYSIS  (18 checks)");
+        System.out.println("  PYTHON SEMANTIC ANALYSIS  (22 checks)");
         System.out.println("=".repeat(60));
 
         if (errors.isEmpty() && warnings.isEmpty()) {

@@ -26,6 +26,6 @@ public class SemanticError {
 
     @Override
     public String toString() {
-        return String.format("[%-7s] Line %d:%d — %s", severity, line, column, message);
+        return String.format("[%s] [Line %d:%d] — %s", severity, line, column, message);
     }
 }

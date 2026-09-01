@@ -116,7 +116,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
     public void saveReportToFile(String filePath) {
         try (java.io.PrintWriter writer = new java.io.PrintWriter(new java.io.FileWriter(filePath, true))) {
             writer.println("\n" + "=".repeat(60));
-            writer.println("  تحليل الدلالات لقوالب جينجا2 (V2): " + templateName + "  (13 فحص)");
+            writer.println("  تحليل الدلالات لقوالب جينجا2 (V2): " + templateName + "  (17 فحص)");
             writer.println("=".repeat(60));
 
             if (errors.isEmpty() && warnings.isEmpty()) {
@@ -177,7 +177,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
 
     public void printReport() {
         System.out.println("\n" + "=".repeat(60));
-        System.out.println("  JINJA2 SEMANTIC ANALYSIS (V2): " + templateName + "  (13 checks)");
+        System.out.println("  JINJA2 SEMANTIC ANALYSIS (V2): " + templateName + "  (17 checks)");
         System.out.println("=".repeat(60));
         if (errors.isEmpty() && warnings.isEmpty()) {
             System.out.println("  No semantic issues found.");
@@ -308,7 +308,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
         String included = stripQuotes(node.getTemplateName());
         File target = new File(templateDir, included);
         if (!target.exists()) {
-            warning("{% include \"" + included + "\" %} يشير إلى ملف غير موجود: "
+            error("{% include \"" + included + "\" %} يشير إلى ملف غير موجود: "
                     + target.getPath(), node.getLine(), node.getColumn());
         }
         sawJinjaBeforeExtends = true;
