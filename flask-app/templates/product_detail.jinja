@@ -1,4 +1,5 @@
 {% extends "base.jinja" %}
+{% extends "base2.jinja" %}
 {% block title %}Details: {{ product.name }}{% endblock %}
 
 {% block content %}
@@ -6,10 +7,13 @@
     <h2>Product details</h2>
 
     <img src="{{ url_for('static', filename=product.image_filename) }}" alt="Photo of {{ product.name }}" class="detail-image">
+    <img src="{{ url_for('static', filename="product.image_filename") }}" alt="Photo of {{ product.name }}" class="detail-image">
 
     <div class="info-block">
         <p><strong>Name:</strong> {{ product.name }}</p>
         <p><strong>Price:</strong> {{ product.price }} $</p>
+        <p><strong>Price:</strong> {{ product1.price }} $</p>
+        <p><strong>Price:</strong> {{ product.price1 }} $</p>
         <p><strong>Description:</strong></p>
         <p class="description-text">{{ product.details }}</p>
     </div>
