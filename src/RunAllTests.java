@@ -67,7 +67,7 @@ public class RunAllTests {
         PythonASTBuilderVisitor astBuilder = new PythonASTBuilderVisitor();
         PythonNode ast = astBuilder.visit(parseTree);
         
-        PythonSemanticAnalyzer semanticAnalyzer = new PythonSemanticAnalyzer();
+        PythonSemanticAnalyzer semanticAnalyzer = new PythonSemanticAnalyzer(null);
         ast.accept(semanticAnalyzer);
         System.out.println("\n--- Python Semantic Analysis ---");
         semanticAnalyzer.printReport();
@@ -96,7 +96,7 @@ public class RunAllTests {
                     String tName = t.getName();
                     
                     Set<String> ctxVars = new LinkedHashSet<>(templateContextVars.getOrDefault(tName, Set.of()));
-                    JinjaAstSemanticAnalyzer jAnalyzer = new JinjaAstSemanticAnalyzer(tName, tDir.getAbsolutePath(), ctxVars, mockData);
+                    JinjaAstSemanticAnalyzer jAnalyzer = new JinjaAstSemanticAnalyzer(tName, tDir.getAbsolutePath(), ctxVars, mockData, null);
                     rootNode.accept(jAnalyzer);
                     System.out.println("\n--- Jinja Semantic Analysis (" + tName + ") ---");
                     jAnalyzer.printReport();
@@ -113,7 +113,7 @@ public class RunAllTests {
         FlaskPythonParser parser = new FlaskPythonParser(new CommonTokenStream(new FlaskPythonLexer(input)));
         parser.removeErrorListeners();
         PythonNode ast = new PythonASTBuilderVisitor().visit(parser.program());
-        PythonSemanticAnalyzer analyzer = new PythonSemanticAnalyzer();
+        PythonSemanticAnalyzer analyzer = new PythonSemanticAnalyzer(null);
         ast.accept(analyzer);
         analyzer.printReport();
         analyzer.saveReportToFile(logFile);
@@ -126,7 +126,7 @@ public class RunAllTests {
         FlaskTemplateParser parser = new FlaskTemplateParser(new CommonTokenStream(new FlaskJinjaLexer(charStream)));
         parser.removeErrorListeners();
         TemplateNode rootNode = new TemplateASTBuilder().visitTemplateRoot((gen.FlaskTemplateParser.TemplateRootContext) parser.template());
-        JinjaAstSemanticAnalyzer analyzer = new JinjaAstSemanticAnalyzer(Path.of(filePath).getFileName().toString(), Path.of(filePath).getParent().toString(), pythonCtxVars, mockData);
+        JinjaAstSemanticAnalyzer analyzer = new JinjaAstSemanticAnalyzer(Path.of(filePath).getFileName().toString(), Path.of(filePath).getParent().toString(), pythonCtxVars, mockData, null);
         rootNode.accept(analyzer);
         analyzer.printReport();
         analyzer.saveReportToFile(logFile);

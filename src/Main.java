@@ -1,4 +1,3 @@
-import output.CompilerArtifacts;
 import server.OutputHttpServer;
 import ast.python.PythonNode;
 import ast.python.visitors.PythonASTPrinter;
@@ -18,8 +17,8 @@ import semantic.JinjaAstSemanticAnalyzer;
 import semantic.PythonSemanticAnalyzer;
 import symbolTable.PythonSymbolTable;
 import symbolTable.visitores.PythonSymbolTableBuilder;
-import symbolTableJinja.JinjaSymbolTable;
-import symbolTableJinja.JinjaAstSymbolTableBuilder;
+import symbolTable.JinjaSymbolTable;
+import symbolTable.visitores.JinjaSymbolTableBuilder;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -39,8 +38,7 @@ public class Main {
         Files.deleteIfExists(semanticReport);
 
         // ── 1. Python pipeline (valid Flask app) ─────────────────────────────
-        output.CompilerArtifacts artifacts = new output.CompilerArtifacts(compilerOutput);
-        PythonNode pythonAst = runPythonPipeline("flask-app/app.py", artifacts);
+        PythonNode pythonAst = runPythonPipeline("flask-app/app.py");
 
         // Write Python AST to JSON
         String pythonJson = ASTJsonSerializer.toJson(pythonAst);
@@ -139,7 +137,7 @@ public class Main {
     }
 
     // ─── Python Pipeline (full) ────────────────────────────────────────────
-    private static PythonNode runPythonPipeline(String filePath, CompilerArtifacts artifacts)
+    private static PythonNode runPythonPipeline(String filePath)
             throws Exception {
         printSection("PYTHON: " + filePath);
 
@@ -173,10 +171,11 @@ public class Main {
         symbolTable.print();
 
         // Semantic analysis on the valid Flask app
-        PythonSemanticAnalyzer semanticAnalyzer = new PythonSemanticAnalyzer();
+        PythonSemanticAnalyzer semanticAnalyzer = new PythonSemanticAnalyzer(symbolTable);
         ast.accept(semanticAnalyzer);
         semanticAnalyzer.printReport();
         semanticAnalyzer.saveReportToFile("compiler_output/semantic_report.txt");
+
 
         return ast;
     }
@@ -209,23 +208,20 @@ public class Main {
         String templateName = Path.of(filePath).getFileName().toString();
         String templateDir  = Path.of(filePath).getParent().toString();
 
-        JinjaAstSymbolTableBuilder symbolBuilder =
-                new JinjaAstSymbolTableBuilder(templateName, pythonCtxVars);
+        JinjaSymbolTableBuilder symbolBuilder = new JinjaSymbolTableBuilder();
         rootNode.accept(symbolBuilder);
 
         JinjaSymbolTable symbolTable = symbolBuilder.getSymbolTable();
-        symbolTable.analyze();
 
-        printSub("Jinja2 Symbol Table + Analysis");
-        symbolTable.printSymbolTable();
-        symbolTable.printAnalysisReport();
+        printSub("Jinja2 Symbol Table (V2)");
+        // symbolTable.printSymbolTable() not implemented for V2 yet
 
         printSub("Template AST");
         PrintASTVisitor.printNode(rootNode, 0);
 
         // Semantic analysis on the template
-        JinjaAstSemanticAnalyzer jinjaAnalyzer =
-                new JinjaAstSemanticAnalyzer(templateName, templateDir, pythonCtxVars, mockData);
+        semantic.JinjaAstSemanticAnalyzer jinjaAnalyzer =
+                new semantic.JinjaAstSemanticAnalyzer(templateName, templateDir, pythonCtxVars, mockData, symbolTable);
         rootNode.accept(jinjaAnalyzer);
         jinjaAnalyzer.printReport();
         jinjaAnalyzer.saveReportToFile("compiler_output/semantic_report.txt");

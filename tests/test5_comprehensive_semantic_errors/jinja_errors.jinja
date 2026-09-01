@@ -1,0 +1,65 @@
+<!-- تحذير: extends ليس أول تعليمة -->
+<div>Some content before extends</div>
+
+<!-- خطأ: extends يشير لملف غير موجود -->
+{% extends "non_existent.jinja" %}
+
+<!-- خطأ: extends مرة أخرى -->
+{% extends "base.jinja" %}
+
+<!-- خطأ: extends لنفس الملف (استدعاء دائري) - يتم فحصه في المترجم بناءً على اسم الملف، لنقل أن اسم هذا الملف jinja_errors.jinja -->
+{% extends "jinja_errors.jinja" %}
+
+<!-- خطأ: عدم تطابق تاغ HTML -->
+<div>
+    <p>Wrong closing tag</div>
+</p>
+
+<!-- خطأ: الكتلة معرفة أكثر من مرة -->
+{% block my_block %}
+    Hello
+{% endblock %}
+
+{% block my_block %}
+    Duplicate block
+{% endblock %}
+
+<!-- تحذير: الدوران على قائمة فارغة -->
+{% for item in [] %}
+    Empty loop
+{% endfor %}
+
+{% for i in items %}
+    <!-- تحذير: إعادة تعريف متغير الحلقة -->
+    {% set i = 5 %}
+{% endfor %}
+
+<!-- تحذير: المتغير i خارج النطاق الخاص بالحلقة -->
+<p>{{ i }}</p>
+
+<!-- تحذير: إعادة تعريف متغير القالب (نفترض أن template_var ممرر) -->
+{% set template_var = 10 %}
+
+<!-- تحذير: include يشير لملف غير موجود -->
+{% include "missing_include.jinja" %}
+
+<!-- خطأ: import يشير لملف غير موجود -->
+{% import "missing_import.jinja" as missing %}
+
+<!-- خطأ: from import يشير لملف غير موجود -->
+{% from "missing_from.jinja" import something %}
+
+<!-- تحذير: مرشح غير معروف -->
+{{ "text" | unknown_filter }}
+
+<!-- خطأ: السمة غير موجودة في القاموس -->
+{{ mock_dict.missing_attr }}
+
+<!-- خطأ: فهرس خارج النطاق (أكبر من الحد المسموح 100) -->
+{{ mock_list[150] }}
+
+<!-- خطأ: url_for يشير لملف غير موجود -->
+{{ url_for('static', filename='missing_file.css') }}
+
+<!-- خطأ: متغير غير معرف -->
+{{ completely_undefined_var }}

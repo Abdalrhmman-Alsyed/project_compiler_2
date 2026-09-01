@@ -49,7 +49,7 @@ public class LiveAnalyzer {
                 PythonASTBuilderVisitor astBuilder = new PythonASTBuilderVisitor();
                 PythonNode ast = astBuilder.visit(parseTree);
 
-                PythonSemanticAnalyzer analyzer = new PythonSemanticAnalyzer();
+                PythonSemanticAnalyzer analyzer = new PythonSemanticAnalyzer(null);
                 ast.accept(analyzer);
                 errors.addAll(analyzer.getErrors());
                 warnings.addAll(analyzer.getWarnings());

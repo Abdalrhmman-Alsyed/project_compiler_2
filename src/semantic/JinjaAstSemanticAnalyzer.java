@@ -9,6 +9,9 @@ import ast.visitors.TemplateBaseASTVisitor;
 import java.io.File;
 import java.util.*;
 
+import symbolTable.scopes.Scope;
+import symbolTable.scopes.ScopeType;
+
 /**
  * The 11 Jinja2 semantic checks, running on the project's own AST instead of
  * the ANTLR parse tree — the Jinja counterpart of PythonSemanticAnalyzer.
@@ -35,19 +38,16 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
     private final Set<String> pythonContextVars;
     private final Map<String, Object> mockData;
     private final Set<String> allMockDataKeys = new LinkedHashSet<>();
+    private final symbolTable.JinjaSymbolTable symbolTable;
+    private final Map<String, Integer> visitedBlocks = new LinkedHashMap<>();
+    private final Set<String> visitedSetVars = new LinkedHashSet<>();
+    private final Set<String> warnedExpiredLoopVars = new LinkedHashSet<>();
 
     private final List<SemanticError> errors = new ArrayList<>();
     private final List<SemanticError> warnings = new ArrayList<>();
 
-    private final Map<String, Integer> seenBlocks = new LinkedHashMap<>();
-    private final Map<String, Integer> setVarLines = new LinkedHashMap<>();
-
     private int extendsCount = 0;
     private boolean sawJinjaBeforeExtends = false;
-
-    private final Deque<String> activeLoopVars = new ArrayDeque<>();
-    private final Deque<String> activeWithVars = new ArrayDeque<>();
-    private final Set<String> expiredLoopVars = new LinkedHashSet<>();
 
     private static final Set<String> BUILTIN_NAMES = Set.of(
             "loop", "range", "dict", "list", "cycler", "namespace", "lipsum", "joiner",
@@ -68,16 +68,18 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
     private int maxListSize = 0;
 
     public JinjaAstSemanticAnalyzer(String templateName, String templateDir,
-                                    Set<String> pythonContextVars, Map<String, Object> mockData) {
+                                    Set<String> pythonContextVars, Map<String, Object> mockData,
+                                    symbolTable.JinjaSymbolTable symbolTable) {
         this.templateName = templateName;
         this.templateDir = templateDir;
         this.pythonContextVars = pythonContextVars != null ? pythonContextVars : Set.of();
         this.mockData = mockData != null ? mockData : Map.of();
+        this.symbolTable = symbolTable;
         collectKeys(this.mockData);
     }
 
-    public JinjaAstSemanticAnalyzer(String templateName, String templateDir, Set<String> pythonContextVars) {
-        this(templateName, templateDir, pythonContextVars, null);
+    public JinjaAstSemanticAnalyzer(String templateName, String templateDir, Set<String> pythonContextVars, symbolTable.JinjaSymbolTable symbolTable) {
+        this(templateName, templateDir, pythonContextVars, null, symbolTable);
     }
 
     private void collectKeys(Object obj) {
@@ -113,7 +115,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
     public void saveReportToFile(String filePath) {
         try (java.io.PrintWriter writer = new java.io.PrintWriter(new java.io.FileWriter(filePath, true))) {
             writer.println("\n" + "=".repeat(60));
-            writer.println("  تحليل الدلالات لقوالب جينجا2: " + templateName + "  (13 فحص)");
+            writer.println("  تحليل الدلالات لقوالب جينجا2 (V2): " + templateName + "  (13 فحص)");
             writer.println("=".repeat(60));
 
             if (errors.isEmpty() && warnings.isEmpty()) {
@@ -135,6 +137,35 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
         }
     }
 
+    private final Map<Scope, Integer> childIndexMap = new HashMap<>();
+    private Scope currentScope;
+
+    private void pushScope() {
+        if (currentScope == null) {
+            currentScope = symbolTable.getGlobalScope();
+        } else {
+            List<Scope> children = symbolTable.getChildScopes(currentScope);
+            int index = childIndexMap.getOrDefault(currentScope, 0);
+            if (index < children.size()) {
+                currentScope = children.get(index);
+                childIndexMap.put(currentScope.getParent(), index + 1);
+            }
+        }
+    }
+
+    private void popScope() {
+        if (currentScope != null && currentScope.getParent() != null) {
+            currentScope = currentScope.getParent();
+        }
+    }
+
+    @Override
+    public Void visit(ast.template.TemplateRootNode node) {
+        pushScope(); // enter global scope
+        super.visit(node);
+        return null;
+    }
+
     public List<SemanticError> getErrors() {
         return Collections.unmodifiableList(errors);
     }
@@ -145,7 +176,7 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
 
     public void printReport() {
         System.out.println("\n" + "=".repeat(60));
-        System.out.println("  JINJA2 SEMANTIC ANALYSIS: " + templateName + "  (13 checks)");
+        System.out.println("  JINJA2 SEMANTIC ANALYSIS (V2): " + templateName + "  (13 checks)");
         System.out.println("=".repeat(60));
         if (errors.isEmpty() && warnings.isEmpty()) {
             System.out.println("  No semantic issues found.");
@@ -178,14 +209,18 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
     @Override
     public Void visit(BlockBlockNode node) {
         String name = node.getBlockName();
-        if (seenBlocks.containsKey(name)) {
+        if (visitedBlocks.containsKey(name)) {
             error("الكتلة (Block) '" + name + "' تم تعريفها أكثر من مرة (أول مرة في السطر "
-                    + seenBlocks.get(name) + ")", node.getLine(), node.getColumn());
+                    + visitedBlocks.get(name) + ")", node.getLine(), node.getColumn());
         } else {
-            seenBlocks.put(name, node.getLine());
+            visitedBlocks.put(name, node.getLine());
         }
         sawJinjaBeforeExtends = true;
-        return super.visit(node);
+        
+        pushScope();
+        super.visit(node);
+        popScope();
+        return null;
     }
 
     @Override
@@ -225,12 +260,11 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
                     + " — لن يتم تنفيذ محتوى الحلقة أبداً", node.getLine(), node.getColumn());
         }
 
-        // The block owns its body, so the variable's scope is exactly this subtree.
         visitChild(node.getIterable());
-        activeLoopVars.push(loopVar);
+        
+        pushScope();
         for (TemplateNode c : node.getContent()) visitChild(c);
-        activeLoopVars.pop();
-        expiredLoopVars.add(loopVar);
+        popScope();
 
         if (node.hasElseBlock()) visitChild(node.getElseBlock());
         return null;
@@ -241,10 +275,10 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
         sawJinjaBeforeExtends = true;
         visitChild(node.getExpression());
 
-        boolean bound = node.hasVariable();
-        if (bound) activeWithVars.push(node.getVariable());
+        pushScope();
         for (TemplateNode c : node.getContent()) visitChild(c);
-        if (bound) activeWithVars.pop();
+        popScope();
+        
         return null;
     }
 
@@ -257,12 +291,12 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
             warning("{% set " + name + " = ... %} يعيد تعريف المتغير '" + name
                     + "' الذي تم تمريره من بايثون باستخدام الدالة render_template()", line, col);
         }
-        if (setVarLines.containsKey(name)) {
+        if (visitedSetVars.contains(name)) {
             warning("{% set " + name + " = ... %} يعيد تعريف متغير القالب '" + name
-                             + "' الذي تم تحديده مسبقاً عبر {% set %} في السطر " + setVarLines.get(name),
+                             + "' الذي تم تحديده مسبقاً عبر {% set %}",
                     line, col);
         } else {
-            setVarLines.put(name, line);
+            visitedSetVars.add(name);
         }
         sawJinjaBeforeExtends = true;
         return super.visit(node);
@@ -383,17 +417,34 @@ public class JinjaAstSemanticAnalyzer extends TemplateBaseASTVisitor<Void> {
     private void checkName(String name, int line, int col) {
         if (name == null || name.isEmpty()) return;
 
-        if (expiredLoopVars.contains(name) && !activeLoopVars.contains(name)) {
-            warning("المتغير '" + name + "' هو متغير حلقة 'for' يتم استخدامه خارج النطاق الخاص بتلك الحلقة", line, col);
-            expiredLoopVars.remove(name);
+        if (BUILTIN_NAMES.contains(name)) return;
+        if (pythonContextVars.contains(name)) return;
+
+        symbolTable.symbols.Symbol sym = currentScope.resolve(name);
+        if (sym != null) {
+            if (sym.getLine() > line) {
+                // Used before definition
+                error("متغير القالب '" + name + "' لم يتم تمريره من دالة render_template", line, col);
+            }
             return;
         }
 
-        if (BUILTIN_NAMES.contains(name)) return;
-        if (pythonContextVars.contains(name)) return;
-        if (setVarLines.containsKey(name)) return;
-        if (activeLoopVars.contains(name)) return;
-        if (activeWithVars.contains(name)) return;
+        // It is not in scope. Let's see if it was a loop var in ANY scope.
+        boolean wasLoopVar = false;
+        for (Scope s : symbolTable.getAllScopes()) {
+            if (s.getScopeType() == ScopeType.FOR_LOOP && s.getSymbol(name) != null) {
+                wasLoopVar = true;
+                break;
+            }
+        }
+        
+        if (wasLoopVar) {
+            if (!warnedExpiredLoopVars.contains(name)) {
+                warning("المتغير '" + name + "' هو متغير حلقة 'for' يتم استخدامه خارج النطاق الخاص بتلك الحلقة", line, col);
+                warnedExpiredLoopVars.add(name);
+            }
+            return;
+        }
 
         error("متغير القالب '" + name + "' لم يتم تمريره من دالة render_template",
                 line, col);
